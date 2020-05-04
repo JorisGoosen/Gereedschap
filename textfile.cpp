@@ -1,10 +1,9 @@
 #include "textfile.h"
-#include <vector>
-#include <cstdio>
-#include <cstring>
-#include <unistd.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
-bool checkvoorshadercompileerfout(GLuint shader,const char* naam)
+bool checkvoorshadercompileerfout(GLuint shader, const std::string & naam)
 {
 	GLint isCompiled = 0;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
@@ -14,10 +13,11 @@ bool checkvoorshadercompileerfout(GLuint shader,const char* naam)
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 	 
 			//The maxLength includes the NULL character
-			std::vector<char> errorLog(maxLength);
-			glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+			std::string errorLog;
+			errorLog.resize(maxLength);
+			glGetShaderInfoLog(shader, maxLength, &maxLength, errorLog.data());
 	 
-			printf("Shadercompilatie van %s is gefaald..\nCheck dit: %s\n",naam,errorLog.data());
+	 		std::cout << "Shadercompilatie van " << naam << " is gefaald..\nCheck dit: " <<  errorLog.data();
 			glDeleteShader(shader); //Don't leak the shader.
 			return false;
 	}
@@ -39,36 +39,50 @@ std::string GetShaderTypeString(GLenum ShaderType)
 	}
 }
 
-GLuint createshaderobject(std::string shaderfilename, GLenum shadertype, std::string shaderdirectory)
+
+std::string textFileRead(const std::string & fileName) 
 {
-	std::string shaderfilenameinshadersdirectory = shaderdirectory + shaderfilename;
+	std::ifstream leesShader(fileName);
+
+	if(!leesShader.is_open())
+		throw std::runtime_error("Het openen van de shader " + fileName + " is helaas niet gelukt...");
 	
-	//printf((GetShaderTypeString(shadertype) + "-file: " + shaderfilenameinshadersdirectory + "\n").c_str());
-	
+	std::stringstream touw;
+
+	touw << leesShader.rdbuf();
+
+	return touw.str();
+}
+
+
+GLuint createshaderobject(const std::string & shaderfilename, GLenum shadertype)
+{
 	GLuint shaderobject = glCreateShader(shadertype);
 
-	char * shadersource = textFileRead(shaderfilenameinshadersdirectory.c_str());
+	std::string shaderSource = textFileRead(shaderfilename);
 
-	char const ** shadersourcefakearray = const_cast<char const **>(&shadersource);
+	//The following seems a bit weird no?
+	char const * pointerToCStr = shaderSource.c_str();
+
+	char const ** shadersourcefakearray = const_cast<char const **>(&pointerToCStr);
 	
 	glShaderSource(shaderobject, 1, shadersourcefakearray, NULL);
 
-	free(shadersource);
-	
-	//printf("Compiling %s...\n",shaderfilename.c_str());
+	std::cout << "Compiling " << shaderfilename << "..." << std::endl;
+
 	glCompileShader(shaderobject);
 	
-	if(!checkvoorshadercompileerfout(shaderobject, shaderfilenameinshadersdirectory.c_str())) 
+	if(!checkvoorshadercompileerfout(shaderobject, shaderfilename.c_str())) 
 		exit(1);
 
 	return shaderobject;
 }
 
-GLuint creategeomshader(char* vertshaderfilename, char* fragshaderfilename, char* geomshaderfilename, std::string Directory)
+GLuint creategeomshader(const std::string & vertshaderfilename, const std::string & fragshaderfilename, const std::string & geomshaderfilename)
 {
-	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER,		Directory);
-	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER,	Directory);
-	GLuint geomshaderobject = createshaderobject(geomshaderfilename, GL_GEOMETRY_SHADER,	Directory);
+	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER	);
+	GLuint geomshaderobject = createshaderobject(geomshaderfilename, GL_GEOMETRY_SHADER	);
 
 	GLuint prog = glCreateProgram();
 	
@@ -80,10 +94,10 @@ GLuint creategeomshader(char* vertshaderfilename, char* fragshaderfilename, char
 	return prog;
 }
 
-GLuint createshader(char* vertshaderfilename, char* fragshaderfilename, std::string Directory)
+GLuint createshader(const std::string & vertshaderfilename, const std::string & fragshaderfilename)
 {
-	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER,	Directory);
-	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER,	Directory);
+	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER	);
 
 	GLuint prog = glCreateProgram();
 	
@@ -96,9 +110,9 @@ GLuint createshader(char* vertshaderfilename, char* fragshaderfilename, std::str
 
 
 
-GLuint createcomputeshader(char* shaderfilename, std::string Directory)
+GLuint createcomputeshader(const std::string & shaderfilename)
 {
-	GLuint compshaderobject = createshaderobject(shaderfilename, GL_COMPUTE_SHADER,	Directory);
+	GLuint compshaderobject = createshaderobject(shaderfilename, GL_COMPUTE_SHADER);
 
 	GLuint prog = glCreateProgram();
 	
@@ -107,59 +121,5 @@ GLuint createcomputeshader(char* shaderfilename, std::string Directory)
 	glLinkProgram(prog);
 	return prog;
 }
-
-
-//These two functions should probably be rewritten to use streams instead of this old-fashioned crap
-char *textFileRead(const char *fn) {
-
-	FILE *fp;
-	char *content = NULL;
-
-	int f,count;
-	f = open(fn, O_RDONLY);
-
-	count = lseek(f, 0, SEEK_END);
-
-	close(f);
-
-	if (fn != NULL) {
-		fp = fopen(fn,"rt");
-
-		if (fp != NULL) {
-
-
-			if (count > 0) {
-				content = (char *)malloc(sizeof(char) * (count+1));
-				count = fread(content,sizeof(char),count,fp);
-				content[count] = '\0';
-			}
-			fclose(fp);
-		}
-	}
-	return content;
-}
-
-int textFileWrite(char *fn, char *s) {
-
-	FILE *fp;
-	int status = 0;
-
-	if (fn != NULL) {
-		fp = fopen(fn,"w");
-
-		if (fp != NULL) {
-			
-			if (fwrite(s,sizeof(char),strlen(s),fp) == strlen(s))
-				status = 1;
-			fclose(fp);
-		}
-	}
-	return(status);
-}
-
-
-
-
-
 
 

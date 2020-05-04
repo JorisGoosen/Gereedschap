@@ -1,10 +1,13 @@
 #include "RenderScherm.h"
+#include <iostream>
 
 using namespace glm;
 
 RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H) 
 : AspectRatio(float(W) / float(H)), MijnNaam(Naam)
 {
+	std::cout << "RenderScherm created!" << std::endl;
+
     if (!glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
         
@@ -18,7 +21,20 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H)
 
     glfwMakeContextCurrent(Scherm);
 
+	GLenum err = glewInit();
+	
+	if (GLEW_OK != err)
+	{
+	  	std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+		throw std::runtime_error("Failed to initalize glew...");
+	}
+
+	std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION) << std::endl;
+
+
 	RecalculateProjection();
+
+	glfwSwapInterval(1);
 }
 
 RenderScherm::~RenderScherm()
@@ -31,14 +47,22 @@ RenderScherm::~RenderScherm()
 	QuadPos = nullptr;
 	QuadTex = nullptr;
 
+   	glfwDestroyWindow(Scherm);
 	glfwTerminate();
 }
 
 void RenderScherm::prepareForRender()
 {
 	glfwMakeContextCurrent(Scherm);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glLoadIdentity();
+
+	int width, height;
+	
+	glfwGetFramebufferSize(Scherm, &width, &height);
+	AspectRatio = width / (float) height;
+
+	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
+
+	glViewport(0, 0, width, height);
 }
 
 void RenderScherm::finishRender()
@@ -79,14 +103,10 @@ void RenderScherm::RenderQuad()
 	if(!QuadArray)
 		InitQuad();
 
-	prepareForRender();
-
 	glDisable(GL_DEPTH_TEST);
 	unsigned int Indices[] = {1, 0, 2, 3};
 
 	QuadArray->BindVertexArray();	
 	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, Indices);
 	glErrorToConsole("RenderScherm::RenderQuad(): ");
-
-	finishRender();
 }

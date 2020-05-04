@@ -1,6 +1,5 @@
 #pragma once
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <string>
 #include <GLFW/glfw3.h>
 #define GLM_FORCE_RADIANS
@@ -51,8 +50,8 @@ private:
 
 	std::string				MijnNaam;
 	
-	ArrayOfStructOfArrays 	*QuadArray		= NULL;
-	RenderSubBuffer			*QuadPos		= NULL,
-							*QuadTex		= NULL;
+	ArrayOfStructOfArrays 	*QuadArray		= nullptr;
+	RenderSubBuffer			*QuadPos		= nullptr,
+							*QuadTex		= nullptr;
 
 };

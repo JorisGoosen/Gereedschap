@@ -1,6 +1,5 @@
 #pragma once
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <string>
 #include <GLFW/glfw3.h>
 #define GLM_FORCE_RADIANS
