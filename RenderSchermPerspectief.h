@@ -1,11 +1,11 @@
 #pragma once
 #include "RenderScherm.h"
 
-class RenderSchermPerspective : public RenderScherm
+class RenderSchermPerspectief : public RenderScherm
 {
 public:
-		RenderSchermPerspective(std::string Naam = "RenderSchermPerspective", size_t W = 1280, size_t H = 720);
-		~RenderSchermPerspective();
+		RenderSchermPerspectief(std::string Naam = "RenderSchermPerspectief", size_t W = 1280, size_t H = 720);
+		~RenderSchermPerspectief();
 
 	void		RecalculateProjection()	{ _projection = glm::perspective(_fovYScale, _aspectRatio, _nearDistance, _farDistance); };
 	//void		RecalculateModelView()	{ RecalculateModelView(true); }

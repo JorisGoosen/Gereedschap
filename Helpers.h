@@ -1,7 +1,14 @@
 #pragma once
 
 #include <GL/glew.h>
-#include <GL/gl.h>
 #include <string>
 
 void glErrorToConsole(const std::string & huidigeActie = "");
+
+GLuint 		createshaderobject(	const std::string &  shaderfilename, 	GLenum shadertype);
+GLuint 		creategeomshader(	const std::string &  vertshaderfilename, 	const std::string &  fragshaderfilename, const std::string &  geomshaderfilename);
+GLuint 		createshader(		const std::string &  vertshaderfilename, 	const std::string &  fragshaderfilename);
+GLuint 		createcomputeshader(const std::string &  shaderfilename);
+
+
+
