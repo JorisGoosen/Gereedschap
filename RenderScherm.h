@@ -19,24 +19,33 @@ const float 		FPI = 3.141592653589793238f;
 class RenderScherm
 {
 public:
-		RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720);
-		~RenderScherm();
+				RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720);
+				~RenderScherm();
 
-	void		prepareForRender();
-	void		finishRender();
+	void		bereidRenderVoor(const std::string & shader = "");
+	void		rondRenderAf();
 
-	bool		closeRequested() { return glfwWindowShouldClose(_glfwScherm); }
+	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
-	static 	void keyHandler(GLFWwindow * scherm, int key, int scancode, int action, int mods);
-	virtual void keyHandler(int key, int scancode, int action, int mods);
+	static 	void toetsVerwerker(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
+	virtual void keyHandler(						int key, int scancode, int action, int mods);
 
+	GLuint 		maakGeometrieShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
+	GLuint 		maakShader(				const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
+	GLuint 		maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand);
+	
+	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden
+	virtual void extraVoorbereidingen() {}
 	
 protected:
 	float					_aspectRatio = 16.0f / 9.0f;
 	std::string				_naam;
 
 private:
+	GLuint	slaShaderOp(const std::string & naam, GLuint shaderProgramma);
+
 	GLFWwindow 			*	_glfwScherm = nullptr;
-	
+
+	std::map<std::string, GLuint>					_shaderProgrammas;
 	static std::map<GLFWwindow *, RenderScherm*>	_schermen;
 };

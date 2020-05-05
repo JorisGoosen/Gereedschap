@@ -35,15 +35,15 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H)
 		}
 		std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION) << std::endl;
 	}
-	
+
 	_schermen[_glfwScherm] = this;
 
 	glfwSwapInterval(1);
 
-	glfwSetKeyCallback(_glfwScherm, keyHandler);
+	glfwSetKeyCallback(_glfwScherm, toetsVerwerker);
 }
 
-void RenderScherm::keyHandler(GLFWwindow * scherm, int key, int scancode, int action, int mods)
+void RenderScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)
 {
 	if(_schermen.count(scherm) > 0)
 		_schermen[scherm]->keyHandler(key, scancode, action, mods);
@@ -65,7 +65,7 @@ RenderScherm::~RenderScherm()
 		glfwTerminate();
 }
 
-void RenderScherm::prepareForRender()
+void RenderScherm::bereidRenderVoor(const std::string & shader)
 {
 	glfwMakeContextCurrent(_glfwScherm);
 
@@ -77,11 +77,41 @@ void RenderScherm::prepareForRender()
 	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
 
 	glViewport(0, 0, width, height);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if(shader == "" && _shaderProgrammas.size() == 1)				glUseProgram(_shaderProgrammas.begin()->second);
+	else if(shader != "" && _shaderProgrammas.count(shader) > 0)	glUseProgram(_shaderProgrammas[shader]);
+	else															std::cerr << "Kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
+		
+	extraVoorbereidingen();
 }
 
-void RenderScherm::finishRender()
+void RenderScherm::rondRenderAf()
 {
 	glFlush();
 	glfwSwapBuffers(_glfwScherm);
 	glfwPollEvents();
+}
+
+GLuint RenderScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramma)
+{
+	_shaderProgrammas[naam] = shaderProgramma;
+
+	return shaderProgramma;
+}
+
+GLuint RenderScherm::maakGeometrieShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand)
+{
+	return slaShaderOp(shaderNaam, creategeomshader(vertshaderbestand, fragshaderbestand, geomshaderbestand));
+}
+
+GLuint RenderScherm::maakShader(				const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
+{
+	return slaShaderOp(shaderNaam, createshader(vertshaderbestand, fragshaderbestand));
+}
+
+GLuint RenderScherm::maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand)
+{
+	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
 }
