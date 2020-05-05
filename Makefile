@@ -1,12 +1,12 @@
-CXXFLAGS = -g -W -Wall -Wextra -std=c++2a `pkg-config --cflags glfw3 gl glew`
-#-O3
-LIBFLAGS = `pkg-config --libs glfw3 glew gl`
-OBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+CXXFLAGS 	= -O3 -W -Wall -Wextra -std=c++2a `pkg-config --cflags glfw3 gl glew`
+LIBFLAGS 	= `pkg-config --libs glfw3 glew gl`
+OBJECTS 	= $(patsubst %.cpp,%.o,$(wildcard *.cpp))
+DEMOS		= quadDemo
 
-all: $(OBJECTS) demo
+all: $(OBJECTS) $(DEMOS)
 
-demo: $(OBJECTS)
-	g++ $(CXXFLAGS) -o demo $(OBJECTS) $(LIBFLAGS)
+$(DEMOS): $(OBJECTS)
+	g++ $(CXXFLAGS) -o $@ $(OBJECTS) $(LIBFLAGS)
 
 %.o: %.cpp
 	g++ $(CXXFLAGS) -c -o $@ $<

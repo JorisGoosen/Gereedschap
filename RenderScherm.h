@@ -8,6 +8,7 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <map>
 
 #include "RenderSubBuffer.h"	
 
@@ -21,37 +22,21 @@ public:
 		RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720);
 		~RenderScherm();
 
-	void		RecalculateProjection()	{ Projection = glm::perspective(FovYScale, AspectRatio, NearDistance, FarDistance); };
-	void		RecalculateModelView()	{ RecalculateModelView(true); }
-	void		RecalculateModelView(bool IncorporateTranslation);
-
-	glm::mat4	GetProjection()			{ return Projection; }
-	glm::mat4	GetModelView()			{ return ModelView; }
-
 	void		prepareForRender();
 	void		finishRender();
 
-	void 		RenderQuad();
+	bool		closeRequested() { return glfwWindowShouldClose(_glfwScherm); }
 
-	bool		closeRequested() { return glfwWindowShouldClose(Scherm); }
+	static 	void keyHandler(GLFWwindow * scherm, int key, int scancode, int action, int mods);
+	virtual void keyHandler(int key, int scancode, int action, int mods);
 
-	float		FovYScale			= FPI * 0.25f,
-				AspectRatio			= 16.0f / 9.0f,
-				NearDistance		= 0.001f,
-				FarDistance			= 100.0f;
+	
+protected:
+	float					_aspectRatio = 16.0f / 9.0f;
+	std::string				_naam;
 
 private:
-	void		InitQuad();
+	GLFWwindow 			*	_glfwScherm = nullptr;
 	
-	glm::mat4				Projection, 
-							ModelView;
-
- 	GLFWwindow 		* 		Scherm = nullptr;
-
-	std::string				MijnNaam;
-	
-	ArrayOfStructOfArrays 	*QuadArray		= nullptr;
-	RenderSubBuffer			*QuadPos		= nullptr,
-							*QuadTex		= nullptr;
-
+	static std::map<GLFWwindow *, RenderScherm*>	_schermen;
 };

@@ -3,62 +3,76 @@
 
 using namespace glm;
 
-RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H) 
-: AspectRatio(float(W) / float(H)), MijnNaam(Naam)
-{
-	std::cout << "RenderScherm created!" << std::endl;
+std::map<GLFWwindow *, RenderScherm*>	RenderScherm::_schermen;
 
-    if (!glfwInit())
+RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H) 
+: _aspectRatio(float(W) / float(H)), _naam(Naam)
+{
+	std::cout << "RenderScherm " << _naam << " created!" << std::endl;
+
+    if (_schermen.size() == 0 && !glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
         
-    Scherm = glfwCreateWindow(W, H, MijnNaam.c_str(), nullptr, nullptr);
+    _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), nullptr, nullptr);
 
-    if (!Scherm)
+    if (!_glfwScherm)
     {
         glfwTerminate();
         throw std::runtime_error("Failed to create window!");
     }
 
-    glfwMakeContextCurrent(Scherm);
-
-	GLenum err = glewInit();
 	
-	if (GLEW_OK != err)
+
+    glfwMakeContextCurrent(_glfwScherm);
+
+	if(_schermen.size() == 0)
 	{
-	  	std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
-		throw std::runtime_error("Failed to initalize glew...");
+		GLenum err = glewInit();
+		if (GLEW_OK != err)
+		{
+			std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+			throw std::runtime_error("Failed to initalize glew...");
+		}
+		std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION) << std::endl;
 	}
-
-	std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION) << std::endl;
-
-
-	RecalculateProjection();
+	
+	_schermen[_glfwScherm] = this;
 
 	glfwSwapInterval(1);
+
+	glfwSetKeyCallback(_glfwScherm, keyHandler);
+}
+
+void RenderScherm::keyHandler(GLFWwindow * scherm, int key, int scancode, int action, int mods)
+{
+	if(_schermen.count(scherm) > 0)
+		_schermen[scherm]->keyHandler(key, scancode, action, mods);
+}
+
+void RenderScherm::keyHandler(int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(_glfwScherm, 1);
 }
 
 RenderScherm::~RenderScherm()
 {
-	delete QuadArray;
-	delete QuadPos;
-	delete QuadTex;
-	
-	QuadArray = nullptr;
-	QuadPos = nullptr;
-	QuadTex = nullptr;
+	_schermen.erase(_glfwScherm);
 
-   	glfwDestroyWindow(Scherm);
-	glfwTerminate();
+   	glfwDestroyWindow(_glfwScherm);
+
+	if(_schermen.size() == 0)
+		glfwTerminate();
 }
 
 void RenderScherm::prepareForRender()
 {
-	glfwMakeContextCurrent(Scherm);
+	glfwMakeContextCurrent(_glfwScherm);
 
 	int width, height;
 	
-	glfwGetFramebufferSize(Scherm, &width, &height);
-	AspectRatio = width / (float) height;
+	glfwGetFramebufferSize(_glfwScherm, &width, &height);
+	_aspectRatio = width / (float) height;
 
 	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
 
@@ -68,45 +82,6 @@ void RenderScherm::prepareForRender()
 void RenderScherm::finishRender()
 {
 	glFlush();
-	glfwSwapBuffers(Scherm);
+	glfwSwapBuffers(_glfwScherm);
 	glfwPollEvents();
-}
-
-void RenderScherm::InitQuad()
-{
-	if(QuadArray != NULL)
-		throw std::runtime_error("InitQuad dubbel gedaan..\n");
-
-	const int QuadArraySize = 32;
-	//if(!SchrijfBeeldenWeg)	printf("InitQuad Gestart!\n");
-	QuadArray = new ArrayOfStructOfArrays(QuadArraySize);
-	
-	QuadPos = new RenderSubBuffer(2, QuadArraySize, QuadArray, 0);
-	QuadPos->AddDataPoint(vec2(-1.0f, -1.0f));
-	QuadPos->AddDataPoint(vec2( 1.0f, -1.0f));
-	QuadPos->AddDataPoint(vec2( 1.0f,  1.0f));
-	QuadPos->AddDataPoint(vec2(-1.0f,  1.0f));
-	
-	QuadTex = new RenderSubBuffer(2, QuadArraySize, QuadArray, 1);
-	QuadTex->AddDataPoint(vec2(-1.0f, -1.0f));
-	QuadTex->AddDataPoint(vec2( 1.0f, -1.0f));
-	QuadTex->AddDataPoint(vec2( 1.0f,  1.0f));
-	QuadTex->AddDataPoint(vec2(-1.0f,  1.0f));
-
-	QuadPos->Flush();
-	QuadTex->Flush();
-
-}
-
-void RenderScherm::RenderQuad()
-{
-	if(!QuadArray)
-		InitQuad();
-
-	glDisable(GL_DEPTH_TEST);
-	unsigned int Indices[] = {1, 0, 2, 3};
-
-	QuadArray->BindVertexArray();	
-	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, Indices);
-	glErrorToConsole("RenderScherm::RenderQuad(): ");
 }
