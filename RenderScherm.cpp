@@ -80,11 +80,14 @@ void RenderScherm::bereidRenderVoor(const std::string & shader)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if(shader == "" && _shaderProgrammas.size() == 1)				glUseProgram(_shaderProgrammas.begin()->second);
-	else if(shader != "" && _shaderProgrammas.count(shader) > 0)	glUseProgram(_shaderProgrammas[shader]);
+	GLuint programma = 0;
+
+	if(shader == "" && _shaderProgrammas.size() == 1)				programma = _shaderProgrammas.begin()->second;
+	else if(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
 	else															std::cerr << "Kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
 		
-	extraVoorbereidingen();
+	glUseProgram(programma);
+	extraVoorbereidingen(programma);
 }
 
 void RenderScherm::rondRenderAf()
@@ -114,4 +117,21 @@ GLuint RenderScherm::maakShader(				const std::string & shaderNaam,		const std::
 GLuint RenderScherm::maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand)
 {
 	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
+}
+
+GLuint RenderScherm::geefProgrammaHandvat(const std::string & naam) const
+{
+	if(_shaderProgrammas.count(naam) > 0)
+		return _shaderProgrammas.at(naam);
+
+	throw std::runtime_error("Er wordt gepoogd het handvat op te vragen van een shader programma genaamd \"" + naam + "\" maar dat bestaat niet voor zover het scherm weet...");
+}
+
+
+GLuint RenderScherm::geefEnigeProgrammaHandvat() const
+{
+	if(_shaderProgrammas.size() == 1)
+		return _shaderProgrammas.begin()->second;
+
+	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
 }

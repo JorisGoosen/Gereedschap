@@ -35,7 +35,7 @@ struct StructOfArrays
 class ArrayOfStructOfArrays
 {
 public:
-	ArrayOfStructOfArrays(int BUFSIZE) : MIJNBUFSIZE(BUFSIZE) 
+	ArrayOfStructOfArrays(int BUFSIZE = 0) : MIJNBUFSIZE(BUFSIZE) 
 	{
 		glCreateVertexArrays(1, &VertexArray);
 		glErrorToConsole("glCreateVertexArrays: ");

@@ -1,25 +1,112 @@
 #include "icosahedron.h"
+#include <set>
+#include <iostream>
 
 using namespace glm;
 
+bool Lijn::heeftPunt(int p) const	
+{
+	return a == p || b == p; 
+}
+
+bool Lijn::vormtDriehoek(const Lijn & deEen, const Lijn & deAnder) const 
+{
+	if(this->operator==(deEen) || this->operator==(deAnder) || deEen == deAnder)
+		return false;
+
+	std::set<glm::uint32> setje ({a, b, deEen.a, deEen.b, deAnder.a, deAnder.b});
+
+	return setje.size() == 3;
+}
+ 
+glm::ivec3 Lijn::geefDriehoek(const Lijn & deEen, const Lijn & deAnder) const
+{
+	if(!vormtDriehoek(deEen, deAnder))
+		return {0, 0, 0};
+
+	std::set<glm::uint32> setje ({a, b, deEen.a, deEen.b, deAnder.a, deAnder.b});
+	std::vector<glm::uint32> vecje(setje.begin(), setje.end());
+	
+	return { vecje[0], vecje[1], vecje[2] };
+}
+	
+glm::ivec3 	Lijn::geefGeorienteerdeDriehoek(const Lijn & deEen, const Lijn & deAnder, const RenderSubBuffer<float> * punten) const
+{
+	glm::ivec3 vecje(geefDriehoek(deEen, deAnder));
+
+	glm::vec3	a = punten->GetDataPoint3(vecje[0]), 
+				b = punten->GetDataPoint3(vecje[1]), 
+				c = punten->GetDataPoint3(vecje[2]);
+
+	// We weten dat het centrum van de bol op 0,0,0 is. Dus als de normaal enigzins dezelfde kant op wijst is het goed. en anders wisselen we twee punten om.
+	glm::vec3	been0 	= a - b,
+				been1 	= c - b,
+				normaal = glm::normalize(glm::cross(been0, been1)),
+				straal 	= glm::normalize(a + b + c);
+
+	if(glm::dot(straal, normaal) < 0) return vecje;
+
+	std::swap(vecje[1], vecje[2]);
+
+	return vecje;
+}
+
+void Icosahedron::tekenJezelf() const
+{
+	_icoArray->BindVertexArray();	
+	glDrawElements(GL_TRIANGLES, _icoDriehk.size(), GL_UNSIGNED_INT, _icoDriehk.data());
+	glErrorToConsole("Icosahedron::tekenJezelf(): ");
+}
+
+Icosahedron::Icosahedron()
+{
+	_icoArray  	= new ArrayOfStructOfArrays(		ICOSAHEDRON_PUNTEN * 4);
+	_icoPunten	= new RenderSubBuffer<float>(	3, 	ICOSAHEDRON_PUNTEN * 4, 	_icoArray, 0);
+
+	glErrorToConsole("Icosahedron::Icosahedron(): ");
+
+	genereer();
+}
+
+//#define DEBUGTRIANGLE
+
 void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
 {
+#ifdef DEBUGTRIANGLE
+	_icoPunten->AddDataPoint( vec3(-1.0f, 0.0f, 0.0f));
+	_icoPunten->AddDataPoint( vec3( 1.0f, 0.0f, 0.0f));
+	_icoPunten->AddDataPoint( vec3( 0.0f, 1.0f, 0.0f));
+
+	_icoPunten->Flush();
+	
+	_icoDriehk.push_back(0);
+	_icoDriehk.push_back(1);
+	_icoDriehk.push_back(2);
+
+	glErrorToConsole("Icosahedron::genereer: ");
+
+	return;
+#else
 	float t = (1.0 + sqrtf(5.0)) / 2.0;
+	
+	_icoPunten->AddDataPoint( vec3(	  -t,	 1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	   t,	 1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	  -t,	-1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	   t,	-1.0f,	 0.0f) );
 
-	_punten[0]  = vec4(	  -t,	 1.0f,	 0.0f,	1.0f);
-	_punten[1]  = vec4(	   t,	 1.0f,	 0.0f,	1.0f);
-	_punten[2]  = vec4(	  -t,	-1.0f,	 0.0f,	1.0f);
-	_punten[3]  = vec4(	   t,	-1.0f,	 0.0f,	1.0f);
+	_icoPunten->AddDataPoint( vec3(	0.0f,	   -t,	 1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	    t,	 1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	   -t,	-1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	    t,	-1.0f) );
 
-	_punten[4]  = vec4(	0.0f,	   -t,	 1.0f,	1.0f);
-	_punten[5]  = vec4(	0.0f,	    t,	 1.0f,	1.0f);
-	_punten[6]  = vec4(	0.0f,	   -t,	-1.0f,	1.0f);
-	_punten[7]  = vec4(	0.0f,	    t,	-1.0f,	1.0f);
+	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	   -t) );
+	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	    t) );
+	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	   -t) );
+	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	    t) );
 
-	_punten[8]  = vec4(	 1.0f,	 0.0f,	   -t,	1.0f);
-	_punten[9]  = vec4(	 1.0f,	 0.0f,	    t,	1.0f);
-	_punten[10] = vec4(	-1.0f,	 0.0f,	   -t,	1.0f);
-	_punten[11] = vec4(	-1.0f,	 0.0f,	    t,	1.0f);
+	_icoPunten->Flush();
+
+	std::array<Lijn, ICOSAHEDRON_LIJNEN> _lijnen;
 
 	if(PrettyIcoInsteadOfJensens) //Zet dit op false om een Jensen's icosahedron te krijgen (is wel lelijk though)
 	{
@@ -62,4 +149,18 @@ void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
 	_lijnen[25].a = 6;	_lijnen[25].b = 10;
 	_lijnen[26].a = 7;	_lijnen[26].b = 8;
 	_lijnen[27].a = 7;	_lijnen[27].b = 10;
+
+	for(size_t a=0; a<_lijnen.size() - 2; a++)
+		for(size_t b=a+1; b<_lijnen.size() - 1; b++)
+			for(size_t c=b+1; c<_lijnen.size(); c++)
+				if(_lijnen[a].vormtDriehoek(_lijnen[b], _lijnen[c]))
+				{
+					glm::ivec3 driehoek = _lijnen[a].geefGeorienteerdeDriehoek(_lijnen[b], _lijnen[c], _icoPunten);
+					_icoDriehk.push_back(driehoek.x);
+					_icoDriehk.push_back(driehoek.y);
+					_icoDriehk.push_back(driehoek.z);
+				}
+
+	std::cout << "Verwerken van icosahedron resulteerde in " << _icoDriehk.size() / 3 << " driehoeken terwijl er " << ICOSAHEDRON_VLAKKEN << " verwacht werden!" << std::endl;
+	#endif
 }

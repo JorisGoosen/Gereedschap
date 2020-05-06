@@ -34,13 +34,13 @@ void RenderSchermQuad::initQuad()
 	//if(!SchrijfBeeldenWeg)	printf("InitQuad Gestart!\n");
 	_quadArray = new ArrayOfStructOfArrays(QuadArraySize);
 	
-	_quadPos = new RenderSubBuffer(2, QuadArraySize, _quadArray, 0);
+	_quadPos = new RenderSubBuffer<float>(2, QuadArraySize, _quadArray, 0);
 	_quadPos->AddDataPoint(vec2(-1.0f, -1.0f));
 	_quadPos->AddDataPoint(vec2( 1.0f, -1.0f));
 	_quadPos->AddDataPoint(vec2( 1.0f,  1.0f));
 	_quadPos->AddDataPoint(vec2(-1.0f,  1.0f));
 	
-	_quadTex = new RenderSubBuffer(2, QuadArraySize, _quadArray, 1);
+	_quadTex = new RenderSubBuffer<float>(2, QuadArraySize, _quadArray, 1);
 	_quadTex->AddDataPoint(vec2(-1.0f, -1.0f));
 	_quadTex->AddDataPoint(vec2( 1.0f, -1.0f));
 	_quadTex->AddDataPoint(vec2( 1.0f,  1.0f));
@@ -48,7 +48,6 @@ void RenderSchermQuad::initQuad()
 
 	_quadPos->Flush();
 	_quadTex->Flush();
-
 }
 
 void RenderSchermQuad::renderQuad()

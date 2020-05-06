@@ -16,6 +16,6 @@ private:
 	void		initQuad();
 	
 	ArrayOfStructOfArrays 	*_quadArray		= nullptr;
-	RenderSubBuffer			*_quadPos		= nullptr,
+	RenderSubBuffer<float>	*_quadPos		= nullptr,
 							*_quadTex		= nullptr;
 };

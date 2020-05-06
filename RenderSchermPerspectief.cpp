@@ -20,3 +20,14 @@ RenderSchermPerspectief::~RenderSchermPerspectief()
 {
 }
 
+void RenderSchermPerspectief::extraVoorbereidingen(GLuint programma)
+{
+	glEnable(GL_DEPTH_TEST);
+
+	RecalculateProjection();	
+
+	glUniformMatrix4fv(glGetUniformLocation(programma, "projectie"), 1, GL_FALSE, glm::value_ptr(_projection));
+	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelView));
+
+	glErrorToConsole("RenderSchermPerspectief::extraVoorbereidingen()");
+}

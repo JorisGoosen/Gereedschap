@@ -34,8 +34,11 @@ public:
 	GLuint 		maakShader(				const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
 	GLuint 		maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand);
 	
+	GLuint		geefProgrammaHandvat(const std::string & naam) const;
+	GLuint		geefEnigeProgrammaHandvat() const;
+
 	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden
-	virtual void extraVoorbereidingen() {}
+	virtual void extraVoorbereidingen(GLuint programma) {}
 	
 protected:
 	float					_aspectRatio = 16.0f / 9.0f;
