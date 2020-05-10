@@ -87,6 +87,7 @@ void RenderScherm::bereidRenderVoor(const std::string & shader)
 	else															std::cerr << "Kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
 		
 	glUseProgram(programma);
+	glErrorToConsole("glUseProgram(...): ");
 	extraVoorbereidingen(programma);
 }
 
@@ -101,20 +102,36 @@ GLuint RenderScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramm
 {
 	_shaderProgrammas[naam] = shaderProgramma;
 
+	glErrorToConsole("slaShaderOp: ");
+
 	return shaderProgramma;
 }
 
-GLuint RenderScherm::maakGeometrieShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand)
+GLuint RenderScherm::maakVlakVerdelingsShader(
+	const std::string & shaderNaam,		
+	const std::string & vertshaderbestand, 	
+	const std::string & fragshaderbestand, 
+	const std::string & vlakEvaluatieBestand, 
+	const std::string & vlakControleBestand)
+{
+	return slaShaderOp(shaderNaam, createtesselationshader(vertshaderbestand, fragshaderbestand, vlakEvaluatieBestand, vlakControleBestand));
+}
+
+GLuint RenderScherm::maakGeometrieShader(
+	const std::string & shaderNaam,		
+	const std::string & vertshaderbestand, 	
+	const std::string & fragshaderbestand, 
+	const std::string & geomshaderbestand)
 {
 	return slaShaderOp(shaderNaam, creategeomshader(vertshaderbestand, fragshaderbestand, geomshaderbestand));
 }
 
-GLuint RenderScherm::maakShader(				const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
+GLuint RenderScherm::maakShader(const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
 {
 	return slaShaderOp(shaderNaam, createshader(vertshaderbestand, fragshaderbestand));
 }
 
-GLuint RenderScherm::maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand)
+GLuint RenderScherm::maakBerekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
 {
 	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
 }

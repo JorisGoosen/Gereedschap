@@ -17,4 +17,4 @@ $(DEMOS): gereedschap $(wildcard demos/*.cpp)
 	g++ $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm $(OBJECTS) $(DEMOS) $(GEOMS) bin/*
+	rm $(OBJECTS) $(GEOMS) bin/*

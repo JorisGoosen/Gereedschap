@@ -30,9 +30,10 @@ public:
 	static 	void toetsVerwerker(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
 	virtual void keyHandler(						int key, int scancode, int action, int mods);
 
-	GLuint 		maakGeometrieShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
-	GLuint 		maakShader(				const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
-	GLuint 		maakBerekenShader(		const std::string & shaderNaam,		const std::string &  shaderbestand);
+	GLuint 		maakVlakVerdelingsShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  vlakEvaluatieBestand, const std::string &  vlakControleBestand = "");
+	GLuint 		maakGeometrieShader(		const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
+	GLuint 		maakShader(					const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
+	GLuint 		maakBerekenShader(			const std::string & shaderNaam,		const std::string &  shaderbestand);
 	
 	GLuint		geefProgrammaHandvat(const std::string & naam) const;
 	GLuint		geefEnigeProgrammaHandvat() const;

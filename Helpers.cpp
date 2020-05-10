@@ -120,6 +120,30 @@ GLuint creategeomshader(const std::string & vertshaderfilename, const std::strin
 	return prog;
 }
 
+GLuint createtesselationshader(	const std::string & vertshaderfilename, 	const std::string & fragshaderfilename, 
+								const std::string & tessEvalFilename, 		const std::string & tessCtrlFilename)
+{
+	GLuint vertshaderobject = createshaderobject(vertshaderfilename, 	GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = createshaderobject(fragshaderfilename, 	GL_FRAGMENT_SHADER	);
+	GLuint tessEvalObject 	= createshaderobject(tessEvalFilename, 		GL_TESS_EVALUATION_SHADER);
+
+	GLuint tessCtrlObject	= tessCtrlFilename == "" ? 0 : createshaderobject(tessEvalFilename, GL_TESS_CONTROL_SHADER);
+
+	GLuint prog = glCreateProgram();
+	
+	glAttachShader(prog, fragshaderobject);
+	glAttachShader(prog, vertshaderobject);
+	glAttachShader(prog, tessEvalObject);
+
+	if(tessCtrlFilename != "")
+		glAttachShader(prog, tessCtrlObject);
+
+	glLinkProgram(prog);
+	return prog;
+}
+
+
+
 GLuint createshader(const std::string & vertshaderfilename, const std::string & fragshaderfilename)
 {
 	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER	);
@@ -149,3 +173,9 @@ GLuint createcomputeshader(const std::string & shaderfilename)
 }
 
 
+glm::vec3 randomVec3()
+{
+	const float randMax = RAND_MAX;
+
+	return glm::vec3(rand() / randMax, rand() / randMax, rand() / randMax);
+}
