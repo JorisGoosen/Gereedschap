@@ -164,39 +164,21 @@ void RenderScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::
 	unsigned int texture;
 	glGenTextures(1, &texture);  
 
-	std::cout << "A" << std::endl;
-
 	glBindTexture(GL_TEXTURE_2D, texture);
-
-	std::cout << "B" << std::endl;
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	std::cout << "C" << std::endl;
-
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	std::cout << "D" << std::endl;
-
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, breedte, hoogte, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-	std::cout << "E" << std::endl;
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	std::cout << "F" << std::endl;
-
 	glErrorToConsole("RenderScherm::laadTextuurUitPng: ");
-
-	std::cout << "G" << std::endl;
 
 	_texturen[textuurNaam] = texture;
 
-	std::cout << "H" << std::endl;
-
 	delete data;
-
-	std::cout << "I" << std::endl;
 }

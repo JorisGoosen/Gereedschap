@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <png.h>
+#include <exception>
 
 void glErrorToConsole(const std::string & huidigeActie)
 {
@@ -27,6 +28,8 @@ void glErrorToConsole(const std::string & huidigeActie)
 	}
 
 	std::cout << std::endl;
+
+	throw std::runtime_error("...");
 }
 
 
@@ -128,7 +131,7 @@ GLuint createtesselationshader(	const std::string & vertshaderfilename, 	const s
 	GLuint fragshaderobject = createshaderobject(fragshaderfilename, 	GL_FRAGMENT_SHADER	);
 	GLuint tessEvalObject 	= createshaderobject(tessEvalFilename, 		GL_TESS_EVALUATION_SHADER);
 
-	GLuint tessCtrlObject	= tessCtrlFilename == "" ? 0 : createshaderobject(tessEvalFilename, GL_TESS_CONTROL_SHADER);
+	GLuint tessCtrlObject	= tessCtrlFilename == "" ? 0 : createshaderobject(tessCtrlFilename, GL_TESS_CONTROL_SHADER);
 
 	GLuint prog = glCreateProgram();
 	
