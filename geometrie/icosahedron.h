@@ -21,7 +21,8 @@ public:
 	Icosahedron();
 
 	void tekenJezelf() const;
-
+	void tekenJezelfPatchy() const;
+	
 private:
 	void genereer(bool PrettyIcoInsteadOfJensens = true);
 

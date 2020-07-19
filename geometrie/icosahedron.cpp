@@ -58,6 +58,16 @@ void Icosahedron::tekenJezelf() const
 	glErrorToConsole("Icosahedron::tekenJezelf(): ");
 }
 
+void Icosahedron::tekenJezelfPatchy() const
+{
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
+	_icoArray->BindVertexArray();	
+	glDrawElements(GL_PATCHES, _icoDriehk.size(), GL_UNSIGNED_INT, _icoDriehk.data());
+	glErrorToConsole("Icosahedron::tekenJezelfPatchy(): ");
+}
+
+
+
 Icosahedron::Icosahedron()
 {
 	_icoArray  	= new ArrayOfStructOfArrays(		ICOSAHEDRON_PUNTEN * 4);

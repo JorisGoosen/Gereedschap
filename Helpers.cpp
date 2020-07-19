@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <png.h>
 
 void glErrorToConsole(const std::string & huidigeActie)
 {
@@ -178,4 +179,36 @@ glm::vec3 randomVec3()
 	const float randMax = RAND_MAX;
 
 	return glm::vec3(rand() / randMax, rand() / randMax, rand() / randMax);
+}
+
+
+png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen)
+{
+    png_image image;
+
+	memset(&image, 0, (sizeof image));
+	image.version = PNG_IMAGE_VERSION;
+
+	if (png_image_begin_read_from_file(&image, bestandsnaam.c_str()))
+	{
+		png_bytep buffer = nullptr;
+		image.format = PNG_FORMAT_RGBA;
+
+		buffer = new png_byte[PNG_IMAGE_SIZE(image)];
+
+		if (buffer != NULL && png_image_finish_read(&image, nullptr, buffer, 0, nullptr) != 0)
+		{
+			width 	= image.width;
+			height 	= image.height;
+			kanalen	= 4;
+
+			std::cout << "Plaatje '" << bestandsnaam << "' geladen en formaat: " << width << " X " << height << std::endl;
+
+			return buffer;
+		}
+
+		delete buffer;
+	}
+
+	  return nullptr;  
 }

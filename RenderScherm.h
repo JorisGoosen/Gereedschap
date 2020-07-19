@@ -38,6 +38,8 @@ public:
 	GLuint		geefProgrammaHandvat(const std::string & naam) const;
 	GLuint		geefEnigeProgrammaHandvat() const;
 
+	void		laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam);
+
 	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden
 	virtual void extraVoorbereidingen(GLuint programma) {}
 	
@@ -50,6 +52,7 @@ private:
 
 	GLFWwindow 			*	_glfwScherm = nullptr;
 
-	std::map<std::string, GLuint>					_shaderProgrammas;
+	std::map<std::string, GLuint>					_shaderProgrammas,
+													_texturen;
 	static std::map<GLFWwindow *, RenderScherm*>	_schermen;
 };

@@ -8,6 +8,8 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "png.h"
+
 
 void glErrorToConsole(const std::string & huidigeActie = "");
 
@@ -20,3 +22,5 @@ GLuint 		createtesselationshader(	const std::string &  vertshaderfilename, 	cons
 //willekeurig is een beetje te lang
 		glm::vec3	randomVec3();
 inline 	glm::vec3	randomVec3Z() { return glm::vec3(-1.0f) + (2.0f * randomVec3()); }
+
+png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
