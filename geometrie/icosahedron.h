@@ -26,7 +26,7 @@ public:
 private:
 	void genereer(bool PrettyIcoInsteadOfJensens = true);
 
-	ArrayOfStructOfArrays			* _icoArray  = nullptr;
+	RenderBuffers			* _icoArray  = nullptr;
 	RenderSubBuffer<float>			* _icoPunten = nullptr;
 	std::vector<glm::uint32>	  	  _icoDriehk;
 };

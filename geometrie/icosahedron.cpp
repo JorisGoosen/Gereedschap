@@ -70,8 +70,8 @@ void Icosahedron::tekenJezelfPatchy() const
 
 Icosahedron::Icosahedron()
 {
-	_icoArray  	= new ArrayOfStructOfArrays(		ICOSAHEDRON_PUNTEN * 4);
-	_icoPunten	= new RenderSubBuffer<float>(	3, 	ICOSAHEDRON_PUNTEN * 4, 	_icoArray, 0);
+	_icoArray  	= new RenderBuffers(		ICOSAHEDRON_PUNTEN);
+	_icoPunten	= new RenderSubBuffer<float>(	3, 	ICOSAHEDRON_PUNTEN, 	_icoArray, 0);
 
 	glErrorToConsole("Icosahedron::Icosahedron(): ");
 

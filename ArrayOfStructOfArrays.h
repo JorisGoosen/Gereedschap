@@ -5,13 +5,13 @@
 #include <algorithm>
 
 //GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, and GL_UNSIGNED_INT
-template <typename FT>	inline GLenum GetGLType() 				{ return GL_FLOAT; }
-template <> 			inline GLenum GetGLType<char>() 		{ return GL_BYTE; }
-template <> 			inline GLenum GetGLType<uint8_t>() 		{ return GL_UNSIGNED_BYTE; }
-template <> 			inline GLenum GetGLType<short>() 		{ return GL_SHORT; }
+template <typename FT>	inline GLenum GetGLType() 				{ return GL_FLOAT; 			}
+template <> 			inline GLenum GetGLType<char>() 		{ return GL_BYTE; 			}
+template <> 			inline GLenum GetGLType<uint8_t>() 		{ return GL_UNSIGNED_BYTE; 	}
+template <> 			inline GLenum GetGLType<short>() 		{ return GL_SHORT; 			}
 template <> 			inline GLenum GetGLType<uint16_t>() 	{ return GL_UNSIGNED_SHORT; }
-template <> 			inline GLenum GetGLType<int32_t>() 		{ return GL_INT; }
-template <> 			inline GLenum GetGLType<uint32_t>() 	{ return GL_UNSIGNED_INT; }
+template <> 			inline GLenum GetGLType<int32_t>() 		{ return GL_INT; 			}
+template <> 			inline GLenum GetGLType<uint32_t>() 	{ return GL_UNSIGNED_INT; 	}
 
 template <typename FT>	inline uint32_t GetGLBytes()			{ return 4; }
 template <> 			inline uint32_t GetGLBytes<char>() 		{ return 1; }
@@ -32,10 +32,10 @@ struct StructOfArrays
 	GLuint ArrayBuffer, VertexAttribLocation, NumFields;
 };
 
-class ArrayOfStructOfArrays
+class RenderBuffers
 {
 public:
-	ArrayOfStructOfArrays(int BUFSIZE = 0) : MIJNBUFSIZE(BUFSIZE) 
+	RenderBuffers(int BUFSIZE = 0) : MIJNBUFSIZE(BUFSIZE) 
 	{
 		glCreateVertexArrays(1, &VertexArray);
 		glErrorToConsole("glCreateVertexArrays: ");
@@ -91,7 +91,7 @@ public:
 	void BindVertexArray()
 	{
 		glBindVertexArray(VertexArray);
-		glErrorToConsole("ArrayOfStructOfArrays::BindVertexArray(): ");
+		glErrorToConsole("RenderBuffers::BindVertexArray(): ");
 	}
 	
 	const int MIJNBUFSIZE;

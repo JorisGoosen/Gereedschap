@@ -15,7 +15,7 @@ class RenderSubBuffer
 	typedef glm::vec<4, T, glm::defaultp> glmvec4;
 
 public:
-				RenderSubBuffer(int NumFields, int Size, ArrayOfStructOfArrays *DeAOSOA, int AOSOAIndex);
+				RenderSubBuffer(int NumFields, int Size, RenderBuffers *DeAOSOA, int AOSOAIndex);
 				~RenderSubBuffer();
 	
 	int			AddDataPoint(T Val);
@@ -48,11 +48,11 @@ private:
 			EersteVrijPointer = 0, 
 			MijnAOSOAIndex;
 	
-	ArrayOfStructOfArrays 	*AOSOA = nullptr;
+	RenderBuffers 	*AOSOA = nullptr;
 };
 
 
-template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, int Size, ArrayOfStructOfArrays *DeAOSOA, int AOSOAIndex)
+template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, int Size, RenderBuffers *DeAOSOA, int AOSOAIndex)
 {
 	MijnNumFields	= NumFields;
 	MijnLengte		= Size;
