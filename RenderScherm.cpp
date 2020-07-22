@@ -5,13 +5,16 @@ using namespace glm;
 
 std::map<GLFWwindow *, RenderScherm*>	RenderScherm::_schermen;
 
-RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H) 
+RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples) 
 : _aspectRatio(float(W) / float(H)), _naam(Naam)
 {
 	std::cout << "RenderScherm " << _naam << " created!" << std::endl;
 
     if (_schermen.size() == 0 && !glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
+
+	if(samples > 1)
+		glfwWindowHint(GLFW_SAMPLES, samples);
         
     _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), nullptr, nullptr);
 
@@ -21,7 +24,6 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H)
         throw std::runtime_error("Failed to create window!");
     }
 
-	
 
     glfwMakeContextCurrent(_glfwScherm);
 
@@ -41,6 +43,9 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H)
 	glfwSwapInterval(1);
 
 	glfwSetKeyCallback(_glfwScherm, toetsVerwerker);
+
+	if(samples > 1)
+		glEnable(GL_MULTISAMPLE); 
 }
 
 void RenderScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)

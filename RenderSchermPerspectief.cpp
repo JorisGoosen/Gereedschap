@@ -4,8 +4,8 @@
 using namespace glm;
 
 
-RenderSchermPerspectief::RenderSchermPerspectief(std::string Naam, size_t W, size_t H) 
-: RenderScherm(Naam, W, H)
+RenderSchermPerspectief::RenderSchermPerspectief(std::string Naam, size_t W, size_t H, size_t samples) 
+: RenderScherm(Naam, W, H, samples)
 {
 	RecalculateProjection();
 }

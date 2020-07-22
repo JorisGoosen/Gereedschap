@@ -19,7 +19,7 @@ const float 		FPI = 3.141592653589793238f;
 class RenderScherm
 {
 public:
-				RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720);
+				RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
 				~RenderScherm();
 
 	void		bereidRenderVoor(const std::string & shader = "");
