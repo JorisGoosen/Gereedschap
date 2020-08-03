@@ -97,22 +97,22 @@ void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
 
 	return;
 #else
-	float t = (1.0 + sqrtf(5.0)) / 2.0;
+	float tao = 1.61803399;
 	
-	_icoPunten->AddDataPoint( vec3(	  -t,	 1.0f,	 0.0f) );
-	_icoPunten->AddDataPoint( vec3(	   t,	 1.0f,	 0.0f) );
-	_icoPunten->AddDataPoint( vec3(	  -t,	-1.0f,	 0.0f) );
-	_icoPunten->AddDataPoint( vec3(	   t,	-1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	  -tao,	 1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	   tao,	 1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	  -tao,	-1.0f,	 0.0f) );
+	_icoPunten->AddDataPoint( vec3(	   tao,	-1.0f,	 0.0f) );
 
-	_icoPunten->AddDataPoint( vec3(	0.0f,	   -t,	 1.0f) );
-	_icoPunten->AddDataPoint( vec3(	0.0f,	    t,	 1.0f) );
-	_icoPunten->AddDataPoint( vec3(	0.0f,	   -t,	-1.0f) );
-	_icoPunten->AddDataPoint( vec3(	0.0f,	    t,	-1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	   -tao,	 1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	    tao,	 1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	   -tao,	-1.0f) );
+	_icoPunten->AddDataPoint( vec3(	0.0f,	    tao,	-1.0f) );
 
-	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	   -t) );
-	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	    t) );
-	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	   -t) );
-	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	    t) );
+	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	   -tao) );
+	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	    tao) );
+	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	   -tao) );
+	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	    tao) );
 
 	_icoPunten->Flush();
 
