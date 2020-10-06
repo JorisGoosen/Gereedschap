@@ -15,7 +15,7 @@ class RenderSubBuffer
 	typedef glm::vec<4, T, glm::defaultp> glmvec4;
 
 public:
-				RenderSubBuffer(int NumFields, int Size, RenderBuffers *DeAOSOA, int AOSOAIndex);
+				RenderSubBuffer(int NumFields, RenderBuffers *DeAOSOA, int AOSOAIndex);
 				~RenderSubBuffer();
 	
 	int			AddDataPoint(T Val);
@@ -34,29 +34,23 @@ public:
 	glmvec4		GetDataPoint4(int PointIndex) const;	
 	
 	T 		*	GetData()						{ return Data; }
-	void		Flush()	 						{ Flush(GetPointIndex()); }
-	void		Flush(int ZoveelDataPunten)		{ AOSOA->BindNewData(MijnAOSOAIndex, Data, ZoveelDataPunten); }
+	void		Flush()							{ AOSOA->BindNewData(MijnAOSOAIndex, Data); }
 	
-	int			GetPointIndex()	{ return EersteVrijPointer / MijnNumFields; }
 	T*			GetDataPointer(int PointIndex) { return &(Data[PointIndex * MijnNumFields]); }
 
 
 private:
-	T	* 	Data = nullptr;
-	int		MijnNumFields, 
-			MijnLengte, 
-			EersteVrijPointer = 0, 
-			MijnAOSOAIndex;
+	std::vector<T> 		Data;
+	int					MijnNumFields, 
+						MijnAOSOAIndex;
 	
-	RenderBuffers 	*AOSOA = nullptr;
+	RenderBuffers 	*	AOSOA = nullptr;
 };
 
 
-template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, int Size, RenderBuffers *DeAOSOA, int AOSOAIndex)
+template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, RenderBuffers *DeAOSOA, int AOSOAIndex)
 {
 	MijnNumFields	= NumFields;
-	MijnLengte		= Size;
-	Data			= new T[MijnLengte * MijnNumFields]();
 	AOSOA			= DeAOSOA;
 	MijnAOSOAIndex	= AOSOAIndex;
 	
@@ -76,9 +70,9 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(T Val)
 	if(MijnNumFields != 1)
 		throw std::invalid_argument("Trying to add single float to RenderSubBuffer but NumFields is WRONG");
 	
-	Data[EersteVrijPointer++] = Val;
+	Data.push_back(Val);
 	
-	return (EersteVrijPointer - MijnNumFields) / MijnNumFields;
+	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
 template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec2 Val)
@@ -86,10 +80,10 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec2 Val)
 	if(MijnNumFields != 2)
 		throw std::invalid_argument("Trying to add single glmvec2 to RenderSubBuffer but NumFields is WRONG");
 		
-	Data[EersteVrijPointer++] = Val.x;
-	Data[EersteVrijPointer++] = Val.y;
+	Data.push_back(Val.x);
+	Data.push_back(Val.y);
 	
-	return (EersteVrijPointer - MijnNumFields) / MijnNumFields;
+	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
 template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec3 Val)
@@ -97,11 +91,11 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec3 Val)
 	if(MijnNumFields != 3)
 		throw std::invalid_argument("Trying to add single glmvec3 to RenderSubBuffer but NumFields is WRONG");
 		
-	Data[EersteVrijPointer++] = Val.x;
-	Data[EersteVrijPointer++] = Val.y;
-	Data[EersteVrijPointer++] = Val.z;
+	Data.push_back(Val.x);
+	Data.push_back(Val.y);
+	Data.push_back(Val.z);
 	
-	return (EersteVrijPointer - MijnNumFields) / MijnNumFields;
+	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
 template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec4 Val)
@@ -109,12 +103,12 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec4 Val)
 	if(MijnNumFields != 4)
 		throw std::invalid_argument("Trying to add single glmvec4 to RenderSubBuffer but NumFields is WRONG");
 		
-	Data[EersteVrijPointer++] = Val.x;
-	Data[EersteVrijPointer++] = Val.y;
-	Data[EersteVrijPointer++] = Val.z;
-	Data[EersteVrijPointer++] = Val.w;
+	Data.push_back(Val.x);
+	Data.push_back(Val.y);
+	Data.push_back(Val.z);
+	Data.push_back(Val.w);
 	
-	return (EersteVrijPointer - MijnNumFields) / MijnNumFields;
+	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
 

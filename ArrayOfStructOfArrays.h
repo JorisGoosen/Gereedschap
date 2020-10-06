@@ -35,21 +35,22 @@ struct StructOfArrays
 class RenderBuffers
 {
 public:
-	RenderBuffers(int BUFSIZE = 0) : MIJNBUFSIZE(BUFSIZE) 
+	RenderBuffers()
 	{
 		glCreateVertexArrays(1, &VertexArray);
 		glErrorToConsole("glCreateVertexArrays: ");
 		//printf("VertexArray: %d\n", VertexArray);
 	}
 	
-	template <typename TypeOfField> int AddBufferType(int NumFields, TypeOfField * Data, GLuint VertexAttribLocation, bool Normalize = false)
+	template <typename TypeOfField> int AddBufferType(int NumFields, std::vector<TypeOfField> & Data, GLuint VertexAttribLocation, bool Normalize = false)
 	{
 		BindVertexArray();
 		
 		GLuint ArrayBuffer;
 		glCreateBuffers(1, &ArrayBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, ArrayBuffer);
-		glBufferData(GL_ARRAY_BUFFER, MIJNBUFSIZE * NumFields * GetGLBytes<TypeOfField>(), (void *)Data, GL_DYNAMIC_DRAW);
+		//I guess the whole 0 * NumFields etc can be removed here
+		glBufferData(GL_ARRAY_BUFFER, 0 * NumFields * GetGLBytes<TypeOfField>(), (void *)Data.data(), GL_DYNAMIC_DRAW);
 		glErrorToConsole("glBufferData: ");
 		//printf("BufferData toegewezen\n");
 		
@@ -68,19 +69,15 @@ public:
 		return SOAs.size() - 1;
 	}
 	
-	template <typename TypeOfField> void BindNewData(int SOA, TypeOfField * Data, int Size = -1, bool Normalize = false)
+	template <typename TypeOfField> void BindNewData(int SOA, std::vector<TypeOfField> & Data, bool Normalize = false)
 	{
-		if(Size < 0 || Size > MIJNBUFSIZE)
-			Size = MIJNBUFSIZE;
-		
 		BindVertexArray();
 		glErrorToConsole("BindNewData BindVertexArray: ");
 		
 		glBindBuffer(GL_ARRAY_BUFFER, SOAs[SOA].ArrayBuffer);
 		glErrorToConsole("BindNewData glBindBuffer: ");
 		
-		
-		glBufferData(GL_ARRAY_BUFFER, Size * SOAs[SOA].NumFields * GetGLBytes<TypeOfField>(), (void *)Data, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, Data.size() * GetGLBytes<TypeOfField>(), (void *)Data.data(), GL_DYNAMIC_DRAW);
 		glEnableVertexAttribArray(SOAs[SOA].VertexAttribLocation);
 		glVertexAttribPointer(SOAs[SOA].VertexAttribLocation, SOAs[SOA].NumFields, GetGLType<TypeOfField>(), Normalize, 0, 0);
 		glErrorToConsole("BindNewData glBufferData: ");
@@ -93,8 +90,6 @@ public:
 		glBindVertexArray(VertexArray);
 		glErrorToConsole("RenderBuffers::BindVertexArray(): ");
 	}
-	
-	const int MIJNBUFSIZE;
 	
 private:
 	std::vector<StructOfArrays> SOAs;
