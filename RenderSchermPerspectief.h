@@ -26,4 +26,5 @@ private:
 		
 	glm::mat4	_projection			= glm::mat4(1.0f), 
 				_modelView			= glm::mat4(1.0f);
+
 };

@@ -3,6 +3,8 @@
 
 using namespace glm;
 
+RenderScherm::keyHandlerFunc RenderScherm::_customHandler = nullptr;
+
 std::map<GLFWwindow *, RenderScherm*>	RenderScherm::_schermen;
 
 RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples) 
@@ -50,6 +52,9 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples)
 
 void RenderScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)
 {
+	if(_customHandler)
+		_customHandler(key, scancode, action, mods);
+
 	if(_schermen.count(scherm) > 0)
 		_schermen[scherm]->keyHandler(key, scancode, action, mods);
 }

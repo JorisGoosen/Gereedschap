@@ -20,8 +20,11 @@ class Icosahedron
 public:
 	Icosahedron();
 
-	void tekenJezelf() const;
-	void tekenJezelfPatchy() const;
+	///Teken jezelf met driehoeken
+	void tekenJezelf() 			const; 
+
+	///Teken jezelf met patches, tbv vlakverdeling
+	void tekenJezelfPatchy() 	const;
 	
 private:
 	void genereer(bool PrettyIcoInsteadOfJensens = true);

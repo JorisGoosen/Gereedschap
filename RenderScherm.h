@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
+#include <algorithm>
 
 #include "RenderSubBuffer.h"	
 
@@ -16,9 +17,13 @@
 const long double 	PI  = 3.141592653589793238L;
 const float 		FPI = 3.141592653589793238f;
 
+
+
 class RenderScherm
 {
 public:
+	typedef std::function<void(int key, int scancode, int action, int mods)> keyHandlerFunc;
+
 				RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
 				~RenderScherm();
 
@@ -28,7 +33,8 @@ public:
 	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
 	static 	void toetsVerwerker(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
-	virtual void keyHandler(						int key, int scancode, int action, int mods);
+	virtual void keyHandler(							int key, int scancode, int action, int mods);
+	static	void setCustomKeyhandler(keyHandlerFunc customHandler) { _customHandler = customHandler; }
 
 	GLuint 		maakVlakVerdelingsShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  vlakEvaluatieBestand, const std::string &  vlakControleBestand = "");
 	GLuint 		maakGeometrieShader(		const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
@@ -55,4 +61,6 @@ private:
 	std::map<std::string, GLuint>					_shaderProgrammas,
 													_texturen;
 	static std::map<GLFWwindow *, RenderScherm*>	_schermen;
+
+	static keyHandlerFunc _customHandler;
 };
