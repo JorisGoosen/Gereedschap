@@ -2,3 +2,4 @@
 *.so
 vgcore.*
 bin/*
+libgereedschap.a
