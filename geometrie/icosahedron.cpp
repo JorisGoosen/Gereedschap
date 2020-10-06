@@ -4,12 +4,12 @@
 
 using namespace glm;
 
-bool Lijn::heeftPunt(int p) const	
+bool lijn::heeftPunt(int p) const	
 {
 	return a == p || b == p; 
 }
 
-bool Lijn::vormtDriehoek(const Lijn & deEen, const Lijn & deAnder) const 
+bool lijn::vormtDriehoek(const lijn & deEen, const lijn & deAnder) const 
 {
 	if(this->operator==(deEen) || this->operator==(deAnder) || deEen == deAnder)
 		return false;
@@ -19,7 +19,7 @@ bool Lijn::vormtDriehoek(const Lijn & deEen, const Lijn & deAnder) const
 	return setje.size() == 3;
 }
  
-glm::ivec3 Lijn::geefDriehoek(const Lijn & deEen, const Lijn & deAnder) const
+glm::ivec3 lijn::geefDriehoek(const lijn & deEen, const lijn & deAnder) const
 {
 	if(!vormtDriehoek(deEen, deAnder))
 		return {0, 0, 0};
@@ -30,7 +30,7 @@ glm::ivec3 Lijn::geefDriehoek(const Lijn & deEen, const Lijn & deAnder) const
 	return { vecje[0], vecje[1], vecje[2] };
 }
 	
-glm::ivec3 	Lijn::geefGeorienteerdeDriehoek(const Lijn & deEen, const Lijn & deAnder, const RenderSubBuffer<float> * punten) const
+glm::ivec3 	lijn::geefGeorienteerdeDriehoek(const lijn & deEen, const lijn & deAnder, const wrgvOnderOpslag<float> * punten) const
 {
 	glm::ivec3 vecje(geefDriehoek(deEen, deAnder));
 
@@ -51,70 +51,70 @@ glm::ivec3 	Lijn::geefGeorienteerdeDriehoek(const Lijn & deEen, const Lijn & deA
 	return vecje;
 }
 
-void Icosahedron::tekenJezelf() const
+void icosahedron::tekenJezelf() const
 {
-	_icoArray->BindVertexArray();	
-	glDrawElements(GL_TRIANGLES, _icoDriehk.size(), GL_UNSIGNED_INT, _icoDriehk.data());
-	glErrorToConsole("Icosahedron::tekenJezelf(): ");
+	_reeks->BindVertexArray();	
+	glDrawElements(GL_TRIANGLES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
+	glErrorToConsole("icosahedron::tekenJezelf(): ");
 }
 
-void Icosahedron::tekenJezelfPatchy() const
+void icosahedron::tekenJezelfPatchy() const
 {
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
-	_icoArray->BindVertexArray();	
-	glDrawElements(GL_PATCHES, _icoDriehk.size(), GL_UNSIGNED_INT, _icoDriehk.data());
-	glErrorToConsole("Icosahedron::tekenJezelfPatchy(): ");
+	_reeks->BindVertexArray();	
+	glDrawElements(GL_PATCHES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
+	glErrorToConsole("icosahedron::tekenJezelfPatchy(): ");
 }
 
 
 
-Icosahedron::Icosahedron()
+icosahedron::icosahedron()
 {
-	_icoArray  	= new RenderBuffers			();
-	_icoPunten	= new RenderSubBuffer<float>(	3, _icoArray, 0);
+	_reeks  	= new wrgvOpslag			();
+	_punten	= new wrgvOnderOpslag<float>(	3, _reeks, 0);
 
-	glErrorToConsole("Icosahedron::Icosahedron(): ");
+	glErrorToConsole("icosahedron::icosahedron(): ");
 
 	genereer();
 }
 
 //#define DEBUGTRIANGLE
 
-void Icosahedron::genereer()
+void icosahedron::genereer()
 {
 #ifdef DEBUGTRIANGLE
-	_icoPunten->AddDataPoint( vec3(-1.0f, 0.0f, 0.0f));
-	_icoPunten->AddDataPoint( vec3( 1.0f, 0.0f, 0.0f));
-	_icoPunten->AddDataPoint( vec3( 0.0f, 1.0f, 0.0f));
+	_punten->AddDataPoint( vec3(-1.0f, 0.0f, 0.0f));
+	_punten->AddDataPoint( vec3( 1.0f, 0.0f, 0.0f));
+	_punten->AddDataPoint( vec3( 0.0f, 1.0f, 0.0f));
 
-	_icoPunten->Flush();
+	_punten->Flush();
 	
-	_icoDriehk.push_back(0);
-	_icoDriehk.push_back(1);
-	_icoDriehk.push_back(2);
+	_drieHk.push_back(0);
+	_drieHk.push_back(1);
+	_drieHk.push_back(2);
 
-	glErrorToConsole("Icosahedron::genereer: ");
+	glErrorToConsole("icosahedron::genereer: ");
 
 	return;
 #else
 	float tao = 1.61803399;
 	
-	_icoPunten->AddDataPoint( glm::normalize( vec3( -tao,	 1.0f,	 0.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(  tao,	 1.0f,	 0.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3( -tao,	-1.0f,	 0.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(  tao,	-1.0f,	 0.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	 1.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	 1.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	-1.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	-1.0f ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	-tao  ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	 tao  ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	-tao  ) ) );
-	_icoPunten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	 tao  ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3( -tao,	 1.0f,	 0.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(  tao,	 1.0f,	 0.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3( -tao,	-1.0f,	 0.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(  tao,	-1.0f,	 0.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	 1.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	 1.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	-1.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	-1.0f ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	-tao  ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	 tao  ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	-tao  ) ) );
+	_punten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	 tao  ) ) );
 
-	_icoPunten->Flush();
+	_punten->Flush();
 
-	std::array<Lijn, ICOSAHEDRON_LIJNEN> _lijnen;
+	std::array<lijn, ICOSAHEDRON_LIJNEN> _lijnen;
 	
 	_lijnen[29].a= 0;	_lijnen[29].b = 2;
 	_lijnen[28].a= 1;	_lijnen[28].b = 3;
@@ -153,12 +153,12 @@ void Icosahedron::genereer()
 			for(size_t c=b+1; c<_lijnen.size(); c++)
 				if(_lijnen[a].vormtDriehoek(_lijnen[b], _lijnen[c]))
 				{
-					glm::ivec3 driehoek = _lijnen[a].geefGeorienteerdeDriehoek(_lijnen[b], _lijnen[c], _icoPunten);
-					_icoDriehk.push_back(driehoek.x);
-					_icoDriehk.push_back(driehoek.y);
-					_icoDriehk.push_back(driehoek.z);
+					glm::ivec3 driehoek = _lijnen[a].geefGeorienteerdeDriehoek(_lijnen[b], _lijnen[c], _punten);
+					_drieHk.push_back(driehoek.x);
+					_drieHk.push_back(driehoek.y);
+					_drieHk.push_back(driehoek.z);
 				}
 
-	//std::cout << "Verwerken van icosahedron resulteerde in " << _icoDriehk.size() / 3 << " driehoeken en werden er " << ICOSAHEDRON_VLAKKEN << " verwacht!" << std::endl;
+	//std::cout << "Verwerken van icosahedron resulteerde in " << _drieHk.size() / 3 << " driehoeken en werden er " << ICOSAHEDRON_VLAKKEN << " verwacht!" << std::endl;
 	#endif
 }

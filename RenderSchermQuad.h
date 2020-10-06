@@ -15,7 +15,7 @@ public:
 private:
 	void		initQuad();
 	
-	RenderBuffers 	*_quadArray		= nullptr;
-	RenderSubBuffer<float>	*_quadPos		= nullptr,
+	wrgvOpslag 	*_quadArray		= nullptr;
+	wrgvOnderOpslag<float>	*_quadPos		= nullptr,
 							*_quadTex		= nullptr;
 };

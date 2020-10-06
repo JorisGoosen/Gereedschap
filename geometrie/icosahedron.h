@@ -1,24 +1,24 @@
-#include "../RenderSubBuffer.h"
+#include "../wrgvOnderOpslag.h"
 
 #define ICOSAHEDRON_PUNTEN  12
 #define ICOSAHEDRON_LIJNEN  30
 #define ICOSAHEDRON_VLAKKEN 20
 
-struct Lijn
+struct lijn
 {
 	unsigned int a, b;
 
-	bool		operator==(const Lijn & ander) const { return (a == ander.a && b == ander.b) || (a == ander.b && b == ander.a); }
+	bool		operator==(const lijn & ander) const { return (a == ander.a && b == ander.b) || (a == ander.b && b == ander.a); }
 	bool 		heeftPunt(int p) 																								const;
-	bool 		vormtDriehoek(				const Lijn & deEen, const Lijn & deAnder) 											const;
-	glm::ivec3	geefDriehoek(				const Lijn & deEen, const Lijn & deAnder) 											const;
-	glm::ivec3 	geefGeorienteerdeDriehoek(	const Lijn & deEen, const Lijn & deAnder, const RenderSubBuffer<float> * punten)	const;
+	bool 		vormtDriehoek(				const lijn & deEen, const lijn & deAnder) 											const;
+	glm::ivec3	geefDriehoek(				const lijn & deEen, const lijn & deAnder) 											const;
+	glm::ivec3 	geefGeorienteerdeDriehoek(	const lijn & deEen, const lijn & deAnder, const wrgvOnderOpslag<float> * punten)	const;
 };
 
-class Icosahedron
+class icosahedron
 {
 public:
-	Icosahedron();
+	icosahedron();
 
 	///Teken jezelf met driehoeken
 	virtual void tekenJezelf() 			const; 
@@ -29,7 +29,7 @@ public:
 protected:
 	void genereer();
 
-	RenderBuffers					* _icoArray  = nullptr;
-	RenderSubBuffer<float>			* _icoPunten = nullptr;
-	std::vector<glm::uint32>	  	  _icoDriehk;
+	wrgvOpslag						* _reeks  = nullptr;
+	wrgvOnderOpslag<float>			* _punten = nullptr;
+	std::vector<glm::uint32>	  	  _drieHk;
 };

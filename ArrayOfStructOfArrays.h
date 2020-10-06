@@ -32,10 +32,10 @@ struct StructOfArrays
 	GLuint ArrayBuffer, VertexAttribLocation, NumFields;
 };
 
-class RenderBuffers
+class wrgvOpslag
 {
 public:
-	RenderBuffers()
+	wrgvOpslag()
 	{
 		glCreateVertexArrays(1, &VertexArray);
 		glErrorToConsole("glCreateVertexArrays: ");
@@ -88,7 +88,7 @@ public:
 	void BindVertexArray()
 	{
 		glBindVertexArray(VertexArray);
-		glErrorToConsole("RenderBuffers::BindVertexArray(): ");
+		glErrorToConsole("wrgvOpslag::BindVertexArray(): ");
 	}
 	
 private:

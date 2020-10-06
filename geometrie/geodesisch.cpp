@@ -1,23 +1,23 @@
 #include "geodesisch.h"
-#include <stdexcept>
-#include <map>
-#include <iostream>
+
 
 
 using namespace glm;
 
-Geodesisch::Geodesisch(size_t onderverdelingen) : Icosahedron(), _onderverdelingen(onderverdelingen)
+Geodesisch::Geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdelingen(onderverdelingen)
 {
-	// Icosahedron::genereer() wordt aangeroepen in Ico-constr
-	//Nu hebben we in _icoPunten _icoDriehk alles wat we nodig hebben
+	// icosahedron::genereer() wordt aangeroepen in Ico-constr
+	//Nu hebben we in _punten _drieHk alles wat we nodig hebben
 	//Dan moeten we alleen nog alle driehoeken verder onderverdelen
 	verdeelEnHeers();
 
 	//Daarna maken we een lijst van al deze driehoeken
 	//Via deze lijst kunnen we per punt de buren bepalen, waarbij er 12 5 buren (de originele) hebben en de rest 6,
+	maakLijstBuren();
 	
 	//Ook moet ieder punt een lijstje meekrijgen met de buren waar ie bij hoort (dit is ook erg handig voor het tekenen van genoemde polygoon)
 	//Alsin, dat ze naast een coordinaat nog 5 of 6 indices als vertex attribuut heeft
+
 	
 	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
 	
@@ -32,8 +32,8 @@ void Geodesisch::verdeelEnHeers()
 	for(size_t onderverdeling=0; onderverdeling<_onderverdelingen; onderverdeling++)
 	{
 
-		std::vector<glm::uint32> drieHk = _icoDriehk;
-		_icoDriehk.clear();
+		std::vector<glm::uint32> drieHk = _drieHk;
+		_drieHk.clear();
 
 		if(drieHk.size() % 3 != 0)
 			throw std::runtime_error("Driehoeken waren niet, nou, 3 hoeken... De grootte van de lijst was: " + std::to_string(drieHk.size()));
@@ -49,11 +49,11 @@ void Geodesisch::verdeelEnHeers()
 				return kindjes[a][b];
 
 			//Ok er was nog geen kind hier, laten we er ffkes eentje interpoleren op een bal
-			glm::vec3 	A = _icoPunten->GetDataPoint3(a),
-						B = _icoPunten->GetDataPoint3(b),
+			glm::vec3 	A = _punten->GetDataPoint3(a),
+						B = _punten->GetDataPoint3(b),
 						C = glm::normalize((A + B));
 
-			size_t  c = _icoPunten->AddDataPoint(C);
+			size_t  c = _punten->AddDataPoint(C);
 
 			kindjes[a][b] = c;
 
@@ -69,27 +69,55 @@ void Geodesisch::verdeelEnHeers()
 					v12 = vindKind(v1, v2),
 					v20 = vindKind(v2, v0);
 
-			_icoDriehk.push_back(v0 );
-			_icoDriehk.push_back(v01);
-			_icoDriehk.push_back(v20);
+			_drieHk.push_back(v0 );
+			_drieHk.push_back(v01);
+			_drieHk.push_back(v20);
 
-			_icoDriehk.push_back(v1 );
-			_icoDriehk.push_back(v12);
-			_icoDriehk.push_back(v01);
+			_drieHk.push_back(v1 );
+			_drieHk.push_back(v12);
+			_drieHk.push_back(v01);
 
-			_icoDriehk.push_back(v2 );
-			_icoDriehk.push_back(v20);
-			_icoDriehk.push_back(v12);
+			_drieHk.push_back(v2 );
+			_drieHk.push_back(v20);
+			_drieHk.push_back(v12);
 
-			_icoDriehk.push_back(v01);
-			_icoDriehk.push_back(v12);
-			_icoDriehk.push_back(v20);
+			_drieHk.push_back(v01);
+			_drieHk.push_back(v12);
+			_drieHk.push_back(v20);
 		}
 	}
 
 	
 
-	_icoPunten->Flush();
+	_punten->Flush();
 
-	std::cout << "Na het verdelen en heersen blijken er #" << _icoPunten->Aantal() << " punten te zijn!" << std::endl;
+	std::cout << "Na het verdelen en heersen blijken er #" << _punten->Aantal() << " punten te zijn!" << std::endl;
 }
+
+void Geodesisch::maakLijstBuren()
+{
+	for(size_t i=0; i<_drieHk.size(); i+=3)
+	{
+		size_t 	v0	= _drieHk[ i   ],
+				v1	= _drieHk[ i+1 ],
+				v2	= _drieHk[ i+2 ];
+
+		_buren[ v0 ].insert( v1 );
+		_buren[ v0 ].insert( v2 );
+
+		_buren[ v1 ].insert( v0 );
+		_buren[ v1 ].insert( v2 );
+
+		_buren[ v2 ].insert( v0 );
+		_buren[ v2 ].insert( v1 );				
+	}
+
+	
+}
+
+
+
+
+
+
+

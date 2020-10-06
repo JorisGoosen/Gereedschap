@@ -32,15 +32,15 @@ void RenderSchermQuad::initQuad()
 
 	const int QuadArraySize = 32;
 	//if(!SchrijfBeeldenWeg)	printf("InitQuad Gestart!\n");
-	_quadArray = new RenderBuffers();
+	_quadArray = new wrgvOpslag();
 	
-	_quadPos = new RenderSubBuffer<float>(2, _quadArray, 0);
+	_quadPos = new wrgvOnderOpslag<float>(2, _quadArray, 0);
 	_quadPos->AddDataPoint(vec2(-1.0f, -1.0f));
 	_quadPos->AddDataPoint(vec2( 1.0f, -1.0f));
 	_quadPos->AddDataPoint(vec2( 1.0f,  1.0f));
 	_quadPos->AddDataPoint(vec2(-1.0f,  1.0f));
 	
-	_quadTex = new RenderSubBuffer<float>(2, _quadArray, 1);
+	_quadTex = new wrgvOnderOpslag<float>(2, _quadArray, 1);
 	_quadTex->AddDataPoint(vec2(-1.0f, -1.0f));
 	_quadTex->AddDataPoint(vec2( 1.0f, -1.0f));
 	_quadTex->AddDataPoint(vec2( 1.0f,  1.0f));

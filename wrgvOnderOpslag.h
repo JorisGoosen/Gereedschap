@@ -8,15 +8,15 @@
 
 
 template <class T>
-class RenderSubBuffer
+class wrgvOnderOpslag
 {
 public:
 	typedef glm::vec<2, T, glm::defaultp> glmvec2;
 	typedef glm::vec<3, T, glm::defaultp> glmvec3;
 	typedef glm::vec<4, T, glm::defaultp> glmvec4;
 
-				RenderSubBuffer(int NumFields, RenderBuffers *DeAOSOA, int AOSOAIndex);
-				~RenderSubBuffer();
+				wrgvOnderOpslag(int NumFields, wrgvOpslag *DeAOSOA, int AOSOAIndex);
+				~wrgvOnderOpslag();
 	
 	int			AddDataPoint(T Val);
 	int			AddDataPoint(glmvec2 Val);	
@@ -46,11 +46,11 @@ private:
 	int					MijnNumFields, 
 						MijnAOSOAIndex;
 	
-	RenderBuffers 	*	AOSOA = nullptr;
+	wrgvOpslag 	*	AOSOA = nullptr;
 };
 
 
-template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, RenderBuffers *DeAOSOA, int AOSOAIndex)
+template <class T> wrgvOnderOpslag<T>::wrgvOnderOpslag(int NumFields, wrgvOpslag *DeAOSOA, int AOSOAIndex)
 {
 	MijnNumFields	= NumFields;
 	AOSOA			= DeAOSOA;
@@ -59,25 +59,25 @@ template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, RenderBuff
 	AOSOA->AddBufferType(MijnNumFields, Data, MijnAOSOAIndex);
 }
 
-template <class T> RenderSubBuffer<T>::~RenderSubBuffer()
+template <class T> wrgvOnderOpslag<T>::~wrgvOnderOpslag()
 { 
 	Data.clear();
 }
 
-template <class T> int RenderSubBuffer<T>::AddDataPoint(T Val)
+template <class T> int wrgvOnderOpslag<T>::AddDataPoint(T Val)
 {
 	if(MijnNumFields != 1)
-		throw std::invalid_argument("Trying to add single float to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to add single float to wrgvOnderOpslag but NumFields is WRONG");
 	
 	Data.push_back(Val);
 	
 	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
-template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec2 Val)
+template <class T> int wrgvOnderOpslag<T>::AddDataPoint(glmvec2 Val)
 {
 	if(MijnNumFields != 2)
-		throw std::invalid_argument("Trying to add single glmvec2 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to add single glmvec2 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data.push_back(Val.x);
 	Data.push_back(Val.y);
@@ -85,10 +85,10 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec2 Val)
 	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
-template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec3 Val)
+template <class T> int wrgvOnderOpslag<T>::AddDataPoint(glmvec3 Val)
 {
 	if(MijnNumFields != 3)
-		throw std::invalid_argument("Trying to add single glmvec3 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to add single glmvec3 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data.push_back(Val.x);
 	Data.push_back(Val.y);
@@ -97,10 +97,10 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec3 Val)
 	return (Data.size() - MijnNumFields) / MijnNumFields;
 }
 
-template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec4 Val)
+template <class T> int wrgvOnderOpslag<T>::AddDataPoint(glmvec4 Val)
 {
 	if(MijnNumFields != 4)
-		throw std::invalid_argument("Trying to add single glmvec4 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to add single glmvec4 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data.push_back(Val.x);
 	Data.push_back(Val.y);
@@ -111,37 +111,37 @@ template <class T> int RenderSubBuffer<T>::AddDataPoint(glmvec4 Val)
 }
 
 
-template <class T> void RenderSubBuffer<T>::SetDataPoint(int PointIndex, T Val)
+template <class T> void wrgvOnderOpslag<T>::SetDataPoint(int PointIndex, T Val)
 {
 	if(MijnNumFields != 1)
-		throw std::invalid_argument("Trying to set single T to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to set single T to wrgvOnderOpslag but NumFields is WRONG");
 	
 	Data[PointIndex * MijnNumFields] = Val;
 }
 
-template <class T> void RenderSubBuffer<T>::SetDataPoint(int PointIndex, glmvec2 Val)
+template <class T> void wrgvOnderOpslag<T>::SetDataPoint(int PointIndex, glmvec2 Val)
 {
 	if(MijnNumFields != 2)
-		throw std::invalid_argument("Trying to set single glmvec2 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to set single glmvec2 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data[PointIndex * MijnNumFields + 0] = Val.x;
 	Data[PointIndex * MijnNumFields + 1] = Val.y;
 }
 
-template <class T> void RenderSubBuffer<T>::SetDataPoint(int PointIndex, glmvec3 Val)
+template <class T> void wrgvOnderOpslag<T>::SetDataPoint(int PointIndex, glmvec3 Val)
 {
 	if(MijnNumFields != 3)
-		throw std::invalid_argument("Trying to set single glmvec3 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to set single glmvec3 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data[PointIndex * MijnNumFields + 0] = Val.x;
 	Data[PointIndex * MijnNumFields + 1] = Val.y;
 	Data[PointIndex * MijnNumFields + 2] = Val.z;
 }
 
-template <class T> void RenderSubBuffer<T>::SetDataPoint(int PointIndex, glmvec4 Val)
+template <class T> void wrgvOnderOpslag<T>::SetDataPoint(int PointIndex, glmvec4 Val)
 {
 	if(MijnNumFields != 4)
-		throw std::invalid_argument("Trying to set single glmvec4 to RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to set single glmvec4 to wrgvOnderOpslag but NumFields is WRONG");
 		
 	Data[PointIndex * MijnNumFields + 0] = Val.x;
 	Data[PointIndex * MijnNumFields + 1] = Val.y;
@@ -149,34 +149,34 @@ template <class T> void RenderSubBuffer<T>::SetDataPoint(int PointIndex, glmvec4
 	Data[PointIndex * MijnNumFields + 3] = Val.w;
 }
 
-template <class T> T RenderSubBuffer<T>::GetDataPoint1(int PointIndex) const
+template <class T> T wrgvOnderOpslag<T>::GetDataPoint1(int PointIndex) const
 {
 	if(MijnNumFields != 1)
-		throw std::invalid_argument("Trying to get single float from RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to get single float from wrgvOnderOpslag but NumFields is WRONG");
 	
 	return Data[PointIndex * MijnNumFields];
 }
 
-template <class T> glm::vec<2, T, glm::defaultp> RenderSubBuffer<T>::GetDataPoint2(int PointIndex) const
+template <class T> glm::vec<2, T, glm::defaultp> wrgvOnderOpslag<T>::GetDataPoint2(int PointIndex) const
 {
 	if(MijnNumFields != 2)
-		throw std::invalid_argument("Trying to get single glmvec2 from RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to get single glmvec2 from wrgvOnderOpslag but NumFields is WRONG");
 		
 	return glmvec2(Data[PointIndex * MijnNumFields + 0], Data[PointIndex * MijnNumFields + 1]);
 }
 
-template <class T> glm::vec<3, T, glm::defaultp> RenderSubBuffer<T>::GetDataPoint3(int PointIndex) const
+template <class T> glm::vec<3, T, glm::defaultp> wrgvOnderOpslag<T>::GetDataPoint3(int PointIndex) const
 {
 	if(MijnNumFields != 3)
-		throw std::invalid_argument("Trying to get single glmvec3 from RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to get single glmvec3 from wrgvOnderOpslag but NumFields is WRONG");
 		
 	return glmvec3(Data[PointIndex * MijnNumFields + 0], Data[PointIndex * MijnNumFields + 1], Data[PointIndex * MijnNumFields + 2]);
 }
 
-template <class T> glm::vec<4, T, glm::defaultp> RenderSubBuffer<T>::GetDataPoint4(int PointIndex) const
+template <class T> glm::vec<4, T, glm::defaultp> wrgvOnderOpslag<T>::GetDataPoint4(int PointIndex) const
 {
 	if(MijnNumFields != 4)
-		throw std::invalid_argument("Trying to get single glmvec4 from RenderSubBuffer but NumFields is WRONG");
+		throw std::invalid_argument("Trying to get single glmvec4 from wrgvOnderOpslag but NumFields is WRONG");
 		
 	return glmvec4(Data[PointIndex * MijnNumFields + 0], Data[PointIndex * MijnNumFields + 1], Data[PointIndex * MijnNumFields + 2], Data[PointIndex * MijnNumFields + 3]);
 }

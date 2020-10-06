@@ -9,7 +9,7 @@ int main()
 
 	glClearColor(0,0,0,0);
 
-	Icosahedron ico;
+	icosahedron ico;
 
 	float rot = 0.0f;
 	while(!scherm.stopGewenst())
