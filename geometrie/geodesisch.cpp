@@ -1,4 +1,5 @@
 #include "geodesisch.h"
+#include <random>
 
 
 
@@ -17,7 +18,10 @@ Geodesisch::Geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdeling
 	
 	//Ook moet ieder punt een lijstje meekrijgen met de buren waar ie bij hoort (dit is ook erg handig voor het tekenen van genoemde polygoon)
 	//Alsin, dat ze naast een coordinaat nog 5 of 6 indices als vertex attribuut heeft
-
+	//Een vertex attrib pointer kan maar max 4 velden hebben (ivec4) maar das niet erg.
+	//Configuratie van [{{#buren, buur0, buur1, buur3}, {buur4, buur5, ( ? | buur6), ?}}, ...]
+	//Dus twee aparte attribpointers maar zelfde buffer met stride 4
+	burenAlsEigenschapWijzers();
 	
 	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
 	
@@ -49,11 +53,11 @@ void Geodesisch::verdeelEnHeers()
 				return kindjes[a][b];
 
 			//Ok er was nog geen kind hier, laten we er ffkes eentje interpoleren op een bal
-			glm::vec3 	A = _punten->GetDataPoint3(a),
-						B = _punten->GetDataPoint3(b),
+			glm::vec3 	A = _punten->ggvPunt3(a),
+						B = _punten->ggvPunt3(b),
 						C = glm::normalize((A + B));
 
-			size_t  c = _punten->AddDataPoint(C);
+			size_t  c = _punten->ggvPuntErbij(C);
 
 			kindjes[a][b] = c;
 
@@ -89,13 +93,15 @@ void Geodesisch::verdeelEnHeers()
 
 	
 
-	_punten->Flush();
+	_punten->spoel();
 
-	std::cout << "Na het verdelen en heersen blijken er #" << _punten->Aantal() << " punten te zijn!" << std::endl;
+	std::cout << "Na het verdelen en heersen blijken er #" << _punten->grootte() << " punten te zijn!" << std::endl;
 }
 
 void Geodesisch::maakLijstBuren()
 {
+	_buren.resize(_punten->grootte());
+
 	for(size_t i=0; i<_drieHk.size(); i+=3)
 	{
 		size_t 	v0	= _drieHk[ i   ],
@@ -110,9 +116,31 @@ void Geodesisch::maakLijstBuren()
 
 		_buren[ v2 ].insert( v0 );
 		_buren[ v2 ].insert( v1 );				
+	}	
+}
+
+void Geodesisch::burenAlsEigenschapWijzers()
+{
+	_eigenschappen.reserve(_buren.size() * 8); //De grootte is eigenlijk _buren.size() * 6 - 12 maar ik denk dat het beter is voor de gpu om ze allebei een vec4 te geven, anders accepteert ie misschien wel, maar...
+	
+	std::random_device willekeur;
+
+	for(const auto & buurt : _buren)
+	{
+		_eigenschappen.push_back(buurt.size());
+
+		for(const auto & buur : buurt)
+			_eigenschappen.push_back(buur);
+
+		if(buurt.size() == 5)
+			_eigenschappen.push_back(0);
+
+		//0 = aantal, 1...6	buren, dat laat 7 over voor:
+		_eigenschappen.push_back(willekeur()%1000);
+	
 	}
 
-	
+	_reeks->AddBufferType(4, _eigenschappen, { stapWijzer(1, 8, 0), stapWijzer(2, 8, 4) } );
 }
 
 

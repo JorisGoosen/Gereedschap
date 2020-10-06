@@ -34,9 +34,9 @@ glm::ivec3 	lijn::geefGeorienteerdeDriehoek(const lijn & deEen, const lijn & deA
 {
 	glm::ivec3 vecje(geefDriehoek(deEen, deAnder));
 
-	glm::vec3	a = punten->GetDataPoint3(vecje[0]), 
-				b = punten->GetDataPoint3(vecje[1]), 
-				c = punten->GetDataPoint3(vecje[2]);
+	glm::vec3	a = punten->ggvPunt3(vecje[0]), 
+				b = punten->ggvPunt3(vecje[1]), 
+				c = punten->ggvPunt3(vecje[2]);
 
 	// We weten dat het centrum van de bol op 0,0,0 is. Dus als de normaal enigzins dezelfde kant op wijst is het goed. en anders wisselen we twee punten om.
 	glm::vec3	been0 	= a - b,
@@ -83,11 +83,11 @@ icosahedron::icosahedron()
 void icosahedron::genereer()
 {
 #ifdef DEBUGTRIANGLE
-	_punten->AddDataPoint( vec3(-1.0f, 0.0f, 0.0f));
-	_punten->AddDataPoint( vec3( 1.0f, 0.0f, 0.0f));
-	_punten->AddDataPoint( vec3( 0.0f, 1.0f, 0.0f));
+	_punten->ggvPuntErbij( vec3(-1.0f, 0.0f, 0.0f));
+	_punten->ggvPuntErbij( vec3( 1.0f, 0.0f, 0.0f));
+	_punten->ggvPuntErbij( vec3( 0.0f, 1.0f, 0.0f));
 
-	_punten->Flush();
+	_punten->spoel();
 	
 	_drieHk.push_back(0);
 	_drieHk.push_back(1);
@@ -99,20 +99,20 @@ void icosahedron::genereer()
 #else
 	float tao = 1.61803399;
 	
-	_punten->AddDataPoint( glm::normalize( vec3( -tao,	 1.0f,	 0.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(  tao,	 1.0f,	 0.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3( -tao,	-1.0f,	 0.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(  tao,	-1.0f,	 0.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	 1.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	 1.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	-1.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	-1.0f ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	-tao  ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	 tao  ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	-tao  ) ) );
-	_punten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	 tao  ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3( -tao,	 1.0f,	 0.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(  tao,	 1.0f,	 0.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3( -tao,	-1.0f,	 0.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(  tao,	-1.0f,	 0.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 0.0f,	-tao,	 1.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 0.0f,	 tao,	 1.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 0.0f,	-tao,	-1.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 0.0f,	 tao,	-1.0f ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 1.0f,	 0.0f,	-tao  ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	 1.0f,	 0.0f,	 tao  ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	-1.0f,	 0.0f,	-tao  ) ) );
+	_punten->ggvPuntErbij( glm::normalize( vec3(	-1.0f,	 0.0f,	 tao  ) ) );
 
-	_punten->Flush();
+	_punten->spoel();
 
 	std::array<lijn, ICOSAHEDRON_LIJNEN> _lijnen;
 	
