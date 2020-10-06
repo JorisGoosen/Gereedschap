@@ -8,18 +8,29 @@ using namespace glm;
 
 Geodesisch::Geodesisch(size_t onderverdelingen) : Icosahedron(), _onderverdelingen(onderverdelingen)
 {
+	// Icosahedron::genereer() wordt aangeroepen in Ico-constr
+	//Nu hebben we in _icoPunten _icoDriehk alles wat we nodig hebben
+	//Dan moeten we alleen nog alle driehoeken verder onderverdelen
 	verdeelEnHeers();
+
+	//Daarna maken we een lijst van al deze driehoeken
+	//Via deze lijst kunnen we per punt de buren bepalen, waarbij er 12 5 buren (de originele) hebben en de rest 6,
+	
+	//Ook moet ieder punt een lijstje meekrijgen met de buren waar ie bij hoort (dit is ook erg handig voor het tekenen van genoemde polygoon)
+	//Alsin, dat ze naast een coordinaat nog 5 of 6 indices als vertex attribuut heeft
+	
+	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
+	
+	//Dan een geometrische shader maken die een polygoon tekent per punt
+
 }
 
 void Geodesisch::verdeelEnHeers() 
 {
-	std::cout << "Komen we uberhaupt toe aan het verdelen en heersen?" << std::endl;
-	//Nu hebben we dan dus in _icoPunten _icoDriehk wat we nodig hebben
-	//Dan moeten we alleen nog alle driehoeken verder onderverdelen
+	
 
 	for(size_t onderverdeling=0; onderverdeling<_onderverdelingen; onderverdeling++)
 	{
-		std::cout << "Onderverdeling #" << onderverdeling << ", oh yeah" << std::endl;
 
 		std::vector<glm::uint32> drieHk = _icoDriehk;
 		_icoDriehk.clear();
@@ -76,12 +87,7 @@ void Geodesisch::verdeelEnHeers()
 		}
 	}
 
-	//Daarna maken we een lijst van al deze driehoeken
-	//Via deze lijst kunnen we per punt de buren bepalen, waarbij er 12 5 buren (de originele) hebben en de rest 6,
-	//Dan een geometrische shader maken die een polygoon tekent per punt
-
-	//Ook moet ieder punt een lijstje krijgen met de buren waar ie bij hoort (dit is ook erg handig voor het tekenen van genoemde polygoon)
-	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
+	
 
 	_icoPunten->Flush();
 
