@@ -80,7 +80,7 @@ Icosahedron::Icosahedron()
 
 //#define DEBUGTRIANGLE
 
-void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
+void Icosahedron::genereer()
 {
 #ifdef DEBUGTRIANGLE
 	_icoPunten->AddDataPoint( vec3(-1.0f, 0.0f, 0.0f));
@@ -99,41 +99,29 @@ void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
 #else
 	float tao = 1.61803399;
 	
-	_icoPunten->AddDataPoint( vec3( -tao,	 1.0f,	 0.0f ) );
-	_icoPunten->AddDataPoint( vec3(  tao,	 1.0f,	 0.0f ) );
-	_icoPunten->AddDataPoint( vec3( -tao,	-1.0f,	 0.0f ) );
-	_icoPunten->AddDataPoint( vec3(  tao,	-1.0f,	 0.0f ) );
-
-	_icoPunten->AddDataPoint( vec3(	 0.0f,	-tao,	 1.0f ) );
-	_icoPunten->AddDataPoint( vec3(	 0.0f,	 tao,	 1.0f ) );
-	_icoPunten->AddDataPoint( vec3(	 0.0f,	-tao,	-1.0f ) );
-	_icoPunten->AddDataPoint( vec3(	 0.0f,	 tao,	-1.0f ) );
-
-	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	-tao  ) );
-	_icoPunten->AddDataPoint( vec3(	 1.0f,	 0.0f,	 tao  ) );
-	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	-tao  ) );
-	_icoPunten->AddDataPoint( vec3(	-1.0f,	 0.0f,	 tao  ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3( -tao,	 1.0f,	 0.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(  tao,	 1.0f,	 0.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3( -tao,	-1.0f,	 0.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(  tao,	-1.0f,	 0.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	 1.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	 1.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	-tao,	-1.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 0.0f,	 tao,	-1.0f ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	-tao  ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	 1.0f,	 0.0f,	 tao  ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	-tao  ) ) );
+	_icoPunten->AddDataPoint( glm::normalize( vec3(	-1.0f,	 0.0f,	 tao  ) ) );
 
 	_icoPunten->Flush();
 
 	std::array<Lijn, ICOSAHEDRON_LIJNEN> _lijnen;
-
-	if(PrettyIcoInsteadOfJensens) //Zet dit op false om een Jensen's icosahedron te krijgen (is wel lelijk though)
-	{
-		_lijnen[29].a= 0;	_lijnen[29].b = 2;
-		_lijnen[28].a= 1;	_lijnen[28].b = 3;
-		_lijnen[23].a= 8;	_lijnen[23].b = 10;
-		_lijnen[18].a= 9;	_lijnen[18].b = 11;
-		_lijnen[9].a = 4;	_lijnen[9].b  = 6;
-		_lijnen[0].a = 5;	_lijnen[0].b  = 7;
-	}else{
-		_lijnen[0].a  = 0;	_lijnen[0].b  = 1;
-		_lijnen[9].a  = 2;	_lijnen[9].b  = 3;
-		_lijnen[18].a = 4;	_lijnen[18].b = 5;
-		_lijnen[23].a = 6;	_lijnen[23].b = 7;
-		_lijnen[28].a = 8;	_lijnen[28].b = 9;
-		_lijnen[29].a = 10;	_lijnen[29].b = 11;
-	}
+	
+	_lijnen[29].a= 0;	_lijnen[29].b = 2;
+	_lijnen[28].a= 1;	_lijnen[28].b = 3;
+	_lijnen[23].a= 8;	_lijnen[23].b = 10;
+	_lijnen[18].a= 9;	_lijnen[18].b = 11;
+	_lijnen[9].a = 4;	_lijnen[9].b  = 6;
+	_lijnen[0].a = 5;	_lijnen[0].b  = 7;
 
 	_lijnen[1].a  = 0;	_lijnen[1].b  = 5;
 	_lijnen[2].a  = 0;	_lijnen[2].b  = 7;
@@ -171,6 +159,6 @@ void Icosahedron::genereer(bool PrettyIcoInsteadOfJensens)
 					_icoDriehk.push_back(driehoek.z);
 				}
 
-	std::cout << "Verwerken van icosahedron resulteerde in " << _icoDriehk.size() / 3 << " driehoeken terwijl er " << ICOSAHEDRON_VLAKKEN << " verwacht werden!" << std::endl;
+	//std::cout << "Verwerken van icosahedron resulteerde in " << _icoDriehk.size() / 3 << " driehoeken en werden er " << ICOSAHEDRON_VLAKKEN << " verwacht!" << std::endl;
 	#endif
 }

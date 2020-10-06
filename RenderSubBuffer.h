@@ -10,11 +10,11 @@
 template <class T>
 class RenderSubBuffer
 {
+public:
 	typedef glm::vec<2, T, glm::defaultp> glmvec2;
 	typedef glm::vec<3, T, glm::defaultp> glmvec3;
 	typedef glm::vec<4, T, glm::defaultp> glmvec4;
 
-public:
 				RenderSubBuffer(int NumFields, RenderBuffers *DeAOSOA, int AOSOAIndex);
 				~RenderSubBuffer();
 	
@@ -33,10 +33,12 @@ public:
 	glmvec3		GetDataPoint3(int PointIndex) const;	
 	glmvec4		GetDataPoint4(int PointIndex) const;	
 	
-	T 		*	GetData()						{ return Data; }
+//	T 		*	GetData()						{ return Data.data(); }
 	void		Flush()							{ AOSOA->BindNewData(MijnAOSOAIndex, Data); }
 	
-	T*			GetDataPointer(int PointIndex) { return &(Data[PointIndex * MijnNumFields]); }
+	//T*			GetDataPointer(int PointIndex) { return &(Data[PointIndex * MijnNumFields]); }
+
+	size_t		Aantal() const { return Data.size() / MijnNumFields; } 
 
 
 private:
@@ -59,10 +61,7 @@ template <class T> RenderSubBuffer<T>::RenderSubBuffer(int NumFields, RenderBuff
 
 template <class T> RenderSubBuffer<T>::~RenderSubBuffer()
 { 
-	if(Data != NULL) 
-		delete Data; 
-	
-	Data = NULL;
+	Data.clear();
 }
 
 template <class T> int RenderSubBuffer<T>::AddDataPoint(T Val)

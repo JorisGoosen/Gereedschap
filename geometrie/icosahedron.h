@@ -21,13 +21,13 @@ public:
 	Icosahedron();
 
 	///Teken jezelf met driehoeken
-	void tekenJezelf() 			const; 
+	virtual void tekenJezelf() 			const; 
 
 	///Teken jezelf met patches, tbv vlakverdeling
-	void tekenJezelfPatchy() 	const;
+	virtual void tekenJezelfPatchy() 	const;
 	
-private:
-	void genereer(bool PrettyIcoInsteadOfJensens = true);
+protected:
+	void genereer();
 
 	RenderBuffers					* _icoArray  = nullptr;
 	RenderSubBuffer<float>			* _icoPunten = nullptr;
