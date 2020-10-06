@@ -7,6 +7,7 @@ GEOMS	 	= $(patsubst %.cpp,%.o,$(wildcard geometrie/*.cpp))
 all: gereedschap $(DEMOS) 
 
 gereedschap: $(OBJECTS) $(GEOMS)
+	mkdir -p bin
 	g++ -shared $(CXXFLAGS) -o bin/libgereedschap.so $(OBJECTS) $(GEOMS) $(LIBFLAGS)
 	ar rcs libgereedschap.a $(OBJECTS) $(GEOMS)
 
