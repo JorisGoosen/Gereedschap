@@ -129,6 +129,8 @@ void Geodesisch::burenAlsEigenschapWijzers()
 	{
 		_eigenschappen.push_back(buurt.size());
 
+		assert(buurt.size() == 5 || buurt.size() == 6);
+
 		for(const auto & buur : buurt)
 			_eigenschappen.push_back(buur);
 
@@ -136,7 +138,9 @@ void Geodesisch::burenAlsEigenschapWijzers()
 			_eigenschappen.push_back(0);
 
 		//0 = aantal, 1...6	buren, dat laat 7 over voor:
-		_eigenschappen.push_back(willekeur()%1000);
+		_eigenschappen.push_back(willekeur()%2);
+
+		assert(_eigenschappen.size() % 8 == 0);
 	
 	}
 
