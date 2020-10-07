@@ -138,7 +138,7 @@ void Geodesisch::burenAlsEigenschapWijzers()
 			_eigenschappen.push_back(0);
 
 		//0 = aantal, 1...6	buren, dat laat 7 over voor:
-		_eigenschappen.push_back(willekeur()%2);
+		_eigenschappen.push_back(willekeur()%3);
 
 		assert(_eigenschappen.size() % 8 == 0);
 	
