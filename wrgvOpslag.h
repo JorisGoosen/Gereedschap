@@ -59,7 +59,7 @@ public:
 
 	template <typename veldType> GLuint reeksOpslagErbij(int aantalVelden, std::vector<veldType> & ggvns, std::vector<stapWijzer> stapWijzers)
 	{
-		BindVertexArray();
+		bindPuntReeks();
 
 		GLuint reeksOpslag;
 		glCreateBuffers(	1, 					& reeksOpslag);
@@ -96,8 +96,8 @@ public:
 
 	template <typename veldType> void koppelNieuweGegevens(int plek, std::vector<veldType> & ggvns)
 	{
-		BindVertexArray();
-		glErrorToConsole("koppelNieuweGegevens BindVertexArray: ");
+		bindPuntReeks();
+		glErrorToConsole("koppelNieuweGegevens bindPuntReeks: ");
 
 		glBindBuffer(GL_ARRAY_BUFFER, _plekInfos[plek].reeksOpslag);
 		glErrorToConsole("koppelNieuweGegevens glBindBuffer: ");
@@ -115,10 +115,10 @@ public:
     	glBindVertexArray(0);
 	}
 
-	void BindVertexArray()
+	void bindPuntReeks()
 	{
 		glBindVertexArray(_reeksOpslag);
-		glErrorToConsole("wrgvOpslag::BindVertexArray(): ");
+		glErrorToConsole("wrgvOpslag::bindPuntReeks(): ");
 	}
 
 private:

@@ -47,7 +47,7 @@ public:
 	void		laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam);
 
 	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden
-	virtual void extraVoorbereidingen(GLuint programma) {}
+	virtual void extraVoorbereidingen(GLuint /*programma*/) { }
 	
 protected:
 	float					_aspectRatio = 16.0f / 9.0f;

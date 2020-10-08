@@ -9,7 +9,7 @@ struct lijn
 	unsigned int a, b;
 
 	bool		operator==(const lijn & ander) const { return (a == ander.a && b == ander.b) || (a == ander.b && b == ander.a); }
-	bool 		heeftPunt(int p) 																								const;
+	bool 		heeftPunt(unsigned int p) 																						const;
 	bool 		vormtDriehoek(				const lijn & deEen, const lijn & deAnder) 											const;
 	glm::ivec3	geefDriehoek(				const lijn & deEen, const lijn & deAnder) 											const;
 	glm::ivec3 	geefGeorienteerdeDriehoek(	const lijn & deEen, const lijn & deAnder, const wrgvOnderOpslag<float> * punten)	const;

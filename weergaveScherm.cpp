@@ -59,7 +59,7 @@ void weergaveScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, 
 		_schermen[scherm]->keyHandler(key, scancode, action, mods);
 }
 
-void weergaveScherm::keyHandler(int key, int scancode, int action, int mods)
+void weergaveScherm::keyHandler(int key, int , int action, int )
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(_glfwScherm, 1);
@@ -92,8 +92,8 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader)
 
 	GLuint programma = 0;
 
-	if(shader == "" && _shaderProgrammas.size() == 1)				programma = _shaderProgrammas.begin()->second;
-	else if(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
+	if		(shader == "" && _shaderProgrammas.size() == 1)			programma = _shaderProgrammas.begin()->second;
+	else if	(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
 	else															std::cerr << "Kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
 		
 	glUseProgram(programma);

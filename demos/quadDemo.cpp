@@ -9,7 +9,7 @@ int main()
 	while(!scherm.stopGewenst())
 	{
 		scherm.bereidRenderVoor();
-		scherm.renderQuad();
+		scherm.geefWeer();
 		scherm.rondRenderAf();
 	}
 }
