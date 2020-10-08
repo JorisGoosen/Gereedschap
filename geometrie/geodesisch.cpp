@@ -173,19 +173,12 @@ void geodesisch::ordenPunten()
 
 	std::map<size_t, size_t> oudNaarNieuw;
 
-	float aantalP = punten.size();
-
 	for(size_t i=0; i<sorteerDit.size(); i++)
 	{
 		size_t verplaatsMe = sorteerDit[i];
 
 		_punten->ggvPuntZetten(i, punten[verplaatsMe]);
-
-		vec2 lb = adresLengteBreedte[verplaatsMe];
-
-		vec2 fakeLB = vec2((float(i) / aantalP) , 0);
-
-		_tex->ggvPuntErbij(fakeLB);
+		_tex->ggvPuntErbij(adresLengteBreedte[verplaatsMe]);
 
 		oudNaarNieuw[verplaatsMe] = i;
 	}
