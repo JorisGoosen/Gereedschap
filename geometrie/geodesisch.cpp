@@ -116,7 +116,7 @@ void geodesisch::ordenPunten()
 	//Dan sorteren op de volgende wijze (in aflopende prioriteit): binnen-poolcirkels: { lengtegraden, breedtegraden }, boven/onder poolcirkels: {y, x, z}
 	//Wat is een poolcirkel? Laten we zeggen... breedteG < 0.1 || breedteG > 0.9
 
-	const float 	poolBreedte = 0.1, 
+	const float 	poolBreedte = 0.2, 
 					poolA 		= poolBreedte, 
 					poolB 		= 1.0 - poolBreedte;
 
@@ -153,7 +153,7 @@ void geodesisch::ordenPunten()
 		{
 			//L is iig niet op een pool
 
-			if(R.y < poolA && R.y > poolB)
+			if(R.y < poolA || R.y > poolB)
 				return true; //Want R is op een pool en die komt dus zoiezo later
 
 			//Hier zijn betekent dat zowel L als R op de brede band liggen.
@@ -173,12 +173,19 @@ void geodesisch::ordenPunten()
 
 	std::map<size_t, size_t> oudNaarNieuw;
 
+	float aantalP = punten.size();
+
 	for(size_t i=0; i<sorteerDit.size(); i++)
 	{
 		size_t verplaatsMe = sorteerDit[i];
 
 		_punten->ggvPuntZetten(i, punten[verplaatsMe]);
-		_tex->ggvPuntErbij(adresLengteBreedte[verplaatsMe]);
+
+		vec2 lb = adresLengteBreedte[verplaatsMe];
+
+		vec2 fakeLB = vec2((float(i) / aantalP) , 0);
+
+		_tex->ggvPuntErbij(fakeLB);
 
 		oudNaarNieuw[verplaatsMe] = i;
 	}
