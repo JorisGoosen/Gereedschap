@@ -33,7 +33,7 @@ public:
 	glmvec3		ggvPunt3(		int 		PointIndex						) const	;	
 	glmvec4		ggvPunt4(		int 		PointIndex						) const	;	
 	
-	void		spoel()			{ _Aosoa->BindNewData(_adresAosoa, _ggvns); }
+	void		spoel()			{ _Aosoa->koppelNieuweGegevens(_adresAosoa, _ggvns); }
 	size_t		grootte() const { return _ggvns.size() / _aantalVelden; } 
 
 
@@ -52,7 +52,7 @@ template <class T> wrgvOnderOpslag<T>::wrgvOnderOpslag(int aantalVelden, wrgvOps
 	_Aosoa			= DeAOSOA;
 	_adresAosoa		= AOSOAIndex;
 	
-	_Aosoa->AddBufferType(_aantalVelden, _ggvns, _adresAosoa);
+	_Aosoa->reeksOpslagErbij(_aantalVelden, _ggvns, _adresAosoa);
 }
 
 template <class T> wrgvOnderOpslag<T>::~wrgvOnderOpslag()

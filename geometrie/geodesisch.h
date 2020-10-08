@@ -14,10 +14,12 @@ protected:
 	void verdeelEnHeers();
 	void maakLijstBuren();
 	void burenAlsEigenschapWijzers();
-	
+	void maakPingPongOpslagen();
 
 private:
 	std::vector<glm::uint32> 			_eigenschappen;
 	size_t 								_onderverdelingen;
 	buurt								_buren;
+	GLuint								_pingPongOpslag[2];
+										
 };

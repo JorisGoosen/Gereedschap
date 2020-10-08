@@ -23,6 +23,9 @@ Geodesisch::Geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdeling
 	//Dus twee aparte attribpointers maar zelfde buffer met stride 4
 	burenAlsEigenschapWijzers();
 	
+	//Nu nog twee buffers toevoegen waarin ik kan gaan rekenen en als punteigenschapwijzers kan gebruiken.
+	maakPingPongOpslagen();
+
 	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
 	
 	//Dan een geometrische shader maken die een polygoon tekent per punt
@@ -144,12 +147,32 @@ void Geodesisch::burenAlsEigenschapWijzers()
 	
 	}
 
-	_reeks->AddBufferType(4, _eigenschappen, { stapWijzer(1, 8, 0), stapWijzer(2, 8, 4) } );
+	_reeks->reeksOpslagErbij(4, _eigenschappen, { stapWijzer(1, 8, 0), stapWijzer(2, 8, 4) } );
+
+	
 }
 
 
+void Geodesisch::maakPingPongOpslagen()
+{
+	std::vector<float> pingPong;
+	pingPong.reserve(_buren.size() * 4); //Per element 1 vec4 voor nu. misschien later meer
 
 
+	std::random_device rd;  //Wordt gebruikt om het zaadje te planten
+    std::mt19937 gen(rd()); //Standaard mersenne_twister_engine gezaaid met rd()
+    
+	//std::uniform_real_distribution<> dis(0.0, 1.0);
+	std::normal_distribution<> dis(0.5, 0.6);
 
+	for(const auto & buurt : _buren)
+		for(size_t i=0; i<4; i++)
+			pingPong.push_back(1.0 - dis(gen));
 
+	//We gebruiken twee keer dezelfde data, want het wordt gekopieerd en de een wordt straks toch overschreven door de ander maar zo is iig de goeie grootte.
+	_pingPongOpslag[0] = _reeks->reeksOpslagErbij(4, pingPong, 3);
+	_pingPongOpslag[1] = _reeks->reeksOpslagErbij(4, pingPong, 4);
 
+	//We kunnen _pingPongOpslag straks wel allebei gebruiken om een SSB aan te binden en een compute shader tegenaan te gooien.
+	//Voor nu maar gewoon zo houden denk ik.
+}
