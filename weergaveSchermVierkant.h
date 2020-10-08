@@ -1,11 +1,11 @@
 #pragma once
-#include "RenderScherm.h"
+#include "weergaveScherm.h"
 
-class RenderSchermQuad : public RenderScherm
+class weergaveSchermVierkant : public weergaveScherm
 {
 public:
-		RenderSchermQuad(std::string Naam = "RenderSchermQuad", size_t W = 1280, size_t H = 720);
-		~RenderSchermQuad();
+		weergaveSchermVierkant(std::string Naam = "weergaveSchermVierkant", size_t W = 1280, size_t H = 720);
+		~weergaveSchermVierkant();
 
 	void 		renderQuad();
 

@@ -1,16 +1,16 @@
-#include "RenderScherm.h"
+#include "weergaveScherm.h"
 #include <iostream>
 
 using namespace glm;
 
-RenderScherm::keyHandlerFunc RenderScherm::_customHandler = nullptr;
+weergaveScherm::keyHandlerFunc weergaveScherm::_customHandler = nullptr;
 
-std::map<GLFWwindow *, RenderScherm*>	RenderScherm::_schermen;
+std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
-RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples) 
+weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples) 
 : _aspectRatio(float(W) / float(H)), _naam(Naam)
 {
-	std::cout << "RenderScherm " << _naam << " created!" << std::endl;
+	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
 
     if (_schermen.size() == 0 && !glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
@@ -42,7 +42,7 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples)
 
 	_schermen[_glfwScherm] = this;
 
-	glfwSwapInterval(1);
+	glfwSwapInterval(-1);
 
 	glfwSetKeyCallback(_glfwScherm, toetsVerwerker);
 
@@ -50,7 +50,7 @@ RenderScherm::RenderScherm(std::string Naam, size_t W, size_t H, size_t samples)
 		glEnable(GL_MULTISAMPLE); 
 }
 
-void RenderScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)
+void weergaveScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)
 {
 	if(_customHandler)
 		_customHandler(key, scancode, action, mods);
@@ -59,13 +59,13 @@ void RenderScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, in
 		_schermen[scherm]->keyHandler(key, scancode, action, mods);
 }
 
-void RenderScherm::keyHandler(int key, int scancode, int action, int mods)
+void weergaveScherm::keyHandler(int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(_glfwScherm, 1);
 }
 
-RenderScherm::~RenderScherm()
+weergaveScherm::~weergaveScherm()
 {
 	_schermen.erase(_glfwScherm);
 
@@ -75,7 +75,7 @@ RenderScherm::~RenderScherm()
 		glfwTerminate();
 }
 
-void RenderScherm::bereidRenderVoor(const std::string & shader)
+void weergaveScherm::bereidRenderVoor(const std::string & shader)
 {
 	glfwMakeContextCurrent(_glfwScherm);
 
@@ -101,14 +101,14 @@ void RenderScherm::bereidRenderVoor(const std::string & shader)
 	extraVoorbereidingen(programma);
 }
 
-void RenderScherm::rondRenderAf()
+void weergaveScherm::rondRenderAf()
 {
 	glFlush();
 	glfwSwapBuffers(_glfwScherm);
 	glfwPollEvents();
 }
 
-GLuint RenderScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramma)
+GLuint weergaveScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramma)
 {
 	_shaderProgrammas[naam] = shaderProgramma;
 
@@ -117,7 +117,7 @@ GLuint RenderScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramm
 	return shaderProgramma;
 }
 
-GLuint RenderScherm::maakVlakVerdelingsShader(
+GLuint weergaveScherm::maakVlakVerdelingsShader(
 	const std::string & shaderNaam,		
 	const std::string & vertshaderbestand, 	
 	const std::string & fragshaderbestand, 
@@ -127,7 +127,7 @@ GLuint RenderScherm::maakVlakVerdelingsShader(
 	return slaShaderOp(shaderNaam, createtesselationshader(vertshaderbestand, fragshaderbestand, vlakEvaluatieBestand, vlakControleBestand));
 }
 
-GLuint RenderScherm::maakGeometrieShader(
+GLuint weergaveScherm::maakGeometrieShader(
 	const std::string & shaderNaam,		
 	const std::string & vertshaderbestand, 	
 	const std::string & fragshaderbestand, 
@@ -136,17 +136,17 @@ GLuint RenderScherm::maakGeometrieShader(
 	return slaShaderOp(shaderNaam, creategeomshader(vertshaderbestand, fragshaderbestand, geomshaderbestand));
 }
 
-GLuint RenderScherm::maakShader(const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
+GLuint weergaveScherm::maakShader(const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
 {
 	return slaShaderOp(shaderNaam, createshader(vertshaderbestand, fragshaderbestand));
 }
 
-GLuint RenderScherm::maakBerekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
+GLuint weergaveScherm::maakBerekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
 {
 	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
 }
 
-GLuint RenderScherm::geefProgrammaHandvat(const std::string & naam) const
+GLuint weergaveScherm::geefProgrammaHandvat(const std::string & naam) const
 {
 	if(_shaderProgrammas.count(naam) > 0)
 		return _shaderProgrammas.at(naam);
@@ -155,7 +155,7 @@ GLuint RenderScherm::geefProgrammaHandvat(const std::string & naam) const
 }
 
 
-GLuint RenderScherm::geefEnigeProgrammaHandvat() const
+GLuint weergaveScherm::geefEnigeProgrammaHandvat() const
 {
 	if(_shaderProgrammas.size() == 1)
 		return _shaderProgrammas.begin()->second;
@@ -163,7 +163,7 @@ GLuint RenderScherm::geefEnigeProgrammaHandvat() const
 	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
 }
 
-void RenderScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam)
+void weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam)
 {
 	size_t breedte, hoogte, kanalen;
 	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);
@@ -186,7 +186,7 @@ void RenderScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	glErrorToConsole("RenderScherm::laadTextuurUitPng: ");
+	glErrorToConsole("weergaveScherm::laadTextuurUitPng: ");
 
 	_texturen[textuurNaam] = texture;
 

@@ -1,41 +1,19 @@
 #include "geodesisch.h"
 #include <random>
 
-
-
-using namespace glm;
-
-Geodesisch::Geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdelingen(onderverdelingen)
+geodesisch::geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdelingen(onderverdelingen)
 {
 	// icosahedron::genereer() wordt aangeroepen in Ico-constr
 	//Nu hebben we in _punten _drieHk alles wat we nodig hebben
 	//Dan moeten we alleen nog alle driehoeken verder onderverdelen
 	verdeelEnHeers();
 
-	//Daarna maken we een lijst van al deze driehoeken
-	//Via deze lijst kunnen we per punt de buren bepalen, waarbij er 12 5 buren (de originele) hebben en de rest 6,
-	maakLijstBuren();
-	
-	//Ook moet ieder punt een lijstje meekrijgen met de buren waar ie bij hoort (dit is ook erg handig voor het tekenen van genoemde polygoon)
-	//Alsin, dat ze naast een coordinaat nog 5 of 6 indices als vertex attribuut heeft
-	//Een vertex attrib pointer kan maar max 4 velden hebben (ivec4) maar das niet erg.
-	//Configuratie van [{{#buren, buur0, buur1, buur3}, {buur4, buur5, ( ? | buur6), ?}}, ...]
-	//Dus twee aparte attribpointers maar zelfde buffer met stride 4
-	burenAlsEigenschapWijzers();
-	
-	//Nu nog twee buffers toevoegen waarin ik kan gaan rekenen en als punteigenschapwijzers kan gebruiken.
-	maakPingPongOpslagen();
-
 	//Misschien is het ook een goed idee om naderhand eens alle punten te maken en te herordenen gebaseerd longitude en latitude zodat er evt beter gecached kan worden op de gpu
-	
-	//Dan een geometrische shader maken die een polygoon tekent per punt
-
+	ordenPunten();
 }
 
-void Geodesisch::verdeelEnHeers() 
+void geodesisch::verdeelEnHeers() 
 {
-	
-
 	for(size_t onderverdeling=0; onderverdeling<_onderverdelingen; onderverdeling++)
 	{
 
@@ -101,78 +79,115 @@ void Geodesisch::verdeelEnHeers()
 	std::cout << "Na het verdelen en heersen blijken er #" << _punten->grootte() << " punten te zijn!" << std::endl;
 }
 
-void Geodesisch::maakLijstBuren()
+void geodesisch::ordenPunten()
 {
-	_buren.resize(_punten->grootte());
+	using namespace glm;
 
-	for(size_t i=0; i<_drieHk.size(); i+=3)
+	//Eerst bepalen welke lengte- en breedtegraden alle punten hebben.
+	std::map<size_t, vec2> adresLengteBreedte;
+
+	//Deze mapping zou er in principe voor moeten zorgen dat ik goed kan samplen uit een cylindrisch geprojecteerd planeetweergave (zoals MOLA voor Mars)
+	auto berekenLengteBreedte = [&](size_t adres) -> vec2
 	{
-		size_t 	v0	= _drieHk[ i   ],
-				v1	= _drieHk[ i+1 ],
-				v2	= _drieHk[ i+2 ];
+		//Alle posities zijn al genormaliseerd
+		vec3 	positie		= _punten->ggvPunt3(adres);
+		float 	latitude 	= (positie.y + 1.0) * 0.5;
+		vec2	horizontaal	= positie.xz();
 
-		_buren[ v0 ].insert( v1 );
-		_buren[ v0 ].insert( v2 );
+		//Is het een pool?
+		if(length(horizontaal) == 0)	horizontaal = vec2(1, 0);
+				
+		return vec2(atan(horizontaal.x, horizontaal.y), latitude);
+	};
 
-		_buren[ v1 ].insert( v0 );
-		_buren[ v1 ].insert( v2 );
+	for(size_t i=0; i<_punten->grootte(); i++)
+		adresLengteBreedte[i] = berekenLengteBreedte(i);
 
-		_buren[ v2 ].insert( v0 );
-		_buren[ v2 ].insert( v1 );				
-	}	
-}
-
-void Geodesisch::burenAlsEigenschapWijzers()
-{
-	_eigenschappen.reserve(_buren.size() * 8); //De grootte is eigenlijk _buren.size() * 6 - 12 maar ik denk dat het beter is voor de gpu om ze allebei een vec4 te geven, anders accepteert ie misschien wel, maar...
 	
-	std::random_device willekeur;
+	//Even wat dingen op een rijtje zetten om te gaan sorteren
+	std::vector<vec3> punten = _punten->gegevens3(); //Werkt wat makkelijker
 
-	for(const auto & buurt : _buren)
+	std::vector<size_t> sorteerDit;
+	sorteerDit.resize(punten.size());
+
+	for(size_t i=0; i<sorteerDit.size(); i++)
+		sorteerDit[i] = i;
+
+	//Dan sorteren op de volgende wijze (in aflopende prioriteit): binnen-poolcirkels: { lengtegraden, breedtegraden }, boven/onder poolcirkels: {y, x, z}
+	//Wat is een poolcirkel? Laten we zeggen... breedteG < 0.1 || breedteG > 0.9
+
+	const float 	poolBreedte = 0.1, 
+					poolA 		= poolBreedte, 
+					poolB 		= 1.0 - poolBreedte;
+
+	auto sortLambda = [&](const size_t & l, const size_t & r) -> bool
 	{
-		_eigenschappen.push_back(buurt.size());
+		//Dit moet een < relatie worden uiteindelijk.
+		const vec2 	& L = adresLengteBreedte[l],
+					& R = adresLengteBreedte[r];
 
-		assert(buurt.size() == 5 || buurt.size() == 6);
+		if(L.y < poolA || L.y > poolB)
+		{
+			//Ok links is op de polen
+			
+			if(R.y >= poolA && R.y <= poolB)
+				return false; //R is niet polair dus  !(L < R)
+			else
+			{
+				//Allebei op de polen, maar zijn het dezelfde polen?
 
-		for(const auto & buur : buurt)
-			_eigenschappen.push_back(buur);
+				if		(L.y < poolA && R.y > poolB)	return true;
+				else if (L.y > poolB && R.y < poolA)	return false;
+				
+				//Ok, op dezelfde pool
+				const vec3	& lPunt = punten[l],
+							& rPunt = punten[r];
 
-		if(buurt.size() == 5)
-			_eigenschappen.push_back(0);
+				if		(lPunt.x < rPunt.x)	return true;
+				else if	(lPunt.x > rPunt.x) return false;
+				
+				return lPunt.z < rPunt.z;
+			}
+		}
+		else
+		{
+			//L is iig niet op een pool
 
-		//0 = aantal, 1...6	buren, dat laat 7 over voor:
-		_eigenschappen.push_back(willekeur()%3);
+			if(R.y < poolA && R.y > poolB)
+				return true; //Want R is op een pool en die komt dus zoiezo later
 
-		assert(_eigenschappen.size() % 8 == 0);
-	
+			//Hier zijn betekent dat zowel L als R op de brede band liggen.
+			
+			if(L.x < R.x)		return true;
+			else if(L.x > R.x)	return false;
+			else				return L.y < R.y;
+		}
+	};
+
+	std::sort(sorteerDit.begin(), sorteerDit.end(), sortLambda);
+
+	//Nu is alles dan gesorteerd, dus das leuk.
+	//Alleen moeten we dat nog even aan de GPU duidelijk maken natuurlijk.
+
+	_tex = new wrgvOnderOpslag<float>(2, _reeks, 1);
+
+	std::map<size_t, size_t> oudNaarNieuw;
+
+	for(size_t i=0; i<sorteerDit.size(); i++)
+	{
+		size_t verplaatsMe = sorteerDit[i];
+
+		_punten->ggvPuntZetten(i, punten[verplaatsMe]);
+		_tex->ggvPuntErbij(adresLengteBreedte[verplaatsMe]);
+
+		oudNaarNieuw[verplaatsMe] = i;
 	}
 
-	_reeks->reeksOpslagErbij(4, _eigenschappen, { stapWijzer(1, 8, 0), stapWijzer(2, 8, 4) } );
+	_punten->spoel();
+	_tex->spoel();
 
+	//Verder moeten we natuurlijk niet vergeten de _drieHk op de hoogte te brengen!
+	for(size_t i=0; i<_drieHk.size(); i++)
+		_drieHk[i] = oudNaarNieuw[_drieHk[i]];
 	
-}
-
-
-void Geodesisch::maakPingPongOpslagen()
-{
-	std::vector<float> pingPong;
-	pingPong.reserve(_buren.size() * 4); //Per element 1 vec4 voor nu. misschien later meer
-
-
-	std::random_device rd;  //Wordt gebruikt om het zaadje te planten
-    std::mt19937 gen(rd()); //Standaard mersenne_twister_engine gezaaid met rd()
-    
-	//std::uniform_real_distribution<> dis(0.0, 1.0);
-	std::normal_distribution<> dis(0.5, 0.6);
-
-	for(const auto & buurt : _buren)
-		for(size_t i=0; i<4; i++)
-			pingPong.push_back(1.0 - dis(gen));
-
-	//We gebruiken twee keer dezelfde data, want het wordt gekopieerd en de een wordt straks toch overschreven door de ander maar zo is iig de goeie grootte.
-	_pingPongOpslag[0] = _reeks->reeksOpslagErbij(4, pingPong, 3);
-	_pingPongOpslag[1] = _reeks->reeksOpslagErbij(4, pingPong, 4);
-
-	//We kunnen _pingPongOpslag straks wel allebei gebruiken om een SSB aan te binden en een compute shader tegenaan te gooien.
-	//Voor nu maar gewoon zo houden denk ik.
 }

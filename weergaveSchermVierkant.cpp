@@ -1,20 +1,20 @@
-#include "RenderSchermQuad.h"
+#include "weergaveSchermVierkant.h"
 #include <iostream>
 
 using namespace glm;
 
 
-RenderSchermQuad::RenderSchermQuad(std::string Naam, size_t W, size_t H) 
-: RenderScherm(Naam, W, H)
+weergaveSchermVierkant::weergaveSchermVierkant(std::string Naam, size_t W, size_t H) 
+: weergaveScherm(Naam, W, H)
 {}
 
-/*void RenderSchermQuad::keyHandler(int key, int scancode, int action, int mods)
+/*void weergaveSchermVierkant::keyHandler(int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(_glfwScherm, 1);
 }*/
 
-RenderSchermQuad::~RenderSchermQuad()
+weergaveSchermVierkant::~weergaveSchermVierkant()
 {
 	delete _quadArray;
 	delete _quadPos;
@@ -25,7 +25,7 @@ RenderSchermQuad::~RenderSchermQuad()
 	_quadTex 	= nullptr;
 }
 
-void RenderSchermQuad::initQuad()
+void weergaveSchermVierkant::initQuad()
 {
 	if(_quadArray != NULL)
 		throw std::runtime_error("InitQuad dubbel gedaan..\n");
@@ -50,7 +50,7 @@ void RenderSchermQuad::initQuad()
 	_quadTex->spoel();
 }
 
-void RenderSchermQuad::renderQuad()
+void weergaveSchermVierkant::renderQuad()
 {
 	if(!_quadArray)
 		initQuad();
@@ -60,5 +60,5 @@ void RenderSchermQuad::renderQuad()
 
 	_quadArray->BindVertexArray();	
 	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, Indices);
-	glErrorToConsole("RenderSchermQuad::renderQuad(): ");
+	glErrorToConsole("weergaveSchermVierkant::renderQuad(): ");
 }

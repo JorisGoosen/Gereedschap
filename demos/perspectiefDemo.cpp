@@ -1,10 +1,10 @@
 //This file simply opens an OpenGL window where a quad will be rendered and some simple shaders to display this fact, press escape to exit.
-#include "../RenderSchermPerspectief.h"
+#include "../weergaveSchermPerspectief.h"
 #include "../geometrie/icosahedron.h"
 
 int main()
 {
-	RenderSchermPerspectief scherm("Perspectief Demo");
+	weergaveSchermPerspectief scherm("Perspectief Demo");
 	scherm.maakShader("perspectiefDemo", "shaders/perspectiefDemo.vert", "shaders/perspectiefDemo.frag");
 
 	glClearColor(0,0,0,0);

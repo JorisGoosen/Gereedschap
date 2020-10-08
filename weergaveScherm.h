@@ -19,13 +19,13 @@ const float 		FPI = 3.141592653589793238f;
 
 
 
-class RenderScherm
+class weergaveScherm
 {
 public:
 	typedef std::function<void(int key, int scancode, int action, int mods)> keyHandlerFunc;
 
-				RenderScherm(std::string Naam = "RenderScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
-				~RenderScherm();
+				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
+				~weergaveScherm();
 
 	void		bereidRenderVoor(const std::string & shader = "");
 	void		rondRenderAf();
@@ -60,7 +60,7 @@ private:
 
 	std::map<std::string, GLuint>					_shaderProgrammas,
 													_texturen;
-	static std::map<GLFWwindow *, RenderScherm*>	_schermen;
+	static std::map<GLFWwindow *, weergaveScherm*>	_schermen;
 
 	static keyHandlerFunc _customHandler;
 };

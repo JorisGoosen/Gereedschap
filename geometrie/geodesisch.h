@@ -3,23 +3,19 @@
 #include <map>
 #include <set>
 #include <iostream>
-class Geodesisch : public icosahedron
+class geodesisch : public icosahedron
 {
 public:
 	typedef std::vector<std::set<glm::uint32>> buurt;
 	
-	Geodesisch(size_t onderverdelingen = 1);
+	geodesisch(size_t onderverdelingen = 1);
 
 protected:
 	void verdeelEnHeers();
-	void maakLijstBuren();
-	void burenAlsEigenschapWijzers();
-	void maakPingPongOpslagen();
+	void ordenPunten();
 
 private:
-	std::vector<glm::uint32> 			_eigenschappen;
-	size_t 								_onderverdelingen;
-	buurt								_buren;
-	GLuint								_pingPongOpslag[2];
-										
+	size_t 						_onderverdelingen;
+	wrgvOnderOpslag<float>	* 	_tex = nullptr;
+
 };
