@@ -97,7 +97,7 @@ void geodesisch::ordenPunten()
 		//Is het een pool?
 		if(length(horizontaal) == 0)	horizontaal = vec2(1, 0);
 				
-		return vec2(atan(horizontaal.x, horizontaal.y), latitude);
+		return vec2(atan(horizontaal.x, horizontaal.y) / pi<float>(), latitude);
 	};
 
 	for(size_t i=0; i<_punten->grootte(); i++)
