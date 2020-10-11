@@ -12,8 +12,9 @@ protected:
 	void verdeelEnHeers();
 	void ordenPunten();
 
-private:
-	size_t 						_onderverdelingen;
-	wrgvOnderOpslag<float>	* 	_tex = nullptr;
+	float						_poolA				, 
+								_poolB				;
+	size_t 						_onderverdelingen	;
+	wrgvOnderOpslag<float>	* 	_tex = nullptr		;
 
 };

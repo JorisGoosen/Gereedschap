@@ -116,9 +116,9 @@ void geodesisch::ordenPunten()
 	//Dan sorteren op de volgende wijze (in aflopende prioriteit): binnen-poolcirkels: { lengtegraden, breedtegraden }, boven/onder poolcirkels: {y, x, z}
 	//Wat is een poolcirkel? Laten we zeggen... breedteG < 0.1 || breedteG > 0.9
 
-	const float 	poolBreedte = 0.2, 
-					poolA 		= poolBreedte, 
-					poolB 		= 1.0 - poolBreedte;
+	const float 	poolBreedte = 0.2;
+					_poolA 		= poolBreedte;
+					_poolB 		= 1.0 - poolBreedte;
 
 	auto sortLambda = [&](const size_t & l, const size_t & r) -> bool
 	{
@@ -126,18 +126,18 @@ void geodesisch::ordenPunten()
 		const vec2 	& L = adresLengteBreedte[l],
 					& R = adresLengteBreedte[r];
 
-		if(L.y < poolA || L.y > poolB)
+		if(L.y < _poolA || L.y > _poolB)
 		{
 			//Ok links is op de polen
 			
-			if(R.y >= poolA && R.y <= poolB)
+			if(R.y >= _poolA && R.y <= _poolB)
 				return false; //R is niet polair dus  !(L < R)
 			else
 			{
 				//Allebei op de polen, maar zijn het dezelfde polen?
 
-				if		(L.y < poolA && R.y > poolB)	return true;
-				else if (L.y > poolB && R.y < poolA)	return false;
+				if		(L.y < _poolA && R.y > _poolB)	return true;
+				else if (L.y > _poolB && R.y < _poolA)	return false;
 				
 				//Ok, op dezelfde pool
 				const vec3	& lPunt = punten[l],
@@ -153,7 +153,7 @@ void geodesisch::ordenPunten()
 		{
 			//L is iig niet op een pool
 
-			if(R.y < poolA || R.y > poolB)
+			if(R.y < _poolA || R.y > _poolB)
 				return true; //Want R is op een pool en die komt dus zoiezo later
 
 			//Hier zijn betekent dat zowel L als R op de brede band liggen.
