@@ -25,6 +25,8 @@ public:
 
 	///Teken jezelf met patches, tbv vlakverdeling
 	virtual void tekenJezelfPatchy() 	const;
+
+	void bindPuntReeks() const { _reeks->bindPuntReeks();	 }
 	
 protected:
 	void genereer();

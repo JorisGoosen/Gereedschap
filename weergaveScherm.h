@@ -27,7 +27,7 @@ public:
 				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
 				~weergaveScherm();
 
-	void		bereidRenderVoor(const std::string & shader = "");
+	void		bereidRenderVoor(const std::string & verwerker = "");
 	void		rondRenderAf();
 
 	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
@@ -39,12 +39,15 @@ public:
 	GLuint 		maakVlakVerdelingsShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  vlakEvaluatieBestand, const std::string &  vlakControleBestand = "");
 	GLuint 		maakGeometrieShader(		const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
 	GLuint 		maakShader(					const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
-	GLuint 		maakBerekenShader(			const std::string & shaderNaam,		const std::string &  shaderbestand);
+	GLuint 		maakRekenShader(			const std::string & shaderNaam,		const std::string &  shaderbestand);
 	
 	GLuint		geefProgrammaHandvat(const std::string & naam) const;
 	GLuint		geefEnigeProgrammaHandvat() const;
 
 	void		laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam);
+
+
+	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 
 	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden
 	virtual void extraVoorbereidingen(GLuint /*programma*/) { }

@@ -53,7 +53,7 @@ glm::ivec3 	lijn::geefGeorienteerdeDriehoek(const lijn & deEen, const lijn & deA
 
 void icosahedron::tekenJezelf() const
 {
-	_reeks->bindPuntReeks();	
+	bindPuntReeks();
 	glDrawElements(GL_TRIANGLES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
 	glErrorToConsole("icosahedron::tekenJezelf(): ");
 }
@@ -61,7 +61,7 @@ void icosahedron::tekenJezelf() const
 void icosahedron::tekenJezelfPatchy() const
 {
 	glPatchParameteri(GL_PATCH_VERTICES, 3);
-	_reeks->bindPuntReeks();	
+	bindPuntReeks();
 	glDrawElements(GL_PATCHES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
 	glErrorToConsole("icosahedron::tekenJezelfPatchy(): ");
 }

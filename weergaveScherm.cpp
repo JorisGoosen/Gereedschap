@@ -94,11 +94,25 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader)
 
 	if		(shader == "" && _shaderProgrammas.size() == 1)			programma = _shaderProgrammas.begin()->second;
 	else if	(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
-	else															std::cerr << "Kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
+	else															std::cerr << "bereidRenderVoor kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
 		
 	glUseProgram(programma);
-	glErrorToConsole("glUseProgram(...): ");
+	glErrorToConsole("bereidRenderVoor glUseProgram('"+shader+"'): ");
+
 	extraVoorbereidingen(programma);
+}
+
+void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding)
+{
+	glfwMakeContextCurrent(_glfwScherm);
+	glUseProgram(_shaderProgrammas[verwerker]);
+	glErrorToConsole("doeRekenVerwerker glUseProgram('"+verwerker+"'): ");
+
+	renderVoorbereiding();
+	glErrorToConsole("doeRekenVerwerker renderVoorbereiding: ");
+
+	glDispatchCompute(groepGroottes.x, groepGroottes.y, groepGroottes.z);
+	glErrorToConsole("doeRekenVerwerker glDispatchCompute");
 }
 
 void weergaveScherm::rondRenderAf()
@@ -141,7 +155,7 @@ GLuint weergaveScherm::maakShader(const std::string & shaderNaam,		const std::st
 	return slaShaderOp(shaderNaam, createshader(vertshaderbestand, fragshaderbestand));
 }
 
-GLuint weergaveScherm::maakBerekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
+GLuint weergaveScherm::maakRekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
 {
 	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
 }
