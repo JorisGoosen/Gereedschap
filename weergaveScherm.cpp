@@ -177,7 +177,7 @@ GLuint weergaveScherm::geefEnigeProgrammaHandvat() const
 	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
 }
 
-void weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam)
+glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam, unsigned char ** imgData)
 {
 	size_t breedte, hoogte, kanalen;
 	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);
@@ -204,5 +204,8 @@ void weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, const std
 
 	_texturen[textuurNaam] = texture;
 
-	delete data;
+	if(!imgData)	delete data;
+	else			*imgData = data;
+
+	return glm::vec2(breedte, hoogte);
 }
