@@ -27,7 +27,8 @@ void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
 	RecalculateProjection();	
 
 	glUniformMatrix4fv(glGetUniformLocation(programma, "projectie"), 1, GL_FALSE, glm::value_ptr(_projection));
-	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelView));
+	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> projectie");
 
-	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen()");
+	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelView));
+	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> modelView");
 }
