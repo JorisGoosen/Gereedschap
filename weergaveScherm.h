@@ -27,7 +27,7 @@ public:
 				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
 				~weergaveScherm();
 
-	void		bereidRenderVoor(const std::string & verwerker = "");
+	void		bereidRenderVoor(const std::string & verwerker = "", bool wisScherm = true);
 	void		rondRenderAf();
 
 	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
@@ -41,8 +41,9 @@ public:
 	GLuint 		maakShader(					const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand);
 	GLuint 		maakRekenShader(			const std::string & shaderNaam,		const std::string &  shaderbestand);
 	
-	GLuint		geefProgrammaHandvat(const std::string & naam) const;
-	GLuint		geefEnigeProgrammaHandvat() const;
+	GLuint		geefProgrammaHandvat(const std::string & naam) 	const;
+	GLuint		geefEnigeProgrammaHandvat() 					const;
+	GLuint		huidigProgramma()								const { return _huidigProgramma; }
 
 	glm::vec2 	laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam, unsigned char ** imgData = nullptr);
 
@@ -55,6 +56,7 @@ public:
 protected:
 	float					_aspectRatio = 16.0f / 9.0f;
 	std::string				_naam;
+	GLuint					_huidigProgramma;
 
 private:
 	GLuint	slaShaderOp(const std::string & naam, GLuint shaderProgramma);

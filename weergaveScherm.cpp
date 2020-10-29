@@ -75,7 +75,7 @@ weergaveScherm::~weergaveScherm()
 		glfwTerminate();
 }
 
-void weergaveScherm::bereidRenderVoor(const std::string & shader)
+void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm)
 {
 	glfwMakeContextCurrent(_glfwScherm);
 
@@ -88,14 +88,16 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader)
 
 	glViewport(0, 0, width, height);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if(wisScherm)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GLuint programma = 0;
 
 	if		(shader == "" && _shaderProgrammas.size() == 1)			programma = _shaderProgrammas.begin()->second;
 	else if	(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
 	else															std::cerr << "bereidRenderVoor kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
-		
+
+	_huidigProgramma = programma;
 	glUseProgram(programma);
 	glErrorToConsole("bereidRenderVoor glUseProgram('"+shader+"'): ");
 
@@ -105,7 +107,8 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader)
 void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding)
 {
 	glfwMakeContextCurrent(_glfwScherm);
-	glUseProgram(_shaderProgrammas[verwerker]);
+	_huidigProgramma = _shaderProgrammas[verwerker];
+	glUseProgram(_huidigProgramma);
 	glErrorToConsole("doeRekenVerwerker glUseProgram('"+verwerker+"'): ");
 
 	renderVoorbereiding();
