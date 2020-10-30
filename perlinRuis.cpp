@@ -89,7 +89,7 @@ glm::vec3 perlinRuis::gradient(glm::ivec3 loc)
 
 float perlinRuis::geefIniqoQuilesRuis(glm::vec3 x)
 {
-	x *= 16.0f;
+	//x *= 16.0f;
     // grid
     glm::vec3 p = glm::floor(x), w = glm::fract(x);
 
