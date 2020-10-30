@@ -14,7 +14,6 @@ class perlinRuis
 public:
     		            	perlinRuis();
 							~perlinRuis();
-			void			begin();
 			void			zetKnooppunten(int gradientAdres, int herschikkingsAdres);		
     		glm::vec3   	gradient(glm::ivec3 loc);
     		float 			geefIniqoQuilesRuis(glm::vec3 x);

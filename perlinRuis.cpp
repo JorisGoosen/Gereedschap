@@ -13,11 +13,6 @@ perlinRuis::perlinRuis()
 
 perlinRuis * perlinRuis::_perlin = nullptr;
 
-void perlinRuis::begin()
-{
-	
-}
-
 void perlinRuis::zetKnooppunten(int gradientAdres, int herschikkingsAdres)
 {
 	_willekeurigeGradienten	-> zetKnooppunt(gradientAdres);
