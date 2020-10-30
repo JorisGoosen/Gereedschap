@@ -141,7 +141,7 @@ GLuint weergaveScherm::maakVlakVerdelingsShader(
 	const std::string & vlakEvaluatieBestand, 
 	const std::string & vlakControleBestand)
 {
-	return slaShaderOp(shaderNaam, createtesselationshader(vertshaderbestand, fragshaderbestand, vlakEvaluatieBestand, vlakControleBestand));
+	return slaShaderOp(shaderNaam, _maakVlakVerdelingShader(vertshaderbestand, fragshaderbestand, vlakEvaluatieBestand, vlakControleBestand));
 }
 
 GLuint weergaveScherm::maakGeometrieShader(
@@ -150,17 +150,17 @@ GLuint weergaveScherm::maakGeometrieShader(
 	const std::string & fragshaderbestand, 
 	const std::string & geomshaderbestand)
 {
-	return slaShaderOp(shaderNaam, creategeomshader(vertshaderbestand, fragshaderbestand, geomshaderbestand));
+	return slaShaderOp(shaderNaam, _maakGeometrieShader(vertshaderbestand, fragshaderbestand, geomshaderbestand));
 }
 
 GLuint weergaveScherm::maakShader(const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand)
 {
-	return slaShaderOp(shaderNaam, createshader(vertshaderbestand, fragshaderbestand));
+	return slaShaderOp(shaderNaam, _maakShader(vertshaderbestand, fragshaderbestand));
 }
 
 GLuint weergaveScherm::maakRekenShader(const std::string & shaderNaam,		const std::string &  shaderbestand)
 {
-	return slaShaderOp(shaderNaam, createcomputeshader(shaderbestand));
+	return slaShaderOp(shaderNaam, _maakBerekenShader(shaderbestand));
 }
 
 GLuint weergaveScherm::geefProgrammaHandvat(const std::string & naam) const

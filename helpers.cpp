@@ -42,7 +42,7 @@ bool checkvoorshadercompileerfout(GLuint shader, const std::string & naam)
 			GLint maxLength = 0;
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 	 
-			//The maxLength includes the NULL character
+			//The maxLength includes the nullptr character
 			std::string errorLog;
 			errorLog.resize(maxLength);
 			glGetShaderInfoLog(shader, maxLength, &maxLength, errorLog.data());
@@ -85,34 +85,34 @@ std::string textFileRead(const std::string & fileName)
 }
 
 
-GLuint createshaderobject(const std::string & shaderfilename, GLenum shadertype)
+GLuint _maakShaderObject(const std::string & shaderBestandsnaam, GLenum shadertype)
 {
 	GLuint shaderobject = glCreateShader(shadertype);
 
-	std::string shaderSource = textFileRead(shaderfilename);
+	std::string shaderSource = textFileRead(shaderBestandsnaam);
 
 	//The following seems a bit weird no?
 	char const * pointerToCStr = shaderSource.c_str();
 
 	char const ** shadersourcefakearray = const_cast<char const **>(&pointerToCStr);
 	
-	glShaderSource(shaderobject, 1, shadersourcefakearray, NULL);
+	glShaderSource(shaderobject, 1, shadersourcefakearray, nullptr);
 
-	std::cout << "Compiling " << shaderfilename << "..." << std::endl;
+	std::cout << "Compiling " << shaderBestandsnaam << "..." << std::endl;
 
 	glCompileShader(shaderobject);
 	
-	if(!checkvoorshadercompileerfout(shaderobject, shaderfilename.c_str())) 
+	if(!checkvoorshadercompileerfout(shaderobject, shaderBestandsnaam.c_str())) 
 		exit(1);
 
 	return shaderobject;
 }
 
-GLuint creategeomshader(const std::string & vertshaderfilename, const std::string & fragshaderfilename, const std::string & geomshaderfilename)
+GLuint _maakGeometrieShader(const std::string & vertShaderBestandsnaam, const std::string & fragShaderBestandsnaam, const std::string & geomShaderBestandsnaam)
 {
-	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER	);
-	GLuint geomshaderobject = createshaderobject(geomshaderfilename, GL_GEOMETRY_SHADER	);
+	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, GL_FRAGMENT_SHADER	);
+	GLuint geomshaderobject = _maakShaderObject(geomShaderBestandsnaam, GL_GEOMETRY_SHADER	);
 
 	GLuint prog = glCreateProgram();
 	
@@ -124,14 +124,14 @@ GLuint creategeomshader(const std::string & vertshaderfilename, const std::strin
 	return prog;
 }
 
-GLuint createtesselationshader(	const std::string & vertshaderfilename, 	const std::string & fragshaderfilename, 
-								const std::string & tessEvalFilename, 		const std::string & tessCtrlFilename)
+GLuint _maakVlakVerdelingShader(	const std::string & vertShaderBestandsnaam, 	const std::string & fragShaderBestandsnaam, 
+								const std::string & vlakEvalBestandsnaam, 		const std::string & vlakCtrlBestandsnaam)
 {
-	GLuint vertshaderobject = createshaderobject(vertshaderfilename, 	GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = createshaderobject(fragshaderfilename, 	GL_FRAGMENT_SHADER	);
-	GLuint tessEvalObject 	= createshaderobject(tessEvalFilename, 		GL_TESS_EVALUATION_SHADER);
+	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, 	GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, 	GL_FRAGMENT_SHADER	);
+	GLuint tessEvalObject 	= _maakShaderObject(vlakEvalBestandsnaam, 		GL_TESS_EVALUATION_SHADER);
 
-	GLuint tessCtrlObject	= tessCtrlFilename == "" ? 0 : createshaderobject(tessCtrlFilename, GL_TESS_CONTROL_SHADER);
+	GLuint tessCtrlObject	= vlakCtrlBestandsnaam == "" ? 0 : _maakShaderObject(vlakCtrlBestandsnaam, GL_TESS_CONTROL_SHADER);
 
 	GLuint prog = glCreateProgram();
 	
@@ -139,7 +139,7 @@ GLuint createtesselationshader(	const std::string & vertshaderfilename, 	const s
 	glAttachShader(prog, vertshaderobject);
 	glAttachShader(prog, tessEvalObject);
 
-	if(tessCtrlFilename != "")
+	if(vlakCtrlBestandsnaam != "")
 		glAttachShader(prog, tessCtrlObject);
 
 	glLinkProgram(prog);
@@ -148,10 +148,10 @@ GLuint createtesselationshader(	const std::string & vertshaderfilename, 	const s
 
 
 
-GLuint createshader(const std::string & vertshaderfilename, const std::string & fragshaderfilename)
+GLuint _maakShader(const std::string & vertShaderBestandsnaam, const std::string & fragShaderBestandsnaam)
 {
-	GLuint vertshaderobject = createshaderobject(vertshaderfilename, GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = createshaderobject(fragshaderfilename, GL_FRAGMENT_SHADER	);
+	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, GL_VERTEX_SHADER	);
+	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, GL_FRAGMENT_SHADER	);
 
 	GLuint prog = glCreateProgram();
 	
@@ -164,9 +164,9 @@ GLuint createshader(const std::string & vertshaderfilename, const std::string & 
 
 
 
-GLuint createcomputeshader(const std::string & shaderfilename)
+GLuint _maakBerekenShader(const std::string & shaderBestandsnaam)
 {
-	GLuint compshaderobject = createshaderobject(shaderfilename, GL_COMPUTE_SHADER);
+	GLuint compshaderobject = _maakShaderObject(shaderBestandsnaam, GL_COMPUTE_SHADER);
 
 	GLuint prog = glCreateProgram();
 	
@@ -177,7 +177,7 @@ GLuint createcomputeshader(const std::string & shaderfilename)
 }
 
 
-glm::vec3 randomVec3()
+glm::vec3 willekeurigeVec3()
 {
 	const float randMax = RAND_MAX;
 
@@ -199,7 +199,7 @@ png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & he
 
 		buffer = new png_byte[PNG_IMAGE_SIZE(image)];
 
-		if (buffer != NULL && png_image_finish_read(&image, nullptr, buffer, 0, nullptr) != 0)
+		if (buffer != nullptr && png_image_finish_read(&image, nullptr, buffer, 0, nullptr) != 0)
 		{
 			width 	= image.width;
 			height 	= image.height;

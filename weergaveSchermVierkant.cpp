@@ -21,7 +21,7 @@ weergaveSchermVierkant::~weergaveSchermVierkant()
 
 void weergaveSchermVierkant::initQuad()
 {
-	if(_reeks != NULL)
+	if(_reeks != nullptr)
 		throw std::runtime_error("InitQuad dubbel gedaan..\n");
 
 	_reeks = new wrgvOpslag();

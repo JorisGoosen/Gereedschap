@@ -13,14 +13,13 @@
 
 void glErrorToConsole(const std::string & huidigeActie = "");
 
-GLuint 		createshaderobject(			const std::string &  shaderfilename, 	GLenum shadertype);
-GLuint 		createcomputeshader(		const std::string &  shaderfilename);
-GLuint 		createshader(				const std::string &  vertshaderfilename, 	const std::string &  fragshaderfilename);
-GLuint 		creategeomshader(			const std::string &  vertshaderfilename, 	const std::string &  fragshaderfilename, const std::string &  geomshaderfilename);
-GLuint 		createtesselationshader(	const std::string &  vertshaderfilename, 	const std::string &  fragshaderfilename, const std::string &  tessEvalFilename, const std::string &  tessCtrlFilename = "");
+GLuint 		_maakShaderObject(			const std::string &  shaderBestandsnaam, 		GLenum shadertype);
+GLuint 		_maakBerekenShader(			const std::string &  shaderBestandsnaam);
+GLuint 		_maakShader(				const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam);
+GLuint 		_maakGeometrieShader(		const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  geomShaderBestandsnaam);
+GLuint 		_maakVlakVerdelingShader(	const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  vlakEvalBestandsnaam, const std::string &  vlakCtrlBestandsnaam = "");
 
-//willekeurig is een beetje te lang
-		glm::vec3	randomVec3();
-inline 	glm::vec3	randomVec3Z() { return glm::vec3(-1.0f) + (2.0f * randomVec3()); }
+		glm::vec3	willekeurigeVec3();
+inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 
 png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
