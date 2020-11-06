@@ -14,7 +14,7 @@ public:
 	glm::mat4	projection()			{ return _projection; 	}
 	glm::mat4	modelView()				{ return _modelView; 	}
 
-	void		setModelView(glm::mat4 modelView) { _modelView = modelView; }
+	void		setModelView(glm::mat4 modelView);
 	//void keyHandler(int key, int scancode, int action, int mods) override;
 
 	void extraVoorbereidingen(GLuint programma) override;
@@ -25,6 +25,7 @@ private:
 				_farDistance		= 100.0f;
 		
 	glm::mat4	_projection			= glm::mat4(1.0f), 
-				_modelView			= glm::mat4(1.0f);
+				_modelView			= glm::mat4(1.0f),
+				_transInvMV 		= glm::mat4(1.0f);
 
 };

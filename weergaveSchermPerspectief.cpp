@@ -20,6 +20,12 @@ weergaveSchermPerspectief::~weergaveSchermPerspectief()
 {
 }
 
+void weergaveSchermPerspectief::setModelView(glm::mat4 modelView)
+{ 
+	_modelView  = modelView;
+	_transInvMV = glm::transpose(glm::inverse(_modelView));
+}
+
 void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
 {
 	glEnable(GL_DEPTH_TEST);
@@ -31,4 +37,9 @@ void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
 
 	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> modelView");
+
+	glUniformMatrix4fv(glGetUniformLocation(programma, "transInvMV"), 1, GL_FALSE, glm::value_ptr(_transInvMV));
+	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> transInvMV");
+
+	
 }

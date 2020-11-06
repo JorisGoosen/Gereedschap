@@ -7,7 +7,7 @@
 #include <list>
 
 
-#define PERLIN_AANTAL_GRADIENTEN 1024
+#define PERLIN_AANTAL_GRADIENTEN 4096
 
 class perlinRuis
 {
