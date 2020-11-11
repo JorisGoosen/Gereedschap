@@ -4,6 +4,7 @@
 #include <iostream>
 #include <png.h>
 #include <exception>
+#include <random>
 
 void glErrorToConsole(const std::string & huidigeActie)
 {
@@ -179,9 +180,11 @@ GLuint _maakBerekenShader(const std::string & shaderBestandsnaam)
 
 glm::vec3 willekeurigeVec3()
 {
-	const float randMax = RAND_MAX;
+	static std::random_device					willekeur;  
+    static std::mt19937 						bemonsteraar(willekeur());
+	static std::uniform_real_distribution<> 	greep(-1.0, 1.0);
 
-	return glm::vec3(rand() / randMax, rand() / randMax, rand() / randMax);
+	return glm::vec3(greep(bemonsteraar), greep(bemonsteraar), greep(bemonsteraar));
 }
 
 
