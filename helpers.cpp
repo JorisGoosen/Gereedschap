@@ -5,6 +5,8 @@
 #include <png.h>
 #include <exception>
 #include <random>
+#include <regex>
+#include <filesystem>
 
 void glErrorToConsole(const std::string & huidigeActie)
 {
@@ -71,17 +73,31 @@ std::string GetShaderTypeString(GLenum ShaderType)
 }
 
 
-std::string textFileRead(const std::string & fileName) 
+std::string tekstInlezen(const std::string & bestandsNaam) 
 {
-	std::ifstream leesShader(fileName);
+	using namespace std::filesystem;
+	path bestand(bestandsNaam);
+
+	std::ifstream leesShader(bestandsNaam);
 
 	if(!leesShader.is_open())
-		throw std::runtime_error("Het openen van de shader " + fileName + " is helaas niet gelukt...");
+		throw std::runtime_error("Het openen van de shader " + bestandsNaam + " is helaas niet gelukt...");
+
+	std::regex headers("\\s*#include\\s+\"(\\w+\\.\\w+)\"\\s*");
 	
-	std::stringstream touw;
+	std::stringstream 	touw;
+	std::string			regel;
+	std::smatch 		m;
 
-	touw << leesShader.rdbuf();
+	while(std::getline(leesShader, regel))
+		touw << (std::regex_match(regel, m, headers) ? tekstInlezen(bestand.replace_filename(path(m[1])).string()) : regel) << "\n";
 
+	if(false)
+	{
+		const char * streepjes = "-----------------";
+		std::cout << "\n" << streepjes << "tekstInlezen('" << bestandsNaam << "')" << streepjes << "\n" << touw.str() << streepjes << "\nEinde '" << bestandsNaam << "'" << streepjes <<  std::endl;
+	}
+	
 	return touw.str();
 }
 
@@ -90,7 +106,7 @@ GLuint _maakShaderObject(const std::string & shaderBestandsnaam, GLenum shaderty
 {
 	GLuint shaderobject = glCreateShader(shadertype);
 
-	std::string shaderSource = textFileRead(shaderBestandsnaam);
+	std::string shaderSource = tekstInlezen(shaderBestandsnaam);
 
 	//The following seems a bit weird no?
 	char const * pointerToCStr = shaderSource.c_str();
