@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "png.h"
-
+#include <ostream>
 
 void glErrorToConsole(const std::string & huidigeActie = "");
 
@@ -23,3 +23,8 @@ GLuint 		_maakVlakVerdelingShader(	const std::string &  vertShaderBestandsnaam, 
 inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 
 png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
+
+
+inline std::ostream& operator<<(std::ostream& os, const glm::vec2 & vec) { return (os << "[ " << vec.x << ", " << vec.y										<< " ]"); }
+inline std::ostream& operator<<(std::ostream& os, const glm::vec3 & vec) { return (os << "[ " << vec.x << ", " << vec.y << ", " << vec.z 					<< " ]"); }
+inline std::ostream& operator<<(std::ostream& os, const glm::vec4 & vec) { return (os << "[ " << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w 	<< " ]"); }
