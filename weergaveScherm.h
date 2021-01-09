@@ -45,8 +45,8 @@ public:
 	GLuint		geefEnigeProgrammaHandvat() 					const;
 	GLuint		huidigProgramma()								const { return _huidigProgramma; }
 
-	glm::vec2 	laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam, unsigned char ** imgData = nullptr);
-
+	glm::vec2 	laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, unsigned char ** imgData = nullptr);
+	void 		bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const;
 
 	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 

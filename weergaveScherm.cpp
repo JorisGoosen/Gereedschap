@@ -181,7 +181,7 @@ GLuint weergaveScherm::geefEnigeProgrammaHandvat() const
 	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
 }
 
-glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam, unsigned char ** imgData)
+glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, unsigned char ** imgData)
 {
 	size_t breedte, hoogte, kanalen;
 	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);
@@ -194,8 +194,8 @@ glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, cons
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, herhaalS ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, herhaalT ? GL_REPEAT : GL_CLAMP_TO_EDGE);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -212,4 +212,10 @@ glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string bestandsNaam, cons
 	else			*imgData = data;
 
 	return glm::vec2(breedte, hoogte);
+}
+
+void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const
+{
+	glActiveTexture(GL_TEXTURE0 + bindPlek);
+	glBindTexture(GL_TEXTURE_2D, _texturen.at(textuurNaam));
 }
