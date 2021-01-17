@@ -9,6 +9,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
+#include <set>
+#include <function>
 #include <algorithm>
 
 #include "wrgvOnderOpslag.h"	
@@ -45,8 +47,10 @@ public:
 	GLuint		geefEnigeProgrammaHandvat() 					const;
 	GLuint		huidigProgramma()								const { return _huidigProgramma; }
 
-	glm::vec2 	laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, unsigned char ** imgData = nullptr);
+
+	glm::vec2 	laadTextuurUitPng(const std::string bestandsNaam, const std::string textuurNaam,  bool herhaalS = true, bool herhaalT = true, unsigned char ** imgData = nullptr);
 	void 		bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const;
+	void		maakVolumeTextuur(const std::string textuurNaam, glm::uvec3 dimensies, unsigned char * data = nullptr);
 
 	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 
@@ -65,6 +69,7 @@ private:
 
 	std::map<std::string, GLuint>					_shaderProgrammas,
 													_texturen;
+	std::set<std::string>							_3dTexturen;
 	static std::map<GLFWwindow *, weergaveScherm*>	_schermen;
 
 	static keyHandlerFunc _customHandler;

@@ -214,8 +214,29 @@ glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, co
 	return glm::vec2(breedte, hoogte);
 }
 
+
 void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const
 {
 	glActiveTexture(GL_TEXTURE0 + bindPlek);
 	glBindTexture(GL_TEXTURE_2D, _texturen.at(textuurNaam));
+}
+
+void weergaveScherm::maakVolumeTextuur(const std::string textuurNaam, glm::uvec3 dimensies, unsigned char * data)
+{
+	unsigned int texture;
+	glGenTextures(1, &texture);  
+
+	glBindTexture(GL_TEXTURE_3D, texture);
+
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, dimensies.x, dimensies.y, dimensies.z, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	_texturen[textuurNaam] = texture;
+	_3dTexturen.insert(textuurNaam);
 }
