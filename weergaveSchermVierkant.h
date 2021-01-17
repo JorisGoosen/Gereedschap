@@ -16,6 +16,6 @@ private:
 	void		initQuad();
 	
 	wrgvOpslag 	*_reeks		= nullptr;
-	wrgvOnderOpslag<float>	*_punten		= nullptr,
+	wrgvOnderOpslag<float>	*_punten	= nullptr,
 							*_tex		= nullptr;
 };

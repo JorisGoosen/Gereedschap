@@ -123,6 +123,7 @@ void weergaveScherm::rondRenderAf()
 	glFlush();
 	glfwSwapBuffers(_glfwScherm);
 	glfwPollEvents();
+	glErrorToConsole("weergaveScherm::rondRenderAf(): ");
 }
 
 GLuint weergaveScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramma)

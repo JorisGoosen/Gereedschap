@@ -48,7 +48,7 @@ void weergaveSchermVierkant::geefWeer()
 		initQuad();
 
 	glDisable(GL_DEPTH_TEST);
-	unsigned int indices[] = {1, 0, 2, 3};
+	unsigned int indices[] = {1, 2, 0, 3};
 
 	_reeks->bindPuntReeks();	
 	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, indices);
