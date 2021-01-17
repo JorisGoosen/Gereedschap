@@ -218,10 +218,10 @@ glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, co
 void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const
 {
 	glActiveTexture(GL_TEXTURE0 + bindPlek);
-	glBindTexture(GL_TEXTURE_2D, _texturen.at(textuurNaam));
+	glBindTexture(_3dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_3D : GL_TEXTURE_2D, _texturen.at(textuurNaam));
 }
 
-void weergaveScherm::maakVolumeTextuur(const std::string textuurNaam, glm::uvec3 dimensies, unsigned char * data)
+void weergaveScherm::maakVolumeTextuur(const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * data)
 {
 	unsigned int texture;
 	glGenTextures(1, &texture);  
