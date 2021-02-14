@@ -50,6 +50,8 @@ public:
 	glm::vec2 	laadTextuurUitPng(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, unsigned char ** imgData = nullptr);
 	void 		bindTextuur(		const std::string & textuurNaam, GLuint bindPlek) const;
 	void		maakVolumeTextuur(	const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * data = nullptr);
+	void		maakTextuur(		const std::string & textuurNaam, size_t breedte, size_t hoogte, void * data = nullptr, 	GLenum format = GL_RGBA, 	GLenum type = GL_UNSIGNED_BYTE);
+	void		laadData(			const std::string & textuurNaam, size_t breedte, size_t hoogte, void * data, 			GLenum format = GL_RGBA, 	GLenum type = GL_UNSIGNED_BYTE);
 
 	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 

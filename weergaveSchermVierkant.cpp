@@ -4,8 +4,8 @@
 using namespace glm;
 
 
-weergaveSchermVierkant::weergaveSchermVierkant(std::string Naam, size_t W, size_t H) 
-: weergaveScherm(Naam, W, H)
+weergaveSchermVierkant::weergaveSchermVierkant(std::string Naam, size_t W, size_t H, bool texVanafNul) 
+: weergaveScherm(Naam, W, H), _texVanafNul(texVanafNul)
 {}
 
 weergaveSchermVierkant::~weergaveSchermVierkant()
@@ -33,10 +33,11 @@ void weergaveSchermVierkant::initQuad()
 	_punten->ggvPuntErbij(vec2(-1.0f,  1.0f));
 	
 	_tex = new wrgvOnderOpslag<float>(2, _reeks, 1);
-	_tex->ggvPuntErbij(vec2(-1.0f, -1.0f));
-	_tex->ggvPuntErbij(vec2( 1.0f, -1.0f));
+	const float minus = _texVanafNul ? 0.0f : -1.0;
+	_tex->ggvPuntErbij(vec2(minus, minus));
+	_tex->ggvPuntErbij(vec2( 1.0f, minus));
 	_tex->ggvPuntErbij(vec2( 1.0f,  1.0f));
-	_tex->ggvPuntErbij(vec2(-1.0f,  1.0f));
+	_tex->ggvPuntErbij(vec2(minus,  1.0f));
 
 	_punten->spoel();
 	_tex->spoel();
