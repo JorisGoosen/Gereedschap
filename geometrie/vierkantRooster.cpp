@@ -41,7 +41,7 @@ void vierkantRooster::genereer()
 	for(size_t y=0; y<=_hoogte; y++)
 		for(size_t x=0; x<=_breedte; x++)
 		{
-			_punten->ggvPuntErbij(glm::highp_vec3(xStap * x, yStap * y, 0.0f));
+			_punten->ggvPuntErbij(glm::highp_vec3(xStap * x, 0.0f, yStap * y));
 
 			if(x < _breedte && y < _hoogte)// && x % 2 ==0 && y %2 == 1)
 			{
