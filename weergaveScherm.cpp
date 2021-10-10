@@ -181,7 +181,7 @@ GLuint weergaveScherm::geefEnigeProgrammaHandvat() const
 	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
 }
 
-glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, unsigned char ** imgData)
+glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
 {
 	size_t breedte, hoogte, kanalen;
 	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);
@@ -189,32 +189,15 @@ glm::vec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, co
 	if(!data) 
 		throw std::runtime_error("Could not load '" + bestandsNaam + "'!");
 
-	unsigned int texture;
-	glGenTextures(1, &texture);  
-
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, herhaalS ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, herhaalT ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, breedte, hoogte, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glErrorToConsole("weergaveScherm::laadTextuurUitPng: ");
-
-	_texturen[textuurNaam] = texture;
-
+	maakTextuur(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, data, GL_RGBA, GL_UNSIGNED_BYTE);
+	
 	if(!imgData)	delete data;
 	else			*imgData = data;
 
-	return glm::vec2(breedte, hoogte);
+	return glm::ivec2(breedte, hoogte);
 }
 
-void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, void * data, GLenum format, 	GLenum type)
+void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, void * data, GLenum format, GLenum type)
 {
 	unsigned int texture;
 	glGenTextures(1, &texture);  
@@ -222,21 +205,24 @@ void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte
 
 	_texturen[textuurNaam] = texture;
 	
-	laadData(textuurNaam, breedte, hoogte, data, format, type);	
+	laadData(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, data, format, type);	
 }
 
 
-void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, size_t hoogte, void * data, GLenum format, 	GLenum type)
+void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, void * data, GLenum format, GLenum type)
 {
 	glBindTexture(GL_TEXTURE_2D, _texturen[textuurNaam]);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, herhaalS ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, herhaalT ? GL_REPEAT : GL_CLAMP_TO_EDGE);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, breedte, hoogte, 0, format, type, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, breedte, hoogte, 0, format, type, data);
+	
+	if(mipmap)
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 	glErrorToConsole("weergaveScherm::laadData: ");
 }
@@ -246,6 +232,13 @@ void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPle
 {
 	glActiveTexture(GL_TEXTURE0 + bindPlek);
 	glBindTexture(_3dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_3D : GL_TEXTURE_2D, _texturen.at(textuurNaam));
+}
+
+void weergaveScherm::bindTextuurPlaatje(const std::string & textuurNaam, GLuint bindPlek, bool lezen, bool schrijven) const
+{
+	if(!lezen && !schrijven) std::runtime_error("Ja hallo, waarom ben je " + textuurNaam + " nu helemaal aan het binden als je niet wilt lezen of schrijven???");
+
+	glBindImageTexture(bindPlek, _texturen.at(textuurNaam), 0, GL_FALSE, 0, lezen ? (schrijven ? GL_READ_WRITE : GL_READ_ONLY) : GL_WRITE_ONLY, GL_RGBA16F); 
 }
 
 void weergaveScherm::maakVolumeTextuur(const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * data)
