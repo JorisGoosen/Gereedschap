@@ -15,7 +15,7 @@ void weergaveSchermPerspectief::keyHandler(int key, int scancode, int action, in
 {
 	weergaveScherm::keyHandler(key, scancode, action, mods); //We hoeven niks te controleren want als die iets opvangt sluit het programma
 
-	const float stap = 0.025, tol = 0.2;
+	const float stap = 0.1, tol = 0.2;
 
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 		switch(key)
