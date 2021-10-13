@@ -4,7 +4,7 @@
 class vierkantRooster
 {
 public:
-	vierkantRooster(size_t breedte, size_t hoogte);
+	vierkantRooster(size_t breedte, size_t hoogte, float schaling = 1.0f);
 
 	///Teken jezelf met driehoeken
 	virtual void tekenJezelf() 			const; 
@@ -17,9 +17,11 @@ public:
 protected:
 	void genereer();
 
-	wrgvOpslag						* 	_reeks  = nullptr;
-	wrgvOnderOpslag<float>			* 	_punten = nullptr;
+	wrgvOpslag						* 	_reeks  	= nullptr;
+	wrgvOnderOpslag<float>			* 	_punten 	= nullptr,
+									*	_texturen	= nullptr;
 	std::vector<glm::uint32>	  	  	_vierkanten;
 	size_t								_breedte,
 										_hoogte;
+	float								_schaling;
 };
