@@ -13,6 +13,8 @@ public:
 	virtual void tekenJezelfPatchy() 	const;
 
 	void bindPuntReeks() const { _reeks->bindPuntReeks();	 }
+
+	float schaling() const { return _schaling; }
 	
 protected:
 	void genereer();
