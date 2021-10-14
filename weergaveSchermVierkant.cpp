@@ -19,10 +19,10 @@ weergaveSchermVierkant::~weergaveSchermVierkant()
 	_tex 	= nullptr;
 }
 
-void weergaveSchermVierkant::initQuad()
+void weergaveSchermVierkant::initVierkant()
 {
 	if(_reeks != nullptr)
-		throw std::runtime_error("InitQuad dubbel gedaan..\n");
+		throw std::runtime_error("initVierkant dubbel gedaan..\n");
 
 	_reeks = new wrgvOpslag();
 	
@@ -46,7 +46,7 @@ void weergaveSchermVierkant::initQuad()
 void weergaveSchermVierkant::geefWeer()
 {
 	if(!_reeks)
-		initQuad();
+		initVierkant();
 
 	glDisable(GL_DEPTH_TEST);
 	unsigned int indices[] = {1, 2, 0, 3};

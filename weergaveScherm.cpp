@@ -3,12 +3,12 @@
 
 using namespace glm;
 
-weergaveScherm::keyHandlerFunc weergaveScherm::_customHandler = nullptr;
+weergaveScherm::toetsVerwerkerFunc weergaveScherm::_eigenVerwerker = nullptr;
 
 std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
 weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples) 
-: _aspectRatio(float(W) / float(H)), _naam(Naam)
+: _schermVerhouding(float(W) / float(H)), _naam(Naam)
 {
 	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
 
@@ -44,22 +44,22 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
 	glfwSwapInterval(-1);
 
-	glfwSetKeyCallback(_glfwScherm, toetsVerwerker);
+	glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
 
 	if(samples > 1)
 		glEnable(GL_MULTISAMPLE); 
 }
 
-void weergaveScherm::toetsVerwerker(GLFWwindow * scherm, int key, int scancode, int action, int mods)
+void weergaveScherm::toetsVerwerkerCentraal(GLFWwindow * scherm, int key, int scancode, int action, int mods)
 {
-	if(_customHandler)
-		_customHandler(key, scancode, action, mods);
+	if(_eigenVerwerker)
+		_eigenVerwerker(key, scancode, action, mods);
 
 	if(_schermen.count(scherm) > 0)
-		_schermen[scherm]->keyHandler(key, scancode, action, mods);
+		_schermen[scherm]->toetsVerwerker(key, scancode, action, mods);
 }
 
-void weergaveScherm::keyHandler(int key, int , int action, int )
+void weergaveScherm::toetsVerwerker(int key, int , int action, int )
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(_glfwScherm, 1);
@@ -82,7 +82,7 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm
 	int width, height;
 	
 	glfwGetFramebufferSize(_glfwScherm, &width, &height);
-	_aspectRatio = width / (float) height;
+	_schermVerhouding = width / (float) height;
 
 	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
 

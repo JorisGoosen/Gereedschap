@@ -48,9 +48,9 @@ void vierkantRooster::genereer()
 			if(x < _breedte && y < _hoogte)// && x % 2 ==0 && y %2 == 1)
 			{
 				_vierkanten.push_back(plek(x, 	y));
-				_vierkanten.push_back(plek(x+1, y));
-				_vierkanten.push_back(plek(x+1, y+1));
 				_vierkanten.push_back(plek(x, 	y+1));				
+				_vierkanten.push_back(plek(x+1, y+1));
+				_vierkanten.push_back(plek(x+1, y));				
 			}
 		}
 

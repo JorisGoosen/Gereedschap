@@ -17,7 +17,7 @@ int main()
 	while(!scherm.stopGewenst())
 	{
 		scherm.herberekenProjectie();
-		scherm.setModelView(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
+		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
 		scherm.bereidRenderVoor();
 
 		geo.tekenJezelf();

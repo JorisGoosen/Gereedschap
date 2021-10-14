@@ -13,7 +13,7 @@ public:
 	//void keyHandler(int key, int scancode, int action, int mods) override;
 
 private:
-	void		initQuad();
+	void		initVierkant();
 
 	bool					_texVanafNul = false;
 	

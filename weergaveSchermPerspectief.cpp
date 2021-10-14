@@ -11,9 +11,9 @@ weergaveSchermPerspectief::weergaveSchermPerspectief(std::string Naam, size_t W,
 	herberekenModelZicht();
 }
 
-void weergaveSchermPerspectief::keyHandler(int key, int scancode, int action, int mods)
+void weergaveSchermPerspectief::toetsVerwerker(int key, int scancode, int action, int mods)
 {
-	weergaveScherm::keyHandler(key, scancode, action, mods); //We hoeven niks te controleren want als die iets opvangt sluit het programma
+	weergaveScherm::toetsVerwerker(key, scancode, action, mods); //We hoeven niks te controleren want als die iets opvangt sluit het programma
 
 	const float stap = 0.1, tol = 0.2;
 
@@ -38,7 +38,7 @@ void weergaveSchermPerspectief::keyHandler(int key, int scancode, int action, in
 
 void weergaveSchermPerspectief::herberekenModelZicht()
 {
-	setModelView(
+	zetModelZicht(
 		glm::rotate(
 			glm::rotate(
 				glm::translate(
@@ -58,10 +58,10 @@ weergaveSchermPerspectief::~weergaveSchermPerspectief()
 {
 }
 
-void weergaveSchermPerspectief::setModelView(glm::mat4 modelView)
+void weergaveSchermPerspectief::zetModelZicht(glm::mat4 modelView)
 { 
-	_modelView  = modelView;
-	_transInvMV = glm::transpose(glm::inverse(_modelView));
+	_modelZicht  = modelView;
+	_transInvMV = glm::transpose(glm::inverse(_modelZicht));
 }
 
 void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
@@ -70,10 +70,10 @@ void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
 
 	herberekenProjectie();	
 
-	glUniformMatrix4fv(glGetUniformLocation(programma, "projectie"), 1, GL_FALSE, glm::value_ptr(_projection));
+	glUniformMatrix4fv(glGetUniformLocation(programma, "projectie"), 1, GL_FALSE, glm::value_ptr(_projectie));
 	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> projectie");
 
-	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelView));
+	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelZicht));
 	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> modelView");
 
 	glUniformMatrix4fv(glGetUniformLocation(programma, "transInvMV"), 1, GL_FALSE, glm::value_ptr(_transInvMV));

@@ -23,7 +23,7 @@ const float 		FPI = 3.141592653589793238f;
 class weergaveScherm
 {
 public:
-	typedef std::function<void(int key, int scancode, int action, int mods)> keyHandlerFunc;
+	typedef std::function<void(int key, int scancode, int action, int mods)> toetsVerwerkerFunc;
 
 				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
 				~weergaveScherm();
@@ -33,9 +33,9 @@ public:
 
 	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
-	static 	void toetsVerwerker(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
-	virtual void keyHandler(							int key, int scancode, int action, int mods);
-	static	void setCustomKeyhandler(keyHandlerFunc customHandler) { _customHandler = customHandler; }
+	static 	void toetsVerwerkerCentraal(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
+	virtual void toetsVerwerker(								int key, int scancode, int action, int mods);
+	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
 
 	GLuint 		maakVlakVerdelingsShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  vlakEvaluatieBestand, const std::string &  vlakControleBestand = "");
 	GLuint 		maakGeometrieShader(		const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
@@ -60,7 +60,7 @@ public:
 	virtual void extraVoorbereidingen(GLuint /*programma*/) { }
 	
 protected:
-	float					_aspectRatio = 16.0f / 9.0f;
+	float					_schermVerhouding = 16.0f / 9.0f;
 	std::string				_naam;
 	GLuint					_huidigProgramma;
 
@@ -74,5 +74,5 @@ private:
 	std::set<std::string>							_3dTexturen;
 	static std::map<GLFWwindow *, weergaveScherm*>	_schermen;
 
-	static keyHandlerFunc _customHandler;
+	static toetsVerwerkerFunc _eigenVerwerker;
 };
