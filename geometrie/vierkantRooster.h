@@ -6,7 +6,7 @@ class vierkantRooster
 public:
 	vierkantRooster(size_t breedte, size_t hoogte, float schaling = 1.0f);
 
-	///Teken jezelf met driehoeken
+	///Teken jezelf met vierkanten
 	virtual void tekenJezelf() 			const; 
 
 	///Teken jezelf met patches, tbv vlakverdeling
