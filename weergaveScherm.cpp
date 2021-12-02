@@ -79,14 +79,14 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm
 {
 	glfwMakeContextCurrent(_glfwScherm);
 
-	int width, height;
+	int breedte, hoogte;
 	
-	glfwGetFramebufferSize(_glfwScherm, &width, &height);
-	_schermVerhouding = width / (float) height;
+	glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
+	_schermVerhouding = breedte / (float) hoogte;
 
 	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
 
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, breedte, hoogte);
 
 	if(wisScherm)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -100,6 +100,9 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm
 	_huidigProgramma = programma;
 	glUseProgram(programma);
 	glErrorToConsole("bereidRenderVoor glUseProgram('"+shader+"'): ");
+
+	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermBreedte"), 	breedte);
+	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermHoogte"), 	hoogte);
 
 	extraVoorbereidingen(programma);
 }
@@ -197,6 +200,7 @@ glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, c
 	return glm::ivec2(breedte, hoogte);
 }
 
+
 void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, void * data, GLenum format, GLenum type)
 {
 	unsigned int texture;
@@ -231,7 +235,7 @@ void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, s
 void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const
 {
 	glActiveTexture(GL_TEXTURE0 + bindPlek);
-	glBindTexture(_3dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_3D : GL_TEXTURE_2D, _texturen.at(textuurNaam));
+	glBindTexture(_3dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_3D : _1dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_1D : GL_TEXTURE_2D, _texturen.at(textuurNaam));
 }
 
 void weergaveScherm::bindTextuurPlaatje(const std::string & textuurNaam, GLuint bindPlek, bool lezen, bool schrijven) const
@@ -248,9 +252,9 @@ void weergaveScherm::maakVolumeTextuur(const std::string & textuurNaam, glm::uve
 
 	glBindTexture(GL_TEXTURE_3D, texture);
 
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
 	
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -259,4 +263,25 @@ void weergaveScherm::maakVolumeTextuur(const std::string & textuurNaam, glm::uve
 
 	_texturen[textuurNaam] = texture;
 	_3dTexturen.insert(textuurNaam);
+
+	glErrorToConsole("weergaveScherm::maakVolumeTextuur('" + textuurNaam + "': ");
+}
+
+void weergaveScherm::maakLijnTextuur(const std::string & textuurNaam, size_t lengte, GLenum internalFormat, void * data, GLenum dataFormat, GLenum dataType)
+{
+	unsigned int texture;
+	glGenTextures(1, &texture);  
+
+	glBindTexture(GL_TEXTURE_1D, texture);
+
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, 		GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, 	GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, 	GL_LINEAR);
+
+	glTexImage1D(GL_TEXTURE_1D, 0, internalFormat, lengte, 0, dataFormat, dataType, data);
+
+	_texturen[textuurNaam] = texture;
+	_1dTexturen.insert(textuurNaam);
+
+	glErrorToConsole("weergaveScherm::maakLijnTextuur('" + textuurNaam + "': ");
 }
