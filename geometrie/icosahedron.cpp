@@ -1,6 +1,7 @@
 #include "icosahedron.h"
 #include <set>
 #include <iostream>
+#include <array>
 
 using namespace glm;
 
