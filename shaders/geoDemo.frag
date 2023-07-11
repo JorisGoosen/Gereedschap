@@ -1,16 +1,14 @@
-#version 440
+#version 300 es
 
-out vec4 kleur;
+out mediump vec4 uitKleur;
 
-in NaarFrag
-{
-	in vec3 normal;
-	in vec2 tex;
-	in vec4 kleur;
-} fs_in;
+in mediump vec3 normal;
+in mediump vec2 texU;
+in mediump vec4 kleur;
+
 
 void main()
 {
-	kleur = fs_in.kleur;
+	uitKleur = kleur;
 }
 	
