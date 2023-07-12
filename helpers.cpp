@@ -46,11 +46,15 @@ bool checkvoorshadercompileerfout(GLuint shader, const std::string & naam)
 			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
 	 
 			//The maxLength includes the nullptr character
-			std::string errorLog;
-			errorLog.resize(maxLength);
-			glGetShaderInfoLog(shader, maxLength, &maxLength, errorLog.data());
+			GLchar * errorLog = new GLchar[maxLength];
+			glGetShaderInfoLog(shader, maxLength, NULL, errorLog);
+
+			glErrorToConsole("glGetShaderInfoLog " + naam);
 	 
-	 		std::cout << "Shadercompilatie van " << naam << " is gefaald..\nCheck dit: " <<  errorLog.data();
+	 		std::cout << "Shadercompilatie van " << naam << " is gefaald..\nCheck dit: " <<  errorLog << std::endl;
+
+			delete[] errorLog;
+
 			glDeleteShader(shader); //Don't leak the shader.
 			return false;
 	}
@@ -118,6 +122,8 @@ GLuint _maakShaderObject(const std::string & shaderBestandsnaam, GLenum shaderty
 	std::cout << "Compiling " << shaderBestandsnaam << "..." << std::endl;
 
 	glCompileShader(shaderobject);
+
+	glErrorToConsole("_makeShaderObject " + shaderBestandsnaam);
 	
 	if(!checkvoorshadercompileerfout(shaderobject, shaderBestandsnaam.c_str())) 
 		exit(1);
@@ -229,7 +235,7 @@ png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & he
 			return buffer;
 		}
 
-		delete buffer;
+		delete[] buffer;
 	}
 
 	  return nullptr;  

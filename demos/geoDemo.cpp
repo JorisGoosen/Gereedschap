@@ -1,4 +1,4 @@
-//This file simply opens an OpenGL window where a quad will be rendered and some simple shaders to display this fact, press escape to exit.
+//This file simply opens an OpenGL window where an icosahedron, subdivided and rounded out CPU side, will be rendered, press escape to exit.
 #include "../weergaveSchermPerspectief.h"
 #include "../geometrie/geodesisch.h"
 #include <iostream>
