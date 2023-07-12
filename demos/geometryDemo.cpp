@@ -1,11 +1,11 @@
-//This file simply opens an OpenGL window where an icosahedron will be rendered, press escape to exit.
+//This file simply opens an OpenGL window where an icosahedron will be rendered with a nice geometry shader to make it rounder, press escape to exit.
 #include "../weergaveSchermPerspectief.h"
 #include "../geometrie/icosahedron.h"
 
 int main()
 {
-	weergaveSchermPerspectief scherm("Perspectief Demo");
-	scherm.maakShader("perspectiefDemo", "shaders/perspectiefDemo.vert", "shaders/perspectiefDemo.frag");
+	weergaveSchermPerspectief scherm("Geometry Shader Demo");
+	scherm.maakGeometrieShader("geometryDemo", "shaders/geometryDemo.vert", "shaders/geometryDemo.frag", "shaders/geometryDemo.geom");
 
 	glClearColor(0,0,0,0);
 
@@ -21,6 +21,6 @@ int main()
 		scherm.rondRenderAf();
 
 
-		rot += 0.001f;
+		rot += 0.01f;
 	}
 }
