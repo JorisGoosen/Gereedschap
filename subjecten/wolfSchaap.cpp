@@ -1,39 +1,85 @@
 #include "wolfSchaap.h"
-#include "weergaveScherm.h"
+#include "../weergaveScherm.h"
 #include <random>
 
 std::random_device				zaaier;
 std::normal_distribution<float> willekeur(0.0, 1.0);
 
-dier::dier()
+Dier::Dier()
 {
 	heteroKracht 	= willekeur(zaaier);
 	homoKracht 		= willekeur(zaaier);
 	honger			= 0.0;
+	levend			= 1;
 }
 
-dieren::dieren(int aantalWolven, int aantalSchapen, float wereldGrootte)
+float hackyWereldGrootte	= 1;
+bool hackySchapenNu			= false;
+
+PlaatsKleur::PlaatsKleur()
+{
+	float 	hoek		= willekeur(zaaier) * 3.14214,
+			afstand		= willekeur(zaaier) * hackyWereldGrootte;
+
+	posX			= sin(hoek) * afstand;
+	posY			= cos(hoek) * afstand;
+	lichtheid		= hackySchapenNu ? 1 : 0.5 * willekeur(zaaier);
+	roodheid		= (hackySchapenNu ? 0.2 : 1.0) * willekeur(zaaier);
+}
+
+
+Dieren::Dieren(int aantalWolven, int aantalSchapen, float wereldGrootte)
 : _wereldGrootte(wereldGrootte), _aantalWolven(aantalWolven), _aantalSchapen(aantalSchapen)
 {
-	std::vector<dier>	wolven,
-						schapen;
+	hackyWereldGrootte = _wereldGrootte;
+
+	std::vector<Dier>			wolven,
+								schapen;
+	std::vector<PlaatsKleur>	wolfPos,
+								schaapPos;
 
 	wolven.resize(aantalWolven);
 	schapen.resize(aantalSchapen);
+	wolfPos.resize(aantalWolven);
+	schaapPos.resize(aantalSchapen);
 
-	_wolven ->push_back(new vrwrkrOpslagDing<dier>(wolven,  0));
-	_wolven ->push_back(new vrwrkrOpslagDing<dier>(wolven,  1));
-	_schapen->push_back(new vrwrkrOpslagDing<dier>(schapen, 2));
-	_schapen->push_back(new vrwrkrOpslagDing<dier>(schapen, 3));
+	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(		wolven,  	0));
+	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(		wolven,  	1));
+	_wolvenP .push_back(new vrwrkrOpslagDing<PlaatsKleur>(	wolfPos, 	2));
+	_wolvenP .push_back(new vrwrkrOpslagDing<PlaatsKleur>(	wolfPos, 	3));
+	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(		schapen, 	4));
+	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(		schapen, 	5));
+	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	6));
+	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	7));
 
-	glErrorToConsole("dieren::dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
+	_wolvenP [0]->maakReeksOpslag();
+	_wolvenP [1]->maakReeksOpslag();
+	_schapenP[0]->maakReeksOpslag();
+	_schapenP[1]->maakReeksOpslag();
+
+	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
 }
 
-void dieren::bindDingen(weergaveScherm * scherm, const std::string & verwerker, bool pong)
+void Dieren::teken(bool wolven)
+{
+	if(wolven)	_wolvenP [_pingPong]->bindPuntReeks();
+	else		_schapenP[_pingPong]->bindPuntReeks();
+
+	glDrawArrays(GL_POINT, 0, wolven ? _aantalWolven : _aantalSchapen);
+}
+
+/*
+void Dieren::bindDingenRekenVerwerker(weergaveScherm * scherm, const std::string & verwerker, bool pong)
 {
 	if(pong)
 		_pingPong = !_pingPong;
 
+	std::function<void(int)> DierBinder = [&](int prog)
+	{
+		glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
+		glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
+	};
 
-	scherm->doeRekenVerwerker(verwerker, 
-}
+	scherm->doeRekenVerwerker(verwerker, {_aantalWolven, 1, 1}, wolfBinder);
+}*/
+

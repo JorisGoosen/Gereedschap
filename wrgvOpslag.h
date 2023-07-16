@@ -83,6 +83,7 @@ public:
 			_plekInfos[stapW.plek] = puntEigenschapPlekInfo(reeksOpslag, stapW.plek, aantalVelden);
 		}
 
+		//ontbind:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
     	glBindVertexArray(0);
 
