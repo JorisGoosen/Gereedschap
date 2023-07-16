@@ -21,10 +21,14 @@ PlaatsKleur::PlaatsKleur()
 	float 	hoek		= willekeur(zaaier) * 3.14214,
 			afstand		= willekeur(zaaier) * hackyWereldGrootte;
 
-	posX			= sin(hoek) * afstand;
-	posY			= cos(hoek) * afstand;
+			static float uhm = -1.0;
+
+	posX			= uhm;//sin(hoek) * afstand;
+	posY			= uhm;//cos(hoek) * afstand;
 	lichtheid		= hackySchapenNu ? 1 : 0.5 * willekeur(zaaier);
 	roodheid		= (hackySchapenNu ? 0.2 : 1.0) * willekeur(zaaier);
+
+	uhm += 0.1;
 }
 
 

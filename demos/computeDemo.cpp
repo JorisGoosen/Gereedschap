@@ -9,12 +9,14 @@ int main()
 	//scherm.maakShader("bereken",	"shaders/computeDemo.comp");
 	scherm.maakShader("geefWeer", 	"shaders/computeDemo.vert", "shaders/computeDemo.frag");
 
-	Dieren dieren;
+	Dieren dieren(1, 20, 2.0);
 
 	/*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);*/
     glClearColor(0.1f, 0.9f, 0.0f, 0.0f);
 	glPointSize(10.0f);
+
+	glEnable(GL_DEPTH_TEST);
 
 	float rot = 0.0f;
 	while(!scherm.stopGewenst())
