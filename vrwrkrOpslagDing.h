@@ -28,7 +28,8 @@ public:
 	void bindPuntReeks()
 	{
 		glBindVertexArray(_reeksOpslag);
-		glErrorToConsole("vrwrkrOpslagDing::bindPuntReeks(): ");
+		glErrorToConsole("vrwrkrOpslagDing::bindPuntReeks() BindVertexArray: ");
+
 	}
 
 	void 	maakReeksOpslag()
@@ -39,16 +40,20 @@ public:
 		glCreateVertexArrays(1, &_reeksOpslag);
 		glErrorToConsole("glCreateVertexArrays in vrwrkrOpslagDing::maakReeksOpslag: ");
 
-		bindPuntReeks();
+		glBindVertexArray(_reeksOpslag);
 
 		glBindBuffer(GL_ARRAY_BUFFER, _opslag);
+		glErrorToConsole("glBindBuffer in vrwrkrOpslagDing::maakReeksOpslag: ");
 
-		glVertexAttribPointer(0, 4, GL_FLOAT, false, 0, 0);
+	//	glVertexAttribPointer(0, 4, GL_FLOAT, false, 0, 0);
+	//	glErrorToConsole("glVertexAttribPointer in vrwrkrOpslagDing::maakReeksOpslag: ");
+
 		glEnableVertexAttribArray(0);
+		glErrorToConsole("glEnableVertexAttribArray in vrwrkrOpslagDing::maakReeksOpslag: ");
 
 		//ontbind:
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-    	glBindVertexArray(0);
+	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //	glBindVertexArray(0);
 	}
 
 private:
