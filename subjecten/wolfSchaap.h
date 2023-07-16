@@ -25,7 +25,7 @@ class weergaveScherm;
 class Dieren
 {
 public:
-	Dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 100);
+	Dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 1);
 
 	//void bindDingenRekenVerwerker(weergaveScherm * scherm, int programma, bool pong = false);
 

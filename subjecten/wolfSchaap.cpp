@@ -21,8 +21,8 @@ PlaatsKleur::PlaatsKleur()
 	float 	hoek		= willekeur(zaaier) * 3.14214,
 			afstand		= willekeur(zaaier) * hackyWereldGrootte;
 
-	posX			= sin(hoek) * afstand;
-	posY			= cos(hoek) * afstand;
+	posX			= 0.1;//sin(hoek) * afstand;
+	posY			= 0;//cos(hoek) * afstand;
 	lichtheid		= hackySchapenNu ? 1 : 0.5 * willekeur(zaaier);
 	roodheid		= (hackySchapenNu ? 0.2 : 1.0) * willekeur(zaaier);
 }
@@ -43,29 +43,31 @@ Dieren::Dieren(int aantalWolven, int aantalSchapen, float wereldGrootte)
 	wolfPos.resize(aantalWolven);
 	schaapPos.resize(aantalSchapen);
 
-	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(		wolven,  	0));
-	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(		wolven,  	1));
+	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	0));
+	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	1));
 	_wolvenP .push_back(new vrwrkrOpslagDing<PlaatsKleur>(	wolfPos, 	2));
 	_wolvenP .push_back(new vrwrkrOpslagDing<PlaatsKleur>(	wolfPos, 	3));
-	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(		schapen, 	4));
-	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(		schapen, 	5));
+	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(			schapen, 	4));
+	_schapenE.push_back(new vrwrkrOpslagDing<Dier>(			schapen, 	5));
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	6));
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	7));
 
-	_wolvenP [0]->maakReeksOpslag();
-	_wolvenP [1]->maakReeksOpslag();
+	//_wolvenP [0]->maakReeksOpslag();
+	//_wolvenP [1]->maakReeksOpslag();
 	_schapenP[0]->maakReeksOpslag();
-	_schapenP[1]->maakReeksOpslag();
+	//_schapenP[1]->maakReeksOpslag();
 
 	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
 }
 
 void Dieren::teken(bool wolven)
 {
-	if(wolven)	_wolvenP [_pingPong]->bindPuntReeks();
-	else		_schapenP[_pingPong]->bindPuntReeks();
+	if(wolven)	_wolvenP [0]->bindPuntReeks();
+	else		_schapenP[0]->bindPuntReeks();
 
-	glDrawArrays(GL_POINT, 0, wolven ? _aantalWolven : _aantalSchapen);
+	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
+
+	glErrorToConsole(std::string("Dieren::teken(") + (wolven ? "wolven":"schapen") + "): ");
 }
 
 /*
