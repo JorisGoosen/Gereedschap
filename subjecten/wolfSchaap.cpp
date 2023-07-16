@@ -13,7 +13,7 @@ Dier::Dier()
 	levend			= 1;
 }
 
-float hackyWereldGrootte	= 1;
+float hackyWereldGrootte	= 2;
 bool hackySchapenNu			= false;
 
 PlaatsKleur::PlaatsKleur()
@@ -21,8 +21,8 @@ PlaatsKleur::PlaatsKleur()
 	float 	hoek		= willekeur(zaaier) * 3.14214,
 			afstand		= willekeur(zaaier) * hackyWereldGrootte;
 
-	posX			= 0.1;//sin(hoek) * afstand;
-	posY			= 0;//cos(hoek) * afstand;
+	posX			= sin(hoek) * afstand;
+	posY			= cos(hoek) * afstand;
 	lichtheid		= hackySchapenNu ? 1 : 0.5 * willekeur(zaaier);
 	roodheid		= (hackySchapenNu ? 0.2 : 1.0) * willekeur(zaaier);
 }
