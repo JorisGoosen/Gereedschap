@@ -9,7 +9,7 @@ int main()
 	//scherm.maakShader("bereken",	"shaders/computeDemo.comp");
 	scherm.maakShader("geefWeer", 	"shaders/computeDemo.vert", "shaders/computeDemo.frag");
 
-	Dieren dieren(1, 20, 2.0);
+	Dieren dieren(1, 200, 4.0);
 
 	/*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);*/

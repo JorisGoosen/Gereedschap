@@ -1,9 +1,11 @@
 #include "wolfSchaap.h"
 #include "../weergaveScherm.h"
 #include <random>
+#include <numbers>
 
-std::random_device				zaaier;
-std::normal_distribution<float> willekeur(0.0, 1.0);
+std::random_device						zaaier;
+std::normal_distribution<float> 		willekeur(0.0, 1.0);
+std::uniform_real_distribution<float>	nietNormaal(0.0, 1.0);
 
 Dier::Dier()
 {
@@ -18,17 +20,14 @@ bool hackySchapenNu			= false;
 
 PlaatsKleur::PlaatsKleur()
 {
-	float 	hoek		= willekeur(zaaier) * 3.14214,
-			afstand		= willekeur(zaaier) * hackyWereldGrootte;
+	float 	hoek		= nietNormaal(zaaier) * std::numbers::pi * 2.0,
+			afstand		= nietNormaal(zaaier) * hackyWereldGrootte;
 
-			static float uhm = -1.0;
+	posX			= sin(hoek) * afstand;
+	posY			= cos(hoek) * afstand;
+	lichtheid		= (hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
+	roodheid		= (hackySchapenNu ? 0.2 : 1.0) 	* nietNormaal(zaaier);
 
-	posX			= uhm;//sin(hoek) * afstand;
-	posY			= uhm;//cos(hoek) * afstand;
-	lichtheid		= hackySchapenNu ? 1 : 0.5 * willekeur(zaaier);
-	roodheid		= (hackySchapenNu ? 0.2 : 1.0) * willekeur(zaaier);
-
-	uhm += 0.1;
 }
 
 
