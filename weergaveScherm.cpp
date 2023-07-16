@@ -7,7 +7,7 @@ weergaveScherm::toetsVerwerkerFunc weergaveScherm::_eigenVerwerker = nullptr;
 
 std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
-weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples) 
+weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples, bool volledigScherm) 
 : _schermVerhouding(float(W) / float(H)), _naam(Naam)
 {
 	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
@@ -18,7 +18,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	if(samples > 1)
 		glfwWindowHint(GLFW_SAMPLES, samples);
         
-    _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), nullptr, nullptr);
+    _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
     if (!_glfwScherm)
     {

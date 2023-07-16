@@ -25,7 +25,7 @@ class weergaveScherm
 public:
 	typedef std::function<void(int key, int scancode, int action, int mods)> toetsVerwerkerFunc;
 
-				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);
+				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1, bool volledigScherm = true);
 				~weergaveScherm();
 
 	void		bereidRenderVoor(const std::string & verwerker = "", bool wisScherm = true);
