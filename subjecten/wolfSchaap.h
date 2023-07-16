@@ -1,28 +1,43 @@
 #include "../vrwrkrOpslagDing.h"
 
-struct dier
+struct Dier
 {
-	dier();
+	Dier();
 
 	float	heteroKracht,	///< Hoe sterk is dit wezen aangetrokken tot de andere? Wolf -> Schaap -> Wolf
 			homoKracht,		///< Hoe sterk is dit wezen aangetrokken tot de zelfde? Wolf <> Wolf en Schaap <> Schaap
-			honger;			///< Als honger > 100 sterft dit dier, als honger > 50 komt begint de snelheid van het dier af te nemen.
+			honger,			///< Als honger > 100 sterft dit Dier, als honger > 50 komt begint de snelheid van het Dier af te nemen.
+			levend;			///< Als !0 leeft het Dier
+};
+
+struct PlaatsKleur
+{
+	PlaatsKleur();
+
+	float	posX,
+			posY,
+			lichtheid,
+			roodheid;
 };
 
 class weergaveScherm;
 
-class dieren
+class Dieren
 {
 public:
-	dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 100);
+	Dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 100);
 
-	void bindDingen(weergaveScherm * scherm, int programma, bool pong = false);
+	//void bindDingenRekenVerwerker(weergaveScherm * scherm, int programma, bool pong = false);
+
+	void teken(bool wolven);
 	
 protected:
-	std::vector<vrwrkrOpslagDing<dier>*>	_wolven [2],	///< Ping pong met wolven
-											_schapen[2];	///< Ping pong met schapen
-	float									_wereldGrootte;
-	int										_pingPong,
-											_aantalWolven,	
-											_aantalSchapen;
+	std::vector<vrwrkrOpslagDing<Dier>*>		_wolvenE ,	///< Ping pong met wolven, eigenschappen
+												_schapenE;	///< Ping pong met schapen, eigenschappen
+	std::vector<vrwrkrOpslagDing<PlaatsKleur>*>	_wolvenP ,	///< Ping pong met wolven, positie, mss beter vertex arary ofzo?
+												_schapenP;	///< Ping pong met schapen, positie
+	float										_wereldGrootte;
+	int											_pingPong,
+												_aantalWolven,	
+												_aantalSchapen;
 };

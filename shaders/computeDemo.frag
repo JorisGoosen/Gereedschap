@@ -2,9 +2,9 @@
 
 out mediump vec4 col;
 
-in mediump vec3 normal;
+in mediump vec4 kleur;
 
 void main()
 {
-	col = vec4((vec3(1) + normal) / vec3(2), 1);
+	col = kleur;
 }

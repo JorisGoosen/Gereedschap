@@ -3,19 +3,20 @@ LIBFLAGS 	= `pkg-config --libs glfw3 glew gl libpng`
 OBJECTS 	= $(patsubst %.cpp,%.o,$(wildcard *.cpp)) 
 DEMOS		= $(patsubst %.cpp,%,$(wildcard demos/*.cpp))
 GEOMS	 	= $(patsubst %.cpp,%.o,$(wildcard geometrie/*.cpp))
+SUBJS	 	= $(patsubst %.cpp,%.o,$(wildcard subjecten/*.cpp))
 
 all: gereedschap $(DEMOS) 
 
-gereedschap: $(OBJECTS) $(GEOMS)
+gereedschap: $(OBJECTS) $(GEOMS) $(SUBJS)
 	mkdir -p bin
-	g++ -shared $(CXXFLAGS) -o bin/libgereedschap.so $(OBJECTS) $(GEOMS) $(LIBFLAGS)
-	ar rcs libgereedschap.a $(OBJECTS) $(GEOMS)
+	g++ -shared $(CXXFLAGS) -o bin/libgereedschap.so $(OBJECTS) $(GEOMS) $(SUBJS) $(LIBFLAGS)
+	ar rcs libgereedschap.a $(OBJECTS) $(GEOMS) $(SUBJS)
 
 $(DEMOS): gereedschap $(wildcard demos/*.cpp)
-	g++ $(CXXFLAGS) -o $(patsubst demos/%,bin/%,$@) $@.cpp $(OBJECTS) $(GEOMS) $(LIBFLAGS) -L. -lgereedschap
+	g++ $(CXXFLAGS) -o $(patsubst demos/%,bin/%,$@) $@.cpp $(OBJECTS) $(GEOMS) $(SUBJS) $(LIBFLAGS) -L. -lgereedschap
 
-%.o: %.cpp geometrie/%.cpp
+%.o: %.cpp geometrie/%.cpp subjecten/%.cpp
 	g++ $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm $(OBJECTS) $(GEOMS) bin/* *.a
+	rm $(OBJECTS) $(GEOMS) $(SUBJS) bin/* *.a

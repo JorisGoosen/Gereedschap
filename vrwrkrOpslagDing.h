@@ -25,7 +25,34 @@ public:
 		glBindBufferBase(	GL_SHADER_STORAGE_BUFFER, knooppunt, _opslag);
 	}
 
+	void bindPuntReeks()
+	{
+		glBindVertexArray(_reeksOpslag);
+		glErrorToConsole("vrwrkrOpslagDing::bindPuntReeks(): ");
+	}
+
+	void 	maakReeksOpslag()
+	{
+		//Ik neem voor het gemak maar aan dat dit geladen moet worden als vec4 en anders jammer dan
+		assert(sizeof(Soort) == sizeof(float) * 4);
+
+		glCreateVertexArrays(1, &_reeksOpslag);
+		glErrorToConsole("glCreateVertexArrays in vrwrkrOpslagDing::maakReeksOpslag: ");
+
+		bindPuntReeks();
+
+		glBindBuffer(GL_ARRAY_BUFFER, _opslag);
+
+		glVertexAttribPointer(0, 4, GL_FLOAT, false, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		//ontbind:
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+    	glBindVertexArray(0);
+	}
+
 private:
-	GLuint _opslag;
+	GLuint 	_opslag,
+			_reeksOpslag; ///< Voor als je deze buffer wilt kunnen weergeven als punten, moet wel worden aangemaakt eerst
 
 };
