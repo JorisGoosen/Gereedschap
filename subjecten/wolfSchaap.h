@@ -27,7 +27,8 @@ class Dieren
 public:
 	Dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 2);
 
-	//void bindDingenRekenVerwerker(weergaveScherm * scherm, int programma, bool pong = false);
+	void pong();
+	void beweeg(weergaveScherm * scherm, bool wolven);
 
 	void teken(bool wolven);
 	

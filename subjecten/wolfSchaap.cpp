@@ -55,10 +55,10 @@ Dieren::Dieren(int aantalWolven, int aantalSchapen, float wereldGrootte)
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	6));
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	7));
 
-	//_wolvenP [0]->maakReeksOpslag();
-	//_wolvenP [1]->maakReeksOpslag();
+	_wolvenP [0]->maakReeksOpslag();
+	_wolvenP [1]->maakReeksOpslag();
 	_schapenP[0]->maakReeksOpslag();
-	//_schapenP[1]->maakReeksOpslag();
+	_schapenP[1]->maakReeksOpslag();
 
 	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
 }
@@ -71,6 +71,28 @@ void Dieren::teken(bool wolven)
 	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
 
 	glErrorToConsole(std::string("Dieren::teken(") + (wolven ? "wolven":"schapen") + "): ");
+}
+
+void Dieren::pong()
+{
+	_pingPong = 1 - _pingPong;
+}
+
+void Dieren::beweeg(weergaveScherm * scherm, bool wolven)
+{
+
+	std::function<void()> schaapVoorbereiding = [&]()
+	{
+		_schapenE[  _pingPong]->zetKnooppunt(0);
+		_schapenE[1-_pingPong]->zetKnooppunt(1);
+		_schapenP[  _pingPong]->zetKnooppunt(2);
+		_schapenP[1-_pingPong]->zetKnooppunt(3);
+		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
+	};
+
+	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
+
+	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
 /*
