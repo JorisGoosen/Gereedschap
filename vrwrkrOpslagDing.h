@@ -45,17 +45,11 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, _opslag);
 		glErrorToConsole("glBindBuffer in vrwrkrOpslagDing::maakReeksOpslag: ");
 
-		glVertexAttribPointer(0, 2, GL_FLOAT, false, 2, 0);
-		glErrorToConsole("glVertexAttribPointer0 in vrwrkrOpslagDing::maakReeksOpslag: ");
+		glVertexAttribPointer(0, 4, GL_FLOAT, false, 0, 0);
+		glErrorToConsole("glVertexAttribPointer in vrwrkrOpslagDing::maakReeksOpslag: ");
 
 		glEnableVertexAttribArray(0);
-		glErrorToConsole("glEnableVertexAttribArray0 in vrwrkrOpslagDing::maakReeksOpslag: ");
-
-		glVertexAttribPointer(1, 2, GL_FLOAT, false, 2, 2);
-		glErrorToConsole("glVertexAttribPointer1 in vrwrkrOpslagDing::maakReeksOpslag: ");
-
-		glEnableVertexAttribArray(1);
-		glErrorToConsole("glEnableVertexAttribArray1 in vrwrkrOpslagDing::maakReeksOpslag: ");
+		glErrorToConsole("glEnableVertexAttribArray in vrwrkrOpslagDing::maakReeksOpslag: ");
 
 		//ontbind:
 	//	glBindBuffer(GL_ARRAY_BUFFER, 0);
