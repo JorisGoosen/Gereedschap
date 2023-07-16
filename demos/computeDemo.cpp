@@ -1,5 +1,4 @@
 //Deze demo doet schapen en wolven met compute shaders
-#include <glad/glad.h>
 #include "../weergaveSchermPerspectief.h"
 #include "../subjecten/wolfSchaap.h"
 #include <iostream>
@@ -7,9 +6,16 @@
 int main()
 {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 
-	weergaveSchermPerspectief scherm("Wolven & Schapen")`;
-	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+	weergaveSchermPerspectief scherm("Wolven & ");
+	
+	if(!GLEW_ARB_compute_shader)
+	{
+		std::cerr << "No compute shaders allowed! :(" << std::endl;
+		exit(1);
+	}
 
 	scherm.maakRekenShader(	"beweeg",		"shaders/computeDemoBeweeg.comp");
 	scherm.maakShader(		"geefWeer", 	"shaders/computeDemo.vert", "shaders/computeDemo.frag");
