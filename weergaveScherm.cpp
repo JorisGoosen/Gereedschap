@@ -79,6 +79,8 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm
 {
 	glfwMakeContextCurrent(_glfwScherm);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	int breedte, hoogte;
 	
 	glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
@@ -201,7 +203,7 @@ glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, c
 }
 
 
-void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, void * data, GLenum format, GLenum type)
+GLuint weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, GLenum internalFormat, void * data, GLenum format, GLenum type)
 {
 	unsigned int texture;
 	glGenTextures(1, &texture);  
@@ -210,6 +212,8 @@ void weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte
 	_texturen[textuurNaam] = texture;
 	
 	laadData(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, data, format, type);	
+
+	return texture;
 }
 
 
