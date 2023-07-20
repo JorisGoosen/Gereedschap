@@ -1,9 +1,9 @@
-#version 120
+#version 300 es
 
-attribute vec2 vPos;
-attribute vec2 vTex;
+in mediump vec2 vPos;
+in mediump vec2 vTex;
 
-varying vec2 tex;
+out mediump vec2 tex;
 
 void main(){
 	gl_Position = vec4(vPos, 0.0, 1.0);
