@@ -28,10 +28,12 @@ public:
 				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1, bool volledigScherm = true);
 				~weergaveScherm();
 
-	void		bereidRenderVoor(const std::string & verwerker = "", bool wisScherm = true);
-	void		rondRenderAf();
+	void		bereidWeergevenVoor(const std::string & verwerker = "", bool wisScherm = true);
+    void		_bereidWeergevenVoor(const std::string &shader, bool wisScherm, int breedte, int hoogte);
+	void		laadOmgeving();
+    void 		rondWeergevenAf();
 
-	bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
+    bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
 	static 	void toetsVerwerkerCentraal(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
 	virtual void toetsVerwerker(								int key, int scancode, int action, int mods);

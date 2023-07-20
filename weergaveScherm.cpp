@@ -75,15 +75,21 @@ weergaveScherm::~weergaveScherm()
 		glfwTerminate();
 }
 
-void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm)
+void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisScherm)
 {
-	glfwMakeContextCurrent(_glfwScherm);
+	laadOmgeving();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	int breedte, hoogte;
 	
 	glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
+
+	_bereidWeergevenVoor(shader, wisScherm, breedte, hoogte);
+}
+
+void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisScherm, int breedte, int hoogte)
+{
 	_schermVerhouding = breedte / (float) hoogte;
 
 	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
@@ -97,16 +103,21 @@ void weergaveScherm::bereidRenderVoor(const std::string & shader, bool wisScherm
 
 	if		(shader == "" && _shaderProgrammas.size() == 1)			programma = _shaderProgrammas.begin()->second;
 	else if	(shader != "" && _shaderProgrammas.count(shader) > 0)	programma = _shaderProgrammas[shader];
-	else															std::cerr << "bereidRenderVoor kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
+	else															std::cerr << "bereidWeergevenVoor kon niet bepalen welke shader gebruikt moest worden, dus nu maar geen..." << std::endl;
 
 	_huidigProgramma = programma;
 	glUseProgram(programma);
-	glErrorToConsole("bereidRenderVoor glUseProgram('"+shader+"'): ");
+	glErrorToConsole("bereidWeergevenVoor glUseProgram('"+shader+"'): ");
 
 	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermBreedte"), 	breedte);
 	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermHoogte"), 	hoogte);
 
 	extraVoorbereidingen(programma);
+}
+
+void weergaveScherm::laadOmgeving()
+{
+	glfwMakeContextCurrent(_glfwScherm);
 }
 
 void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding)
@@ -123,12 +134,12 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 	glErrorToConsole("doeRekenVerwerker glDispatchCompute");
 }
 
-void weergaveScherm::rondRenderAf()
+void weergaveScherm::rondWeergevenAf()
 {
 	glFlush();
 	glfwSwapBuffers(_glfwScherm);
 	glfwPollEvents();
-	glErrorToConsole("weergaveScherm::rondRenderAf(): ");
+	glErrorToConsole("weergaveScherm::rondWeergevenAf(): ");
 }
 
 GLuint weergaveScherm::slaShaderOp(const std::string & naam, GLuint shaderProgramma)

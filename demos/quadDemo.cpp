@@ -8,8 +8,8 @@ int main()
 
 	while(!scherm.stopGewenst())
 	{
-		scherm.bereidRenderVoor();
+		scherm.bereidWeergevenVoor();
 		scherm.geefWeer();
-		scherm.rondRenderAf();
+		scherm.rondWeergevenAf();
 	}
 }

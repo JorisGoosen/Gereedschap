@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 
 struct dier
 {
@@ -16,10 +16,10 @@ struct PlaatsKleur
 			roodheid;
 };
 
-layout(std430, binding = 0) buffer	wijZijnE 	{ dier 		wijEIn	[]; };
-layout(std430, binding = 1) buffer	wijWordenE 	{ dier 		wijEUit	[]; };
-layout(std430, binding = 2) buffer	wijZijnP 	{ dier 		wijPIn	[]; };
-layout(std430, binding = 3) buffer	wijWordenP 	{ dier 		wijPUit	[]; };
+layout(std140) buffer	wijZijnE 	{ dier 		wijEIn	[]; };
+layout(std140) buffer	wijWordenE 	{ dier 		wijEUit	[]; };
+layout(std140) buffer	wijZijnP 	{ dier 		wijPIn	[]; };
+layout(std140) buffer	wijWordenP 	{ dier 		wijPUit	[]; };
 
 void main()
 {
