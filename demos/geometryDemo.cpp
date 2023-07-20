@@ -15,10 +15,10 @@ int main()
 	while(!scherm.stopGewenst())
 	{
 		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -4.0f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
-		scherm.bereidRenderVoor();
+		scherm.bereidWeergevenVoor();
 		ico.tekenJezelf();
 		//scherm.geefWeer();
-		scherm.rondRenderAf();
+		scherm.rondWeergevenAf();
 
 
 		rot += 0.01f;

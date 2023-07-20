@@ -83,14 +83,17 @@ void Dieren::beweeg(weergaveScherm * scherm, bool wolven)
 
 	std::function<void()> schaapVoorbereiding = [&]()
 	{
-		_schapenE[  _pingPong]->zetKnooppunt(0);
-		_schapenE[1-_pingPong]->zetKnooppunt(1);
-		_schapenP[  _pingPong]->zetKnooppunt(2);
-		_schapenP[1-_pingPong]->zetKnooppunt(3);
+
+		_schapenE[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnE"));
+		_schapenE[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
+		_schapenP[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnP"));
+		_schapenP[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
+
 		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
 	};
 
-	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
+
+//	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
 
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
 }

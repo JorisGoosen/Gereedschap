@@ -18,12 +18,12 @@ int main()
 	{
 		scherm.herberekenProjectie();
 		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
-		scherm.bereidRenderVoor();
+		scherm.bereidWeergevenVoor();
 
 		geo.tekenJezelf();
 		glErrorToConsole("Woppaloppa Mainloop ");
-		scherm.rondRenderAf();
-		glErrorToConsole("rondRenderAf: ");
+		scherm.rondWeergevenAf();
+		glErrorToConsole("rondWeergevenAf: ");
 
 		rot += 0.007f;
 	}
