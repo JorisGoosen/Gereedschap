@@ -6,7 +6,7 @@ int main()
 	weergaveSchermVierkant scherm("Marcheer Demo", 1024, 1024, false);
 	scherm.maakShader("marcheerDemo", "shaders/marcheerDemo.vert", "shaders/marcheerDemo.frag");
 
-	scherm.laadTextuurUitPng("plaatjes/landRuis.png", "landRuis", false, false, true);
+	scherm.laadTextuurUitPng("plaatjes/landRuis.png", "landRuis", true, true, false);
 
 	while(!scherm.stopGewenst())
 	{
