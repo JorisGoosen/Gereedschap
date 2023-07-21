@@ -12,5 +12,5 @@ void main(){
 	gl_Position = vec4(vPos, 0.0, 1.0);
   	tex = vTex;
 
-	straal = normalize(vec3(tex.x * schermVerhouding, tex.y, 2.));
+	straal = normalize(vec3(tex.x * schermVerhouding, tex.y, 3.));
 }

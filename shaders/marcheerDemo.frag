@@ -8,7 +8,7 @@ uniform sampler2D landRuis;
 
 void main()
 {
-	const mediump float stapje = 0.01;
+	const mediump float stapje = 0.03;
 	
 	const mediump vec3 begin = vec3(0., 0., -1.);;
 	mediump vec3 positie = begin;
@@ -18,18 +18,18 @@ void main()
 
 	mediump float totaal = 0.0;
 
-	while(length(positie) < 3.0)
+	while(totaal < 10.)
 	{
 		if(positie.x >= -0.5 && positie.x <= 0.5 && positie.z >= 0.0 && positie.z <= 1.0)
 		{
 			//in plaatje, raken we iets?
-			hoogte = texture2D(landRuis, positie.xz + vec2(0.5, 0.)).r;
+			hoogte = texture2D(landRuis, positie.xz + vec2(0.5, 0.)).r * 0.5;
 
-			if(hoogte > positie.y  + 0.5)
+			if(hoogte + positie.z > positie.y + 0.5)
 			{
-				FragColor = vec4(vec3(hoogte), 1.0);
+				FragColor = vec4(hoogte, hoogte - totaal, hoogte, 1.0);
 
-				positie = vec3(1235);
+				break;
 			}
 		}
 
