@@ -1,25 +1,26 @@
-#version 300 es
+#version 310 es
 
-struct dier
+/*
+struct
 {
 	float	heteroKracht,
 			homoKracht,	
 			honger,		
 			levend;		
-};
+} dier;
 
-struct PlaatsKleur
+struct
 {
 	float	posX,
 			posY,
 			lichtheid,
 			roodheid;
-};
+} PlaatsKleur;*/
 
-layout(std140) buffer	wijZijnE 	{ dier 		wijEIn	[]; };
-layout(std140) buffer	wijWordenE 	{ dier 		wijEUit	[]; };
-layout(std140) buffer	wijZijnP 	{ dier 		wijPIn	[]; };
-layout(std140) buffer	wijWordenP 	{ dier 		wijPUit	[]; };
+buffer	{ vec4 		wijEIn	[]; } wijZijnE	;
+buffer	{ vec4 		wijEUit	[]; } wijWordenE;
+buffer	{ vec4 		wijPIn	[]; } wijZijnP	;
+buffer	{ vec4 		wijPUit	[]; } wijWordenP;
 
 void main()
 {

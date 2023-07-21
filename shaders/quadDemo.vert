@@ -1,4 +1,4 @@
-#version 300 es
+#version 310 es
 
 in mediump vec2 vPos;
 in mediump vec2 vTex;
