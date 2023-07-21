@@ -9,6 +9,8 @@ public:
     void bereidWeergevenVoor(const std::string & verwerker = "", bool wisScherm = true);
     void rondWeergevenAf();
 
+    weergaveScherm * scherm() { return _scherm; }
+
 protected:
     weergaveScherm  *   _scherm;
     glm::uvec2          _grootte;

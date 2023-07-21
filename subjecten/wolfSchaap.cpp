@@ -1,5 +1,7 @@
 #include "wolfSchaap.h"
 #include "../weergaveScherm.h"
+#include "../nepScherm.h"
+#include "../geometrie/vierkantRooster.h"
 #include <random>
 #include <numbers>
 
@@ -31,20 +33,23 @@ PlaatsKleur::PlaatsKleur()
 }
 
 
-Dieren::Dieren(int aantalWolven, int aantalSchapen, float wereldGrootte)
+Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, float wereldGrootte)
 : _wereldGrootte(wereldGrootte), _aantalWolven(aantalWolven), _aantalSchapen(aantalSchapen)
 {
 	hackyWereldGrootte = _wereldGrootte;
+
+	_vierkant 	= new vierkantRooster(1, 1);
+	_nepScherm 	= new nepScherm(scherm, {128, 128});
 
 	std::vector<Dier>			wolven,
 								schapen;
 	std::vector<PlaatsKleur>	wolfPos,
 								schaapPos;
 
-	wolven.resize(aantalWolven);
-	schapen.resize(aantalSchapen);
-	wolfPos.resize(aantalWolven);
-	schaapPos.resize(aantalSchapen);
+	wolven		.resize(aantalWolven);
+	schapen		.resize(aantalSchapen);
+	wolfPos		.resize(aantalWolven);
+	schaapPos	.resize(aantalSchapen);
 
 	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	0));
 	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	1));
@@ -78,8 +83,11 @@ void Dieren::pong()
 	_pingPong = 1 - _pingPong;
 }
 
-void Dieren::beweeg(weergaveScherm * scherm, bool wolven)
+void Dieren::beweeg(bool wolven)
 {
+	_nepScherm->bereidWeergevenVoor("beweeg", false);
+
+	weergaveScherm * scherm = _nepScherm->scherm();
 
 	std::function<void()> schaapVoorbereiding = [&]()
 	{
@@ -93,7 +101,7 @@ void Dieren::beweeg(weergaveScherm * scherm, bool wolven)
 	};
 
 
-//	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
+	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
 
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
 }
