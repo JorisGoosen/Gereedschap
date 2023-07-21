@@ -1,4 +1,4 @@
-#version 310 es
+#version 300 es
 
 in mediump vec2 tex;
 out mediump vec4 FragColor;
