@@ -21,14 +21,16 @@ struct PlaatsKleur
 };
 
 class weergaveScherm;
+class nepScherm;
+class vierkantRooster;
 
 class Dieren
 {
 public:
-	Dieren(int wolven = 10, int schapen = 200, float wereldGrootte = 2);
+	Dieren(weergaveScherm * scherm, int wolven = 10, int schapen = 200, float wereldGrootte = 2);
 
 	void pong();
-	void beweeg(weergaveScherm * scherm, bool wolven);
+	void beweeg(bool wolven);
 
 	void teken(bool wolven);
 	
@@ -37,6 +39,8 @@ protected:
 												_schapenE;	///< Ping pong met schapen, eigenschappen
 	std::vector<vrwrkrOpslagDing<PlaatsKleur>*>	_wolvenP ,	///< Ping pong met wolven, positie, mss beter vertex arary ofzo?
 												_schapenP;	///< Ping pong met schapen, positie
+	vierkantRooster 						*	_vierkant;
+	nepScherm								*	_nepScherm;
 	float										_wereldGrootte;
 	int											_pingPong,
 												_aantalWolven,	
