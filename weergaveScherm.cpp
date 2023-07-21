@@ -109,8 +109,9 @@ void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisSc
 	glUseProgram(programma);
 	glErrorToConsole("bereidWeergevenVoor glUseProgram('"+shader+"'): ");
 
-	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermBreedte"), 	breedte);
-	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermHoogte"), 	hoogte);
+	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermBreedte"), 		breedte);
+	glUniform1i(glGetUniformLocation(_huidigProgramma, "schermHoogte"), 		hoogte);
+	glUniform1f(glGetUniformLocation(_huidigProgramma, "schermVerhouding"), 	_schermVerhouding);
 
 	extraVoorbereidingen(programma);
 }
