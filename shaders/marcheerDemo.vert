@@ -12,5 +12,5 @@ void main(){
 	gl_Position = vec4(vPos, 0.0, 1.0);
   	//tex = vTex;
 
-	pixelPlek = vec3(vTex.x * schermVerhouding, vTex.y + 2.0, -1.0);
+	pixelPlek = vec3(vTex.x * schermVerhouding, vTex.y + 1.0, -1.0);
 }
