@@ -69,7 +69,7 @@ void main()
 				//hoogte = hoogte * 2.0;
 				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
 
-				highp float zonLichtAhum = 1. - kleurHier.b * -1. * kleurHier.a;
+				highp float zonLichtAhum = kleurHier.b;
 
 				landKleur = mix(rots, plant, kleurHier.g * 10.) * zonLichtAhum;
 				FragColor = mix(water, landKleur, clamp(hoogte, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
