@@ -8,13 +8,11 @@ public:
 		~weergaveSchermVierkant();
 
 	void 		geefWeer();
-
+	void		initVierkant();
 
 	//void keyHandler(int key, int scancode, int action, int mods) override;
 
 private:
-	void		initVierkant();
-
 	bool					_texVanafNul = false;
 	
 	wrgvOpslag 				*_reeks		= nullptr;

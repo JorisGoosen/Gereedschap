@@ -92,7 +92,12 @@ void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisSc
 {
 	_schermVerhouding = breedte / (float) hoogte;
 
-	//std::cout << "Windowsize: " << width << "x" << height << std::endl;
+	static int vorigeH = -1, vorigeB = -1;
+
+	if(vorigeH != hoogte || vorigeB != breedte)
+		std::cout << "Schermgrootte: " << breedte << "x" << hoogte << std::endl;
+
+	vorigeH = hoogte, vorigeB = breedte;
 
 	glViewport(0, 0, breedte, hoogte);
 

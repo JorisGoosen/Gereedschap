@@ -39,7 +39,7 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 	hackyWereldGrootte = _wereldGrootte;
 
 	_vierkant 	= new vierkantRooster(1, 1);
-	_nepScherm 	= new nepScherm(scherm, {128, 128});
+	_nepScherm 	= new nepScherm(scherm, glm::uvec2({128, 128}));
 
 	std::vector<Dier>			wolven,
 								schapen;

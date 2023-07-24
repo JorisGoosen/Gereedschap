@@ -1,87 +1,42 @@
 #version 300 es
 
 //in mediump vec2 tex;
-in highp vec3 pixelPlek;
+in highp vec2 pixelPlek;
 out mediump vec4 FragColor;
 
 //uniform  float schermVerhouding;
 uniform sampler2D landRuis;
 
-highp float dot2( in highp vec2 v ) { return dot(v,v); }
-highp float dot2( in highp vec3 v ) { return dot(v,v); }
-highp float ndot( in highp vec2 a, in highp vec2 b ) { return a.x*b.x - a.y*b.y; }
+highp float hoogtes[9];
 
-
-highp float sdBox( highp vec3 p, highp vec3 b )
+highp float haalHoogte(int x, int y)
 {
-  highp vec3 q = abs(p) - b;
-  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+	return hoogtes[x*3 + y];
 }
 
 void main()
 {
-	const highp vec3 oog = vec3(0., 1.0, -1.5);
-	highp vec3 straal = normalize(pixelPlek - oog);
-	highp float stapje = 0.00133;
-	
-	
-	highp vec3 positie = pixelPlek;
-	highp float hoogte = 0.0;
+	//FragColor =  vec4(texelFetch(landRuis, pixelPlek, 0).r);
+	//FragColor = texture(landRuis, pixelPlek);
 
-	highp float totaal = 0.0;
-	const mediump float maxTotaal = 6.0;
-	const mediump vec4 water = vec4(0.,0.,0.4, 1.0),
-						plant = vec4(0.0, 0.6, 0., 1.),
-						rots	= vec4(vec3(0.7), 1.),
-						strand = vec4(0.5, 0.8, 0.2, 1.);
+	highp ivec2 textuurGrootte = textureSize(landRuis, 0);
+	highp ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
 
-	highp float afstand, vorigeAfstand;
-	highp vec3 landDoos = vec3(.5, .5, .5);
+	for(int x=-1;x<2;x++)
+		for(int y=-1;y<2;y++)
+			hoogtes[(x+1)*3 + y+1] = texelFetch(landRuis, ivec2(clamp(texelPos.x + x, 0, textuurGrootte.x), clamp(texelPos.y + y, 0, textuurGrootte.y)), 0).r; 
 
-	mediump vec4 landKleur;
+	highp float hoogte = haalHoogte(1, 1);
 
-	while(totaal < maxTotaal)
-	{
-		vorigeAfstand = afstand;
+	highp vec4 gradienten = abs(vec4(
+		haalHoogte(0, 1) - hoogte, 
+		haalHoogte(2, 1) - hoogte, 
+		haalHoogte(1, 0) - hoogte, 
+		haalHoogte(1, 2) - hoogte));
 
-		afstand = sdBox(positie + vec3(0., 0., .5), landDoos);
+	highp float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
 
-		if(afstand > vorigeAfstand && afstand > 0.5)
-		{
-			FragColor = water;//mix(water, vec4(0., 0., (straal.y), 1.), clamp(1. + positie.y * 0.5, 0., 1.));
 
-			break;
-		}
 
-		//if(positie.x >= -0.5 && positie.x <= 0.5 && positie.z >= 0.0 && positie.z <= 1.0)
-		if(afstand < stapje)
-		{
-			//in plaatje, raken we iets?
-			highp vec2 plek = positie.xz + vec2(0.5, 0.);
-			mediump vec4 kleurHier = texture2D(landRuis, plek);
-
-			hoogte = kleurHier.r;
-
-			if(hoogte * landDoos.y > positie.y)
-			{
-			//	hoogte = positie.y;//mix(hoogte, positie.y, 0.5);
-				//FragColor = vec4(positie.y * 5., positie.y - hoogte, hoogte - positie.y, 1.0);
-				//hoogte = hoogte * 2.0;
-				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
-
-				landKleur = mix(rots, plant, kleurHier.g);
-				FragColor = mix(water, mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
-
-				break;
-			}
-		
-			totaal += stapje;
-		}
-		else
-			totaal += afstand;
-
-		positie = pixelPlek + (totaal * straal);
-	};
-
-	//FragColor = vec4(totaal);	
+	FragColor = vec4(hoogte, clamp(1.0 - (maxGrad * 80.), mix(gradienten.x, gradienten.y, 0.5), mix(gradienten.z, gradienten.w, 0.5)), .0, 1.);//vec4(hoogte);
 }

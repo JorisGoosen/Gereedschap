@@ -31,8 +31,8 @@ void main()
 	highp float totaal = 0.0;
 	const mediump float maxTotaal = 6.0;
 	const mediump vec4 water = vec4(0.,0.,0.4, 1.0),
-						plant = vec4(0.0, 0.6, 0., 1.),
-						rots	= vec4(vec3(0.7), 1.),
+						plant = vec4(0.0, 1.0, 0., 1.),
+						rots	= vec4(vec3(0.5), 1.),
 						strand = vec4(0.5, 0.8, 0.2, 1.);
 
 	highp float afstand, vorigeAfstand;
@@ -69,8 +69,10 @@ void main()
 				//hoogte = hoogte * 2.0;
 				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
 
-				landKleur = mix(rots, plant, kleurHier.g);
-				FragColor = mix(water, mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
+				highp float zonLichtAhum = 1. - kleurHier.b * -1. * kleurHier.a;
+
+				landKleur = mix(rots, plant, kleurHier.g * 10.) * zonLichtAhum;
+				FragColor = mix(water, landKleur, clamp(hoogte, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
 
 				break;
 			}
