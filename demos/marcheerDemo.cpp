@@ -6,12 +6,12 @@ int main()
 	weergaveSchermVierkant scherm("Marcheer Demo", 1024, 1024, false);
 	scherm.maakShader("marcheerDemo", "shaders/marcheerDemo.vert", "shaders/marcheerDemo.frag");
 
-	scherm.laadTextuurUitPng("plaatjes/landRuis.png", "landRuis", true, true, false);
+	scherm.laadTextuurUitPng("plaatjes/handLand.png", "handLand", true, true, false);
 
 	while(!scherm.stopGewenst())
 	{
 		scherm.bereidWeergevenVoor();
-		scherm.bindTextuur("landRuis", glGetUniformLocation(scherm.huidigProgramma(), "landRuis"));
+		scherm.bindTextuur("handLand", glGetUniformLocation(scherm.huidigProgramma(), "landRuis"));
 		scherm.geefWeer();
 		scherm.rondWeergevenAf();
 	}
