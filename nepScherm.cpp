@@ -6,14 +6,28 @@ nepScherm::nepScherm(weergaveScherm * scherm, glm::uvec2 grootte, bool alsTextuu
     _textuurBasis(alsTextuur),
     _metDiepte(metDiepteTesten)
 {
-    glGenFramebuffers(1, &_nepSchermId);
+    gedeeldeBouwer();
+}
 
-    glBindFramebuffer(GL_FRAMEBUFFER, _nepSchermId);
+nepScherm::nepScherm(weergaveScherm * scherm, const std::string & dezeTextuur, bool metDiepteTesten)
+:   _scherm(scherm),
+    _grootte(scherm->textuurGrootte(dezeTextuur)),
+    _textuurBasis(true),
+    _metDiepte(metDiepteTesten)
+{
+    gedeeldeBouwer(scherm->textuurId(dezeTextuur));
+}
+
+void nepScherm::gedeeldeBouwer(int dezeTextuur)
+{
+   glGenFramebuffers(1, &_nepSchermId);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, _nepSchermId);
 
     if(_textuurBasis)
     {
         static int nepSchermTextuurTeller = 0;
-        _textuurId = _scherm->maakTextuur("nepSchermTextuur#" + std::to_string(nepSchermTextuurTeller++), _grootte.x, _grootte.y);
+        _textuurId = dezeTextuur != -1 ? dezeTextuur : _scherm->maakTextuur("nepSchermTextuur#" + std::to_string(nepSchermTextuurTeller++), _grootte.x, _grootte.y);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textuurId, 0);
 
         if(_metDiepte)

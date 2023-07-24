@@ -245,6 +245,8 @@ void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, s
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 	glErrorToConsole("weergaveScherm::laadData: ");
+
+	_textuurGroottes[textuurNaam] = glm::uvec2(breedte, hoogte);
 }
 
 
