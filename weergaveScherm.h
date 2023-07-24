@@ -56,6 +56,8 @@ public:
 	void		maakLijnTextuur(	const std::string & textuurNaam, size_t lengte, GLenum internalFormat =  GL_RGBA16 , void * data = nullptr, GLenum dataFormat = GL_RGBA, GLenum dataType = GL_FLOAT);
 	GLuint		maakTextuur(		const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, GLenum internalFormat = GL_RGBA, void * data = nullptr, 	GLenum dataFormat = GL_RGBA, 	GLenum dataType = GL_UNSIGNED_BYTE);
 	void		laadData(			const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, GLenum internalFormat = GL_RGBA, void * data = nullptr,	GLenum dataFormat = GL_RGBA, 	GLenum dataType = GL_UNSIGNED_BYTE);
+	glm::uvec2	textuurGrootte(		const std::string & textuurNaam) { return _textuurGroottes.at(textuurNaam); }
+	GLuint		textuurId(			const std::string & textuurNaam) { return _texturen.at(textuurNaam);		}
 
 	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 
@@ -74,6 +76,7 @@ private:
 
 	std::map<std::string, GLuint>					_shaderProgrammas,
 													_texturen;
+	std::map<std::string, glm::uvec2>				_textuurGroottes;
 	std::set<std::string>							_3dTexturen,
 													_1dTexturen;
 	static std::map<GLFWwindow *, weergaveScherm*>	_schermen;
