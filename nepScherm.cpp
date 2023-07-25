@@ -29,6 +29,7 @@ void nepScherm::gedeeldeBouwer(int dezeTextuur)
 		static int nepSchermTextuurTeller = 0;
 		_textuurId = dezeTextuur != -1 ? dezeTextuur : _scherm->maakTextuur("nepSchermTextuur#" + std::to_string(nepSchermTextuurTeller++), _grootte.x, _grootte.y);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textuurId, 0);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
 		if(_metDiepte)
 		{
@@ -47,7 +48,7 @@ void nepScherm::bereidWeergevenVoor(const std::string & verwerker, bool wisScher
 {
 	_scherm->laadOmgeving();
 
-	glBindFramebuffer(GL_FRAMEBUFFER, _nepSchermId);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _nepSchermId);
 	
 	glErrorToConsole("nepScherm::bereidWeergevenVoor weergave opslag binden: ");
 
