@@ -80,6 +80,7 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 	laadOmgeving();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDrawBuffer(GL_FRONT);
 
 	int breedte, hoogte;
 	
@@ -255,17 +256,17 @@ void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, s
 }
 
 
-void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint bindPlek) const
-{
-	glActiveTexture(GL_TEXTURE0 + bindPlek);
+void weergaveScherm::bindTextuur(const std::string & textuurNaam, GLuint actieveTextuur) const
+{	
+	glActiveTexture(GL_TEXTURE0 + actieveTextuur);
 	glBindTexture(_3dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_3D : _1dTexturen.count(textuurNaam) > 0 ? GL_TEXTURE_1D : GL_TEXTURE_2D, _texturen.at(textuurNaam));
 }
 
-void weergaveScherm::bindTextuurPlaatje(const std::string & textuurNaam, GLuint bindPlek, bool lezen, bool schrijven) const
+void weergaveScherm::bindTextuurPlaatje(const std::string & textuurNaam, GLuint actieveTextuur, bool lezen, bool schrijven) const
 {
 	if(!lezen && !schrijven) std::runtime_error("Ja hallo, waarom ben je " + textuurNaam + " nu helemaal aan het binden als je niet wilt lezen of schrijven???");
 
-	glBindImageTexture(bindPlek, _texturen.at(textuurNaam), 0, GL_FALSE, 0, lezen ? (schrijven ? GL_READ_WRITE : GL_READ_ONLY) : GL_WRITE_ONLY, GL_RGBA16F); 
+	glBindImageTexture(actieveTextuur, _texturen.at(textuurNaam), 0, GL_FALSE, 0, lezen ? (schrijven ? GL_READ_WRITE : GL_READ_ONLY) : GL_WRITE_ONLY, GL_RGBA16F); 
 }
 
 void weergaveScherm::maakVolumeTextuur(const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * data)

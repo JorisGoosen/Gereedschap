@@ -50,8 +50,8 @@ public:
 
 
 	glm::ivec2 	laadTextuurUitPng(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, GLenum internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
-	void 		bindTextuur(		const std::string & textuurNaam, GLuint bindPlek) const;
-	void 		bindTextuurPlaatje(	const std::string & textuurNaam, GLuint bindPlek, bool schrijven = true, bool lezen = true) const;
+	void 		bindTextuur(		const std::string & textuurNaam, GLuint actieveTextuur) const;
+	void 		bindTextuurPlaatje(	const std::string & textuurNaam, GLuint actieveTextuur, bool schrijven = true, bool lezen = true) const;
 	void		maakVolumeTextuur(	const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * data = nullptr);
 	void		maakLijnTextuur(	const std::string & textuurNaam, size_t lengte, GLenum internalFormat =  GL_RGBA16 , void * data = nullptr, GLenum dataFormat = GL_RGBA, GLenum dataType = GL_FLOAT);
 	GLuint		maakTextuur(		const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, GLenum internalFormat = GL_RGBA, void * data = nullptr, 	GLenum dataFormat = GL_RGBA, 	GLenum dataType = GL_UNSIGNED_BYTE);

@@ -22,7 +22,7 @@ void main()
 {
 	const highp vec3 oog = vec3(0., 1.0, -1.5);
 	highp vec3 straal = normalize(pixelPlek - oog);
-	highp float stapje = 0.00133;
+	const highp float stapje = 0.0015;
 	
 	
 	highp vec3 positie = pixelPlek;
@@ -36,9 +36,12 @@ void main()
 						strand = vec4(0.5, 0.8, 0.2, 1.);
 
 	highp float afstand, vorigeAfstand;
-	highp vec3 landDoos = vec3(.5, .5, .5);
+	const highp vec3 landDoos = vec3(.5, .5, .5);
+	const highp float plantHoogteMod = 0.02;
+	mediump vec4 landKleur, kleurHier;
 
-	mediump vec4 landKleur;
+	highp ivec2 plek, laatstePlek;
+	highp vec2 fPlek, textuurGrootte = vec2(textureSize(landTwee, 0));
 
 	while(totaal < maxTotaal)
 	{
@@ -57,10 +60,16 @@ void main()
 		if(afstand < stapje)
 		{
 			//in plaatje, raken we iets?
-			highp vec2 plek = positie.xz + vec2(0.5, 0.);
-			mediump vec4 kleurHier = texture(landTwee, plek);
+			fPlek = positie.xz + vec2(0.5, 1.);
+			//fPlek = vec2(clamp(fPlek.x, 0., 1.), clamp(fPlek.y, 0., 1.));
+			//plek = ivec2(textuurGrootte * fPlek);
 
-			hoogte = kleurHier.r;
+			//if(plek != laatstePlek)
+			kleurHier = texture(landTwee, fPlek);//texelFetch(landTwee, plek, 0);
+
+			//laatstePlek = plek;
+
+			hoogte = kleurHier.r + kleurHier.g * plantHoogteMod;
 
 			if(hoogte * landDoos.y > positie.y)
 			{
@@ -71,8 +80,11 @@ void main()
 
 				highp float zonLichtAhum = kleurHier.b;
 
-				landKleur = mix(rots, plant, kleurHier.g * 10.) * zonLichtAhum;
-				FragColor = mix(water, landKleur, clamp(hoogte, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
+				landKleur = mix(rots, plant, kleurHier.g) * zonLichtAhum;
+				FragColor = mix(water, landKleur, clamp(hoogte - kleurHier.g * plantHoogteMod, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
+				//FragColor = kleurHier;
+				//FragColor.x = fPlek.x;
+				//FragColor.z = fPlek.y;
 
 				break;
 			}

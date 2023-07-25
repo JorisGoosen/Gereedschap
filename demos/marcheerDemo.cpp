@@ -10,8 +10,9 @@ int main(int argc, const char * argv[])
 	weergaveSchermVierkant scherm("Marcheer Demo", 1024, 1024, false);
 	
 	scherm.maakShader("bewerkHetLand", 	"shaders/bewerkHetLand.vert", 	"shaders/bewerkHetLand.frag");
-	scherm.maakShader("toonHetLand", 	"shaders/toonHetLand.vert", 	"shaders/toonHetLand.frag"	);
 	scherm.maakShader("marcheerDemo", 	"shaders/marcheerDemo.vert", 	"shaders/marcheerDemo.frag"	);
+	scherm.maakShader("toonHetLand", 	"shaders/toonHetLand.vert", 	"shaders/toonHetLand.frag"	);
+	
 
 	glm::uvec2 textuurGrootte = scherm.laadTextuurUitPng("plaatjes/handLand.png", "handLand", false, false, false);
 	//scherm.maakTextuur("handLandTwee", textuurGrootte.x, textuurGrootte.y, false, false, false);
@@ -21,7 +22,8 @@ int main(int argc, const char * argv[])
 
 	scherm.initVierkant();
 	nepperd.bereidWeergevenVoor("bewerkHetLand");
-	scherm.bindTextuur("handLand", glGetUniformLocation(scherm.huidigProgramma(), "landRuis"));
+	scherm.bindTextuur("handLand", 0);
+	glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landRuis"), 0);
 	scherm.geefWeer();
 	nepperd.rondWeergevenAf();
 	
@@ -39,7 +41,8 @@ int main(int argc, const char * argv[])
 		if(toonHetLand)		scherm.bereidWeergevenVoor("toonHetLand"); 
 		else				scherm.bereidWeergevenVoor("marcheerDemo");
 
-		scherm.bindTextuur("handLandTwee", glGetUniformLocation(scherm.huidigProgramma(), "landTwee"));
+		scherm.bindTextuur("handLandTwee", 0);
+		glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landTwee"), 0);
 		scherm.geefWeer();
 		scherm.rondWeergevenAf();
 	}
