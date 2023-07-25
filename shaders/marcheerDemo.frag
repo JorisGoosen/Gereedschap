@@ -5,7 +5,7 @@ in highp vec3 pixelPlek;
 out mediump vec4 FragColor;
 
 //uniform  float schermVerhouding;
-uniform sampler2D landRuis;
+uniform sampler2D landTwee;
 
 highp float dot2( in highp vec2 v ) { return dot(v,v); }
 highp float dot2( in highp vec3 v ) { return dot(v,v); }
@@ -58,7 +58,7 @@ void main()
 		{
 			//in plaatje, raken we iets?
 			highp vec2 plek = positie.xz + vec2(0.5, 0.);
-			mediump vec4 kleurHier = texture2D(landRuis, plek);
+			mediump vec4 kleurHier = texture(landTwee, plek);
 
 			hoogte = kleurHier.r;
 

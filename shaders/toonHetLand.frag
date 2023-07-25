@@ -4,11 +4,11 @@
 in highp vec2 pixelPlek;
 out mediump vec4 FragColor;
 
-uniform sampler2D landRuis;
+uniform sampler2D landTwee;
 
 void main()
 {
-	highp ivec2 textuurGrootte = textureSize(landRuis, 0);
+	highp ivec2 textuurGrootte = textureSize(landTwee, 0);
 	highp ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
-	FragColor =  texelFetch(landRuis, texelPos, 0);
+	FragColor =  texelFetch(landTwee, texelPos, 0);
 }
