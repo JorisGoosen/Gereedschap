@@ -7,7 +7,6 @@ in highp vec2 vTex;
 out highp vec2 pixelPlek;
 
 uniform float schermVerhouding;
-uniform sampler2D landRuis;
 
 void main(){
 	gl_Position = vec4(vPos, 0.0, 1.0);

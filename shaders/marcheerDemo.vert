@@ -6,6 +6,7 @@ in highp vec2 vTex;
 //out mediump vec2 tex;
 out highp vec3 pixelPlek;
 
+uniform sampler2D landTwee;
 uniform float schermVerhouding;
 
 void main(){
