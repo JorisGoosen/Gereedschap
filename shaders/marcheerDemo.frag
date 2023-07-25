@@ -6,6 +6,8 @@ out mediump vec4 FragColor;
 
 //uniform  float schermVerhouding;
 uniform sampler2D landTwee;
+uniform highp mat4 modelZicht;
+uniform highp mat4 inversie;
 
 highp float dot2( in highp vec2 v ) { return dot(v,v); }
 highp float dot2( in highp vec3 v ) { return dot(v,v); }
@@ -21,7 +23,8 @@ highp float sdBox( highp vec3 p, highp vec3 b )
 void main()
 {
 	const highp vec3 oog = vec3(0., 1.0, -1.5);
-	highp vec3 straal = normalize(pixelPlek - oog);
+	
+	highp vec3 straal = normalize(pixelPlek - mat3(modelZicht) * oog);
 	const highp float stapje = 0.0015;
 	
 	
@@ -29,7 +32,7 @@ void main()
 	highp float hoogte = 0.0;
 
 	highp float totaal = 0.0;
-	const mediump float maxTotaal = 6.0;
+	const mediump float maxTotaal = 12.0;
 	const mediump vec4 water = vec4(0.,0.,0.4, 1.0),
 						plant = vec4(0.0, 1.0, 0., 1.),
 						rots	= vec4(vec3(0.5), 1.),
@@ -59,6 +62,7 @@ void main()
 		//if(positie.x >= -0.5 && positie.x <= 0.5 && positie.z >= 0.0 && positie.z <= 1.0)
 		if(afstand < stapje)
 		{
+			positie = mat3(inversie) * positie;
 			//in plaatje, raken we iets?
 			fPlek = positie.xz + vec2(0.5, 1.);
 			//fPlek = vec2(clamp(fPlek.x, 0., 1.), clamp(fPlek.y, 0., 1.));
