@@ -34,7 +34,7 @@ void main()
 	highp float totaal = 0.0;
 	const mediump float maxTotaal = 12.0;
 	const mediump vec4 water = vec4(0.,0.,0.4, 1.0),
-						plant = vec4(0.0, 1.0, 0., 1.),
+						plant = vec4(0.0, 0.5, 0., 1.),
 						rots	= vec4(vec3(0.5), 1.),
 						strand = vec4(0.5, 0.8, 0.2, 1.);
 
@@ -62,7 +62,7 @@ void main()
 		//if(positie.x >= -0.5 && positie.x <= 0.5 && positie.z >= 0.0 && positie.z <= 1.0)
 		if(afstand < stapje)
 		{
-			positie = mat3(inversie) * positie;
+			positie = positie;
 			//in plaatje, raken we iets?
 			fPlek = positie.xz + vec2(0.5, 1.);
 			//fPlek = vec2(clamp(fPlek.x, 0., 1.), clamp(fPlek.y, 0., 1.));
@@ -82,9 +82,15 @@ void main()
 				//hoogte = hoogte * 2.0;
 				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
 
-				highp float zonLichtAhum = kleurHier.b;
+				if(hoogte < 0.5)
+					landKleur = mix(rots, plant, kleurHier.g);
+				else if(hoogte > 0.7)
+					landKleur = mix(rots, vec4(1.0), kleurHier.g);
+				else
+					landKleur = rots;
 
-				landKleur = mix(rots, plant, kleurHier.g) * zonLichtAhum;
+				landKleur *= kleurHier.b;
+
 				FragColor = mix(water, landKleur, clamp(hoogte - kleurHier.g * plantHoogteMod, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
 				//FragColor = kleurHier;
 				//FragColor.x = fPlek.x;
