@@ -36,14 +36,22 @@ int main(int argc, const char * argv[])
 		exit(1);
 	}
 
+	float rot = 0.;
 	while(!scherm.stopGewenst())
 	{
 		if(toonHetLand)		scherm.bereidWeergevenVoor("toonHetLand"); 
 		else				scherm.bereidWeergevenVoor("marcheerDemo");
 
+		glm::mat4 modelZicht = glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -4.0f)), rot, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 inversie   = glm::transpose(glm::inverse(modelZicht));
+		glUniformMatrix4fv(glGetUniformLocation(scherm.huidigProgramma(), "modelZicht"), 1, GL_FALSE, glm::value_ptr(modelZicht));
+		glUniformMatrix4fv(glGetUniformLocation(scherm.huidigProgramma(), "inversie"), 1, GL_FALSE, glm::value_ptr(inversie));
+
 		scherm.bindTextuur("handLandTwee", 0);
 		glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landTwee"), 0);
 		scherm.geefWeer();
 		scherm.rondWeergevenAf();
+
+		rot += 0.03333;
 	}
 }
