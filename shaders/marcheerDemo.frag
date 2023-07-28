@@ -22,7 +22,7 @@ highp float sdBox( highp vec3 p, highp vec3 b )
 
 void main()
 {
-	const highp vec3 oog = vec3(0., 1.0, -1.5);
+	const highp vec3 oog = vec3(0., 1.0, -1.9);
 	
 	highp vec3 straal = normalize(pixelPlek - mat3(modelZicht) * oog);
 	const highp float stapje = 0.0015;
@@ -81,8 +81,10 @@ void main()
 				//FragColor = vec4(positie.y * 5., positie.y - hoogte, hoogte - positie.y, 1.0);
 				//hoogte = hoogte * 2.0;
 				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
-
-				if(hoogte < 0.5)
+				const highp float waterHoogte = 0.025;
+				if(hoogte < waterHoogte)
+					landKleur = mix(water, plant, clamp(hoogte-kleurHier.g * plantHoogteMod, 0.0, waterHoogte) / waterHoogte);
+				else if(hoogte < 0.5)
 					landKleur = mix(rots, plant, kleurHier.g);
 				else if(hoogte > 0.7)
 					landKleur = mix(rots, vec4(1.0), kleurHier.g);
@@ -91,7 +93,7 @@ void main()
 
 				landKleur *= kleurHier.b;
 
-				FragColor = mix(water, landKleur, clamp(hoogte - kleurHier.g * plantHoogteMod, 0., 0.05) * 20.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
+				FragColor = landKleur;//mix(water, landKleur, clamp(hoogte - kleurHier.g * plantHoogteMod, 0., 0.01) * 100.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
 				//FragColor = kleurHier;
 				//FragColor.x = fPlek.x;
 				//FragColor.z = fPlek.y;

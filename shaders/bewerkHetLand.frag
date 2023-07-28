@@ -44,11 +44,11 @@ void main()
 	highp float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
 
 
-	highp float groente = clamp(1.0 - (maxGrad * 50.), 0., 1.);
+	highp float groente = clamp(1.0 - (maxGrad * 100.), 0., 1.);
 
 	// nu gaan we licht bakken?
 	// stel de zon komt schuin van een kant
-	highp float zonHoekPerStapje = 0.000666,
+	highp float zonHoekPerStapje = 0.003,
 				huidigeZonHoogte = hoogte,
 				volgendeZonHoogte,
 				zonLicht = 1.;
@@ -68,7 +68,7 @@ void main()
 
 			if(volgendeZonHoogte >= huidigeZonHoogte)
 			{
-				zonLicht = 0.33333;
+				zonLicht = 0.5;
 				doorGaan = false;
 			}
 			
