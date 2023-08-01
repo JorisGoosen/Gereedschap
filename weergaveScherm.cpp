@@ -80,7 +80,7 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 	laadOmgeving();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDrawBuffer(GL_FRONT);
+	glDrawBuffer(GL_BACK); //we zijn aan het dubbelbufferen dus naar achteren schrijven
 
 	int breedte, hoogte;
 	
