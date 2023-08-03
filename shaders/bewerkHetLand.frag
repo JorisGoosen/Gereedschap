@@ -60,7 +60,7 @@ void main()
 	highp float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
 
 
-	highp float groente = clamp(1.0 - (maxGrad * 60.), 0., 1.);
+	highp float groente = clamp(1.0 - (maxGrad * 120.), 0., 1.);
 
 	// nu gaan we licht bakken?
 	// stel de zon komt schuin van een kant
