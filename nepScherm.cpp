@@ -1,4 +1,5 @@
 #include "nepScherm.h"
+#include <iostream>
 
 nepScherm::nepScherm(weergaveScherm * scherm, glm::uvec2 grootte, bool alsTextuur, bool metDiepteTesten)
 :   _scherm(scherm), 
@@ -60,4 +61,13 @@ void nepScherm::rondWeergevenAf()
 {
 	glFlush();
 	glErrorToConsole("nepScherm::rondWeergevenAf: ");
+
+	glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT);
+
+
+	if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		std::cerr << "Er is een fout opgetreden tijdens weergeven van een nepScherm, doehoeg!" << std::endl;
+		exit(1);
+	}
 }

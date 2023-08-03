@@ -12,9 +12,10 @@ void main()
 {
 	//highp vec3  tsjakka = normalize(vec3(dFdx(hoogte) * 500., dFdy(hoogte) * 500., 1.));
 	const highp float hH = 0.005;
-	highp float h = texture(handLand, textuur).r,
-				l,// = dot(vec3(0., 0., 1.), tsjakka),
-				r = h,
+	highp vec4 kleur = texture(handLand, textuur);
+	highp float h = kleur.r,
+				l = 1.,//kleur.b,// = dot(vec3(0., 0., 1.), tsjakka),
+				r = 1.-kleur.g,
 				w = h < hH ? 1.0 - h/hH : 0.;
 
 	highp vec2 texG = vec2(textureSize(handLand, 0));

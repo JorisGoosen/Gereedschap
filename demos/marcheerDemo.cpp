@@ -24,18 +24,9 @@ int main(int argc, const char * argv[])
 	nepperd.bereidWeergevenVoor("bewerkHetLand");
 	scherm.bindTextuur("handLand", 0);
 	glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landRuis"), 0);
-	scherm.geefWeer();
+	scherm.geefVierkantWeer();
 	nepperd.rondWeergevenAf();
 	
-	glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT);
-
-	
-	if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		std::cerr << "Er is een fout opgetreden tijdens het bewerken van het land en dat leidde iedereen nogal af. Het programma wordt beeindigd." << std::endl;
-		exit(1);
-	}
-
 	float rot = 0.;
 	while(!scherm.stopGewenst())
 	{
@@ -49,7 +40,7 @@ int main(int argc, const char * argv[])
 
 		scherm.bindTextuur("handLandTwee", 0);
 		glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landTwee"), 0);
-		scherm.geefWeer();
+		scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
 
 		rot += 0.1;

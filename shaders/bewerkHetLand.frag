@@ -16,9 +16,24 @@ highp float haalHoogte(int x, int y)
 
 highp ivec2 textuurGrootte;
 
+int vorigeX = -1, vorigeY = -1;
+highp float vorigeH = -1.;
+
 highp float texelHoogte(int x, int y)
 {
-	return texelFetch(landRuis, ivec2(clamp(x, 0, textuurGrootte.x), clamp(y, 0, textuurGrootte.y)), 0).r;
+	x= clamp(x, 0, textuurGrootte.x);
+	y =  clamp(y, 0, textuurGrootte.y);
+	/*if(x == vorigeX && y == vorigeY)
+		return vorigeH;
+
+	vorigeX = x;
+	vorigeY = y;
+
+	vorigeH = */
+	
+	return texelFetch(landRuis, ivec2(x,y), 0).r;
+
+	//return vorigeH;
 }
 
 void main()
@@ -31,31 +46,32 @@ void main()
 
 	for(int x=-1;x<2;x++)
 		for(int y=-1;y<2;y++)
-			hoogtes[(x+1)*3 + y+1] = texelHoogte(texelPos.x + x, texelPos.y + y); 
+			if(!(x==y && (x == -1 || x == 1)))
+				hoogtes[(x+1)*3 + y+1] = texelHoogte(texelPos.x + x, texelPos.y + y); 
 
-	highp float hoogte = haalHoogte(1, 1);
+	//highp float hoogte = haalHoogte(1, 1);
 
 	highp vec4 gradienten = abs(vec4(
-		haalHoogte(0, 1) - hoogte, 
-		haalHoogte(2, 1) - hoogte, 
-		haalHoogte(1, 0) - hoogte, 
-		haalHoogte(1, 2) - hoogte));
+		haalHoogte(0, 1) - haalHoogte(1, 1), 
+		haalHoogte(2, 1) - haalHoogte(1, 1), 
+		haalHoogte(1, 0) - haalHoogte(1, 1), 
+		haalHoogte(1, 2) - haalHoogte(1, 1)));
 
 	highp float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
 
 
-	highp float groente = clamp(1.0 - (maxGrad * 100.), 0., 1.);
+	highp float groente = clamp(1.0 - (maxGrad * 60.), 0., 1.);
 
 	// nu gaan we licht bakken?
 	// stel de zon komt schuin van een kant
-	highp float zonHoekPerStapje = 0.003,
-				huidigeZonHoogte = hoogte,
+	const highp float zonHoekPerStapje = 0.003;
+		highp float		huidigeZonHoogte = haalHoogte(1,1),
 				volgendeZonHoogte,
 				zonLicht = 1.;
 
 	bool doorGaan = true;
 
-	highp vec2 zonStraal = vec2(1., -0.5);
+	const highp vec2 zonStraal = vec2(1., -0.5);
 
 	for(highp vec2 zonPos = vec2(texelPos); 
 		doorGaan && zonPos.x >= 0. && zonPos.y >= 0. && zonPos.x < float(textuurGrootte.x) && zonPos.y < float(textuurGrootte.y);
@@ -77,5 +93,5 @@ void main()
 		}
 		
 
-	FragColor = vec4(hoogte, groente, zonLicht, mix(mix(gradienten.x, gradienten.y, 0.5), mix(gradienten.z, gradienten.w, 0.5), 0.5));//vec4(hoogte);
+	FragColor = vec4(haalHoogte(1,1), groente, zonLicht, mix(mix(gradienten.x, gradienten.y, 0.5), mix(gradienten.z, gradienten.w, 0.5), 0.5));//vec4(hoogte);
 }

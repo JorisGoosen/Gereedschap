@@ -30,7 +30,7 @@ int main()
 		scherm.herberekenProjectie();
 		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
 		scherm.bereidWeergevenVoor("geefWeer");
-		//scherm.geefWeer();
+		//scherm.geefVierkantWeer();
 		dieren.teken(true);
 		dieren.teken(false);
 		scherm.rondWeergevenAf();
