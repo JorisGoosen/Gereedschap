@@ -9,7 +9,7 @@ int main()
 	while(!scherm.stopGewenst())
 	{
 		scherm.bereidWeergevenVoor();
-		scherm.geefWeer();
+		scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
 	}
 }

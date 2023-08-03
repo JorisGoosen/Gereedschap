@@ -43,7 +43,7 @@ void weergaveSchermVierkant::initVierkant()
 	_tex->spoel();
 }
 
-void weergaveSchermVierkant::geefWeer()
+void weergaveSchermVierkant::geefVierkantWeer()
 {
 	if(!_reeks)
 		initVierkant();
@@ -53,5 +53,5 @@ void weergaveSchermVierkant::geefWeer()
 
 	_reeks->bindPuntReeks();	
 	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, indices);
-	glErrorToConsole("weergaveSchermVierkant::geefWeer(): ");
+	glErrorToConsole("weergaveSchermVierkant::geefVierkantWeer(): ");
 }

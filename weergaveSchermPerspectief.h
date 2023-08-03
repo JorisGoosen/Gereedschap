@@ -1,7 +1,7 @@
 #pragma once
-#include "weergaveScherm.h"
+#include "weergaveSchermVierkant.h"
 
-class weergaveSchermPerspectief : public weergaveScherm
+class weergaveSchermPerspectief : public weergaveSchermVierkant
 {
 public:
 		weergaveSchermPerspectief(std::string Naam = "weergaveSchermPerspectief", size_t W = 1280, size_t H = 720, size_t multiSamples = 1);

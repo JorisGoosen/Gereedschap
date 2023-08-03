@@ -5,7 +5,7 @@ using namespace glm;
 
 
 weergaveSchermPerspectief::weergaveSchermPerspectief(std::string Naam, size_t W, size_t H, size_t samples) 
-: weergaveScherm(Naam, W, H, samples)
+: weergaveSchermVierkant(Naam, W, H, samples)
 {
 	herberekenProjectie();
 	herberekenModelZicht();
