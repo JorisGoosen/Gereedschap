@@ -20,7 +20,7 @@ int main(int argc, const char * argv[])
 	while(!scherm.stopGewenst())
 	{
 		scherm.herberekenProjectie();
-		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.25f, -1.0f)), rot, glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f))));
+		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.2f, -0.75f)), rot, glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f))));
 		scherm.bereidWeergevenVoor("landDemo");
 		scherm.bindTextuur("handLand", 0);
 		glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "handLand"), 	0);
@@ -28,6 +28,6 @@ int main(int argc, const char * argv[])
 		landRooster.tekenJezelf();
 		scherm.rondWeergevenAf();
 
-		rot += 0.007f;
+		rot += 0.002f;
 	}
 }
