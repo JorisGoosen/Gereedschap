@@ -32,6 +32,7 @@ int main(int argc, const char * argv[])
 	vierkantRooster landRooster(landGrootte.x/deling, landGrootte.y/deling);
 
 	glEnable(GL_DEPTH_TEST);
+	glClearColor(0., 0., 0.5, 0.);
 	
 	while(!scherm.stopGewenst())
 	{

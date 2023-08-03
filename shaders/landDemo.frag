@@ -11,7 +11,7 @@ uniform sampler2D handLand;
 void main()
 {
 	//highp vec3  tsjakka = normalize(vec3(dFdx(hoogte) * 500., dFdy(hoogte) * 500., 1.));
-	const highp float hH = 0.005;
+	const highp float hH = 0.05;
 	//highp vec4 kleur = texture(handLand, textuur);
 	highp float h = texture(handLand, textuur).r, //kleur.r,
 				l = texture(handLand, textuur).b,// = 1.,//kleur.b,// = dot(vec3(0., 0., 1.), tsjakka),

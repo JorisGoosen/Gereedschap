@@ -14,7 +14,7 @@ highp float haalHoogte(int x, int y)
 	return hoogtes[x*3 + y];
 }
 
-highp ivec2 textuurGrootte;
+mediump ivec2 textuurGrootte;
 
 int vorigeX = -1, vorigeY = -1;
 highp float vorigeH = -1.;
@@ -42,7 +42,7 @@ void main()
 	//FragColor = texture(landRuis, pixelPlek);
 
 	textuurGrootte =  textureSize(landRuis, 0);
-	highp ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
+	mediump ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
 
 	for(int x=-1;x<2;x++)
 		for(int y=-1;y<2;y++)
@@ -71,9 +71,9 @@ void main()
 
 	bool doorGaan = true;
 
-	const highp vec2 zonStraal = vec2(1., -0.5);
+	const mediump vec2 zonStraal = vec2(1., -0.5);
 
-	for(highp vec2 zonPos = vec2(texelPos); 
+	for(mediump vec2 zonPos = vec2(texelPos); 
 		doorGaan && zonPos.x >= 0. && zonPos.y >= 0. && zonPos.x < float(textuurGrootte.x) && zonPos.y < float(textuurGrootte.y);
 		zonPos += zonStraal
 		)
