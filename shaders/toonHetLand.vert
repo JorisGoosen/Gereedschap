@@ -1,10 +1,10 @@
-#version 300 es
+#version 400
 
-in mediump vec2 vPos;
-in highp vec2 vTex;
+in vec2 vPos;
+in vec2 vTex;
 
-//out mediump vec2 tex;
-out highp vec2 pixelPlek;
+//out vec2 tex;
+out vec2 pixelPlek;
 
 uniform float schermVerhouding;
 

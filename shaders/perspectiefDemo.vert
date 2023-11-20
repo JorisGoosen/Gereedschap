@@ -1,11 +1,11 @@
-#version 300 es
+#version 400
 
-layout(location = 0) in mediump vec3 vPos;
+layout(location = 0) in vec3 vPos;
 
 uniform mat4 projectie;
 uniform mat4 modelView;
 
-out mediump vec3 normal;
+out vec3 normal;
 
 void main()
 {

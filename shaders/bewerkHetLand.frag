@@ -1,25 +1,25 @@
-#version 300 es
+#version 400
 
-//in mediump vec2 tex;
-in highp vec2 pixelPlek;
-out mediump vec4 FragColor;
+//in vec2 tex;
+in vec2 pixelPlek;
+out vec4 FragColor;
 
 //uniform  float schermVerhouding;
 uniform sampler2D landRuis;
 
-highp float hoogtes[9];
+float hoogtes[9];
 
-highp float haalHoogte(int x, int y)
+float haalHoogte(int x, int y)
 {
 	return hoogtes[x*3 + y];
 }
 
-mediump ivec2 textuurGrootte;
+ivec2 textuurGrootte;
 
 int vorigeX = -1, vorigeY = -1;
-highp float vorigeH = -1.;
+float vorigeH = -1.;
 
-highp float texelHoogte(int x, int y)
+float texelHoogte(int x, int y)
 {
 	x= clamp(x, 0, textuurGrootte.x);
 	y =  clamp(y, 0, textuurGrootte.y);
@@ -42,38 +42,38 @@ void main()
 	//FragColor = texture(landRuis, pixelPlek);
 
 	textuurGrootte =  textureSize(landRuis, 0);
-	mediump ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
+	ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
 
 	for(int x=-1;x<2;x++)
 		for(int y=-1;y<2;y++)
 			if(!(x==y && (x == -1 || x == 1)))
 				hoogtes[(x+1)*3 + y+1] = texelHoogte(texelPos.x + x, texelPos.y + y); 
 
-	//highp float hoogte = haalHoogte(1, 1);
+	//float hoogte = haalHoogte(1, 1);
 
-	highp vec4 gradienten = abs(vec4(
+	vec4 gradienten = abs(vec4(
 		haalHoogte(0, 1) - haalHoogte(1, 1), 
 		haalHoogte(2, 1) - haalHoogte(1, 1), 
 		haalHoogte(1, 0) - haalHoogte(1, 1), 
 		haalHoogte(1, 2) - haalHoogte(1, 1)));
 
-	highp float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
+	float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
 
 
-	highp float groente = clamp(1.0 - (maxGrad * 120.), 0., 1.);
+	float groente = clamp(1.0 - (maxGrad * 120.), 0., 1.);
 
 	// nu gaan we licht bakken?
 	// stel de zon komt schuin van een kant
-	const highp float zonHoekPerStapje = 0.003;
-		highp float		huidigeZonHoogte = haalHoogte(1,1),
+	const float zonHoekPerStapje = 0.003;
+		float		huidigeZonHoogte = haalHoogte(1,1),
 				volgendeZonHoogte,
 				zonLicht = 1.;
 
 	bool doorGaan = true;
 
-	const mediump vec2 zonStraal = vec2(1., -0.5);
+	const vec2 zonStraal = vec2(1., -0.5);
 
-	for(mediump vec2 zonPos = vec2(texelPos); 
+	for(vec2 zonPos = vec2(texelPos); 
 		doorGaan && zonPos.x >= 0. && zonPos.y >= 0. && zonPos.x < float(textuurGrootte.x) && zonPos.y < float(textuurGrootte.y);
 		zonPos += zonStraal
 		)

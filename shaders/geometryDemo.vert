@@ -1,6 +1,6 @@
-#version 300 es
+#version 400
 
-layout(location = 0) in mediump vec3 vPos;
+layout(location = 0) in vec3 vPos;
 
 void main()
 {

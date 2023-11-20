@@ -1,10 +1,10 @@
-#version 300 es
+#version 400
 
-out mediump vec4 uitKleur;
+out vec4 uitKleur;
 
-in mediump vec3 normal;
-in mediump vec2 texU;
-in mediump vec4 kleur;
+in vec3 normal;
+in vec2 texU;
+in vec4 kleur;
 
 
 void main()

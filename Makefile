@@ -1,6 +1,6 @@
-CXXFLAGS 	= -fPIC -O3 -W -Wall -Wextra -Werror=return-type -std=c++2a `pkg-config --cflags glfw3 gl glew libpng`
+CXXFLAGS 	= -fPIC -O3 -W -Wall -Wextra -Werror=return-type -std=c++2a `pkg-config --cflags glfw3 glew libpng glm`
 #CXXFLAGS 	= -fPIC -g3 -W -Wall -Wextra -Werror=return-type -std=c++2a `pkg-config --cflags glfw3 gl glew libpng`
-LIBFLAGS 	= `pkg-config --libs glfw3 glew gl libpng`
+LIBFLAGS 	= `pkg-config --libs glfw3 glew libpng glm` -framework OpenGL
 OBJECTS 	= $(patsubst %.cpp,%.o,$(wildcard *.cpp)) 
 DEMOS		= $(patsubst %.cpp,%,$(wildcard demos/*.cpp))
 GEOMS	 	= $(patsubst %.cpp,%.o,$(wildcard geometrie/*.cpp))

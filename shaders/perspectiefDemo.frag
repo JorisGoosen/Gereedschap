@@ -1,8 +1,8 @@
-#version 300 es
+#version 400
 
-out mediump vec4 col;
+out vec4 col;
 
-in mediump vec3 normal;
+in vec3 normal;
 
 void main()
 {

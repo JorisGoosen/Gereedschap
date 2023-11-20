@@ -1,14 +1,14 @@
-#version 300 es
+#version 400
 
 
-layout(location = 0) in mediump vec4 PlaatsKleur;
+layout(location = 0) in vec4 PlaatsKleur;
 
 
 uniform mat4 modelView;
 uniform mat4 projectie;
 
 
-out mediump vec4 kleur;
+out vec4 kleur;
 
 void main()
 {

@@ -221,7 +221,7 @@ template <class T> std::vector<glm::vec<4, T, glm::defaultp>>	wrgvOnderOpslag<T>
 	std::vector<glm::vec<4, T, glm::defaultp>> lijst; 
 
 	size_t grrrr = grootte();
-	lijst.resize(grootte);
+	lijst.resize(grrrr);
 
 	for(size_t i=0; i<grrrr; i++)
 		lijst[i] = ggvPunt4(i);

@@ -1,15 +1,15 @@
-#version 300 es
+#version 400
 
-layout(location = 0) in mediump vec3	pos;
-layout(location = 1) in mediump vec2	tex;
+layout(location = 0) in vec3	pos;
+layout(location = 1) in vec2	tex;
 
 uniform mat4 modelView;
 uniform mat4 projectie;
 
 
-out mediump vec3 normal;
-out mediump vec2 texU;
-out mediump vec4 kleur;
+out vec3 normal;
+out vec2 texU;
+out vec4 kleur;
 
 void main()
 {

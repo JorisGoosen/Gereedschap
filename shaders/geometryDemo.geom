@@ -1,14 +1,14 @@
-#version 300 es
+#version 400
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices=64)
 
-in mediump vec3 normal[];
+in vec3 normal[];
 
 uniform mat4 projectie;
 uniform mat4 modelView;
 
-out mediump vec3 normal;
+out vec3 normal;
 
 
 void main()

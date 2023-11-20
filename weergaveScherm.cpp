@@ -12,6 +12,10 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 {
 	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 	4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 	1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, 		GLFW_OPENGL_CORE_PROFILE);
+
     if (_schermen.size() == 0 && !glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
 
@@ -37,7 +41,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 			std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
 			throw std::runtime_error("Failed to initalize glew...");
 		}
-		std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION) << std::endl;
+		std::cout << "Status: Using GLEW " << glewGetString(	GLEW_VERSION)<< "\nStatus: Using GL " << glGetString(GL_VERSION) << std::endl;
 	}
 
 	_schermen[_glfwScherm] = this;

@@ -11,6 +11,7 @@
 #include "png.h"
 #include <ostream>
 #include <iomanip>
+#include <sstream>
 
 void glErrorToConsole(const std::string & huidigeActie = "");
 
