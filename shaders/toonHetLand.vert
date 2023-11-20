@@ -1,4 +1,4 @@
-#version 400
+#version 420
 
 in vec2 vPos;
 in vec2 vTex;

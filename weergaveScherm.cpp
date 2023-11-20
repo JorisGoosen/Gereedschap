@@ -13,7 +13,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 	4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 	1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 	6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, 		GLFW_OPENGL_CORE_PROFILE);
 
     if (_schermen.size() == 0 && !glfwInit())
