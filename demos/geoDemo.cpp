@@ -25,6 +25,6 @@ int main()
 		scherm.rondRenderAf();
 		glErrorToConsole("rondRenderAf: ");
 
-		rot += 0.007f;
+		rot += 0.0007f;
 	}
 }

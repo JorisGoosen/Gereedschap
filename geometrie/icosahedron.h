@@ -1,4 +1,5 @@
 #include "../wrgvOnderOpslag.h"
+#include <array>
 
 #define ICOSAHEDRON_PUNTEN  12
 #define ICOSAHEDRON_LIJNEN  30

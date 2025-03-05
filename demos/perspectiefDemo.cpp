@@ -21,6 +21,6 @@ int main()
 		scherm.rondRenderAf();
 
 
-		rot += 0.01f;
+		rot += 0.001f;
 	}
 }
