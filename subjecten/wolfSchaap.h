@@ -39,8 +39,8 @@ protected:
 												_schapenE;	///< Ping pong met schapen, eigenschappen
 	std::vector<vrwrkrOpslagDing<PlaatsKleur>*>	_wolvenP ,	///< Ping pong met wolven, positie, mss beter vertex arary ofzo?
 												_schapenP;	///< Ping pong met schapen, positie
-	vierkantRooster 						*	_vierkant;
-	nepScherm								*	_nepScherm;
+	//vierkantRooster 						*	_vierkant;
+	weergaveScherm							*	_scherm;
 	float										_wereldGrootte;
 	int											_pingPong,
 												_aantalWolven,	

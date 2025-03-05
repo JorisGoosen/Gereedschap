@@ -1,4 +1,4 @@
-#version 310 es
+#version 440
 
 /*
 struct
@@ -17,13 +17,13 @@ struct
 			roodheid;
 } PlaatsKleur;*/
 
-buffer	{ vec4 		wijEIn	[]; } wijZijnE	;
-buffer	{ vec4 		wijEUit	[]; } wijWordenE;
-buffer	{ vec4 		wijPIn	[]; } wijZijnP	;
-buffer	{ vec4 		wijPUit	[]; } wijWordenP;
+buffer	wijZijnE	{ vec4 		wijEIn	[]; };
+buffer	wijWordenE 	{ vec4 		wijEUit	[]; };
+buffer	wijZijnP	{ vec4 		wijPIn	[]; };
+buffer	wijWordenP 	{ vec4 		wijPUit	[]; };
 
 void main()
 {
-	wijPUit[gl_GlobalInvocationID.x].posX = wijPIn[gl_GlobalInvocationID.x].posX + 0.01;
-	wijPUit[gl_GlobalInvocationID.x].posY = wijPIn[gl_GlobalInvocationID.x].posY + 0.01;
+	wijEUit[gl_GlobalInvocationID.x] = wijEIn[gl_GlobalInvocationID.x];
+	wijPUit[gl_GlobalInvocationID.x] = wijPIn[gl_GlobalInvocationID.x] + vec4(0.01, 0.01, 0.0, 0.0);
 }

@@ -1,7 +1,5 @@
 #include "wolfSchaap.h"
 #include "../weergaveScherm.h"
-#include "../nepScherm.h"
-#include "../geometrie/vierkantRooster.h"
 #include <random>
 #include <numbers>
 
@@ -38,8 +36,8 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 {
 	hackyWereldGrootte = _wereldGrootte;
 
-	_vierkant 	= new vierkantRooster(1, 1);
-	_nepScherm 	= new nepScherm(scherm, glm::uvec2({128, 128}));
+	//_vierkant 	= new vierkantRooster(1, 1);
+	_scherm 	= scherm;
 
 	std::vector<Dier>			wolven,
 								schapen;
@@ -85,23 +83,20 @@ void Dieren::pong()
 
 void Dieren::beweeg(bool wolven)
 {
-	_nepScherm->bereidWeergevenVoor("beweeg", false);
-
-	weergaveScherm * scherm = _nepScherm->scherm();
 
 	std::function<void()> schaapVoorbereiding = [&]()
 	{
 
-		_schapenE[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnE"));
-		_schapenE[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
-		_schapenP[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnP"));
-		_schapenP[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
+		_schapenE[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijZijnE"));
+		_schapenE[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijWordenE"));
+		_schapenP[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijZijnP"));
+		_schapenP[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijWordenP"));
 
 		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
 	};
 
 
-	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
+	_scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
 
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
 }

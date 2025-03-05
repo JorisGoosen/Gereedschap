@@ -1,5 +1,4 @@
-#version 300 es
-
+#version 440
 
 layout(location = 0) in mediump vec4 PlaatsKleur;
 

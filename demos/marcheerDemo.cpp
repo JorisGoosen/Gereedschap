@@ -43,6 +43,6 @@ int main(int argc, const char * argv[])
 		scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
 
-		rot += 0.1;
+		rot += 0.01;
 	}
 }

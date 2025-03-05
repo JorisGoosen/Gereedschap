@@ -11,7 +11,7 @@ int main()
 
 	weergaveSchermPerspectief scherm("Wolven & Schapen");
 
-	scherm.maakShader(		"beweeg",		"shaders/quadDemo.vert",		"shaders/computeDemoBeweeg.comp");
+	scherm.maakRekenShader(	"beweeg",		"shaders/computeDemoBeweeg.comp");
 	scherm.maakShader(		"geefWeer", 	"shaders/computeDemo.vert", 	"shaders/computeDemo.frag");
 
 	Dieren dieren(&scherm, 10, 200, 4.0);
@@ -35,11 +35,11 @@ int main()
 		dieren.teken(false);
 		scherm.rondWeergevenAf();
 
-		rot+= 0.01f;
-
-
+		rot+= 0.001f;
+	
 		glDisable(GL_DEPTH_TEST);
 		dieren.beweeg(false);
 		dieren.pong();
+	
 	}
 }

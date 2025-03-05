@@ -1,8 +1,8 @@
-#version 300 es
+#version 440
 
-out mediump vec4 col;
+out vec4 col;
 
-in mediump vec4 kleur;
+in vec4 kleur;
 
 void main()
 {
