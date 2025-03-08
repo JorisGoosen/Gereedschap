@@ -5,9 +5,9 @@
 
 int main()
 {
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
 	weergaveSchermPerspectief scherm("Wolven & Schapen");
 
@@ -28,15 +28,16 @@ int main()
 	{
 		glEnable(GL_DEPTH_TEST);
 		scherm.herberekenProjectie();
-		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
+		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -8.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
 		scherm.bereidWeergevenVoor("geefWeer");
 		//scherm.geefVierkantWeer();
-		dieren.teken(true);
+		//dieren.teken(true);
 		dieren.teken(false);
 		scherm.rondWeergevenAf();
 
-		rot+= 0.001f;
+		rot+= 0.0001f;
 	
+		scherm.laadOmgeving();
 		glDisable(GL_DEPTH_TEST);
 		dieren.beweeg(false);
 		dieren.pong();

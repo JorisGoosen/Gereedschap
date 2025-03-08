@@ -63,6 +63,11 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 	_schapenP[0]->maakReeksOpslag();
 	_schapenP[1]->maakReeksOpslag();
 
+	_wolvenE [0]->maakReeksOpslag();
+	_wolvenE [1]->maakReeksOpslag();
+	_schapenE[0]->maakReeksOpslag();
+	_schapenE[1]->maakReeksOpslag();
+
 	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
 }
 
@@ -83,21 +88,29 @@ void Dieren::pong()
 
 void Dieren::beweeg(bool wolven)
 {
+	_scherm->laadOmgeving();
 
+	glFlush();
+	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
+
+	glErrorToConsole("Dieren::beweeg");
 	std::function<void()> schaapVoorbereiding = [&]()
 	{
 
-		_schapenE[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijZijnE"));
-		_schapenE[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijWordenE"));
-		_schapenP[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijZijnP"));
-		_schapenP[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(_scherm->huidigProgramma(), "wijWordenP"));
+		//_schapenE[  _pingPong]->zetKnooppunt(0);
+		//_schapenE[1-_pingPong]->zetKnooppunt(1);
+		_schapenP[  _pingPong]->zetKnooppunt(0);
+		_schapenP[1-_pingPong]->zetKnooppunt(1);
 
+
+		glErrorToConsole("Dieren:::schaapVoorbereiding");
 		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
 	};
 
 
 	_scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
 
+	glFlush();
 	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
 }
 

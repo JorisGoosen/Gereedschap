@@ -58,7 +58,8 @@ bool checkvoorshadercompileerfout(GLuint shader, const std::string & naam)
 			glDeleteShader(shader); //Don't leak the shader.
 			return false;
 	}
-	
+
+
 	return true;
 }
 
@@ -144,6 +145,9 @@ GLuint _maakGeometrieShader(const std::string & vertShaderBestandsnaam, const st
 	glAttachShader(prog, geomshaderobject);
 
 	glLinkProgram(prog);
+
+	_printInfoLog(prog);
+	
 	return prog;
 }
 
@@ -166,6 +170,9 @@ GLuint _maakVlakVerdelingShader(	const std::string & vertShaderBestandsnaam, 	co
 		glAttachShader(prog, tessCtrlObject);
 
 	glLinkProgram(prog);
+
+	_printInfoLog(prog);
+	
 	return prog;
 }
 
@@ -182,6 +189,9 @@ GLuint _maakShader(const std::string & vertShaderBestandsnaam, const std::string
 	glAttachShader(prog, vertshaderobject);
 
 	glLinkProgram(prog);
+
+	_printInfoLog(prog);
+	
 	return prog;
 }
 
@@ -196,7 +206,23 @@ GLuint _maakBerekenShader(const std::string & shaderBestandsnaam)
 	glAttachShader(prog, compshaderobject);
 
 	glLinkProgram(prog);
+
+	glErrorToConsole("_maakBerekenShader("+shaderBestandsnaam+")");
+
+	_printInfoLog(prog);
+
 	return prog;
+}
+
+void _printInfoLog(GLuint prog)
+{
+	const int maxLen = 1000;
+	int len;
+	char infoLog[maxLen];
+	glGetProgramInfoLog(prog, maxLen, &len, infoLog);
+
+	std::cout << infoLog << std::endl;
+
 }
 
 

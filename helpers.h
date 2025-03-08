@@ -19,7 +19,7 @@ GLuint 		_maakBerekenShader(			const std::string &  shaderBestandsnaam);
 GLuint 		_maakShader(				const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam);
 GLuint 		_maakGeometrieShader(		const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  geomShaderBestandsnaam);
 GLuint 		_maakVlakVerdelingShader(	const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  vlakEvalBestandsnaam, const std::string &  vlakCtrlBestandsnaam = "");
-
+void		_printInfoLog(				GLuint prog);
 		glm::vec3	willekeurigeVec3();
 inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 

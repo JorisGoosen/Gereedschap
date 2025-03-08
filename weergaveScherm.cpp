@@ -29,6 +29,9 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
     glfwMakeContextCurrent(_glfwScherm);
 
+	std::cout << "GLFW version: " << glfwGetVersionString() << std::endl
+				<< "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+
 	if(_schermen.size() == 0)
 	{
 		GLenum err = glewInit();
@@ -130,9 +133,11 @@ void weergaveScherm::laadOmgeving()
 void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding)
 {
 	glfwMakeContextCurrent(_glfwScherm);
+	glErrorToConsole("doeRekenVerwerker glfwMakeContextCurrent verwerker('"+verwerker+"'): ");
+
 	_huidigProgramma = _shaderProgrammas[verwerker];
 	glUseProgram(_huidigProgramma);
-	glErrorToConsole("doeRekenVerwerker glUseProgram('"+verwerker+"'): ");
+	glErrorToConsole("doeRekenVerwerker glUseProgram('"+verwerker+"'), _huidigProgramma="+std::to_string(_huidigProgramma)+": ");
 
 	renderVoorbereiding();
 	glErrorToConsole("doeRekenVerwerker renderVoorbereiding: ");
