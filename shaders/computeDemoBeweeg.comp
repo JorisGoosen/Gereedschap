@@ -30,10 +30,15 @@ uniform uint anderLengte;
 uniform uint onzeLengte;
 uniform bool jeBentWolf;
 
-const float dimensions = 6.0;
+const float dimensions = 12.0;
 
 vec2 rotate(vec2 uv, float th) {
     return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+}
+
+float afstandBitte(vec2 a, vec2 b)
+{
+	return min(min(distance(a,b), distance(a,b-vec2(dimensions*2, 0))), min(distance(a,b-vec2(0, dimensions*2)), distance(a,b-vec2(dimensions*2, dimensions*2))));
 }
 
 void main()
@@ -42,29 +47,45 @@ void main()
 			mijnSpd = wijPIn[gl_GlobalInvocationID.x].zw,
 		 	onzePos = vec2(0.0),
 			hunPos 	= vec2(0.0),
+			dichtP	= vec2(0.0),
 			onzeK	= wijEIn[gl_GlobalInvocationID.x].xy,
 			onzeHL	= wijEIn[gl_GlobalInvocationID.x].zw;
 
-	onzeHL.x += 0.0001;
+
+	if(jeBentWolf)
+		onzeK.y = -1.0;
+
+	onzeHL.x += 0.00001;
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
 	const float epsilon = 0.1,
-			kijk = jeBentWolf ? dimensions : 1;
+			kijk = jeBentWolf ? 7 : 1;
 
 	float onzeGevonden = 0,
-			hunGevonden = 0;
+			hunGevonden = 0,
+			teDichtbij = 0;
 
 	for(uint i=0; i<onzeLengte; i++)
-		if(distance(wijPIn[i].xy, mijnPos) < kijk)
+	{
+		float afstand = afstandBitte(wijPIn[i].xy, mijnPos);
+
+		if(afstand < epsilon * 2)
+		{
+			teDichtbij++;
+			dichtP += wijPIn[i].xy;
+		}
+		else if(afstand < kijk)
 		{
 			onzePos += wijPIn[i].xy;
 			onzeGevonden++;
 		}
+	}
 
 	for(uint i=0; i<anderLengte; i++)
 	{
-		float afstand = distance(mijnPos, zijPIn[i].xy);
+		float afstand = afstandBitte(mijnPos, zijPIn[i].xy);
+
 		if(afstand < epsilon)
 			ikOverlapMetAnder = true;
 		else if(afstand < kijk)
@@ -74,35 +95,60 @@ void main()
 		}
 	}
 
-	if(onzeGevonden>0 && !jeBentWolf)
+	float mixGehalte = jeBentWolf ? 0.05 : 0.01;
+
+	//if(length(mijnSpd) <= 0.00001)
+	//	mijnSpd = normalize(mijnPos);
+
+	float snelheid = length(mijnSpd);
+
+	float hoek = atan(mijnSpd.y, mijnSpd.x);
+
+	if(onzeGevonden>0)
 	{
 		onzePos /= onzeGevonden;
-		mijnSpd = mix(mijnSpd, normalize(onzePos - mijnPos), onzeK.y * 0.5);
+		vec2 onzeR = normalize(onzePos - mijnPos);
+
+		//mijnSpd = mix(mijnSpd, onzeR * onzeK.y, mixGehalte);
+		hoek = mix(hoek, atan(onzeR.y, onzeR.x), 0.01);
 	}
 
 	if(hunGevonden>0)
 	{
 		hunPos /= hunGevonden;
-
-		mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos), onzeK.x * 0.5);
+		vec2 hunR = normalize(hunPos - mijnPos);
+		//mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos) * onzeK.x, mixGehalte);
+		hoek = mix(hoek, atan(hunR.y, hunR.x), 0.03);
 	}
+
 
 	if(onzeGevonden==0 && hunGevonden==0)
 	{
 		//mijnSpd = mix(mijnSpd, -1 * normalize(mijnPos), 0.001);
 	}
 
-	mijnSpd *= 0.9;
 
-	if(length(mijnSpd) > 2.0)
-		mijnSpd = normalize(mijnSpd) * 2;
+	// /mijnSpd *= jeBentWolf ? 0.99 : 0.9;
+
+	//const float maxSpd = 2.0;
+	//if(length(mijnSpd) > maxSpd)
+	//	mijnSpd = normalize(mijnSpd) * maxSpd;
+	snelheid = 1.0 - clamp(onzeHL.x, 0.0, 1.0);
+	mijnSpd = vec2(cos(hoek), sin(hoek)) * snelheid * ( jeBentWolf ? 0.1 : 0.5);
 
 
 	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
 	//	nieuwePos += rotate(normalize(nieuwePos), 1.) * 0.01;
 
-	vec2 nieuwePos = mijnPos + (mijnSpd*0.01);
+	vec2 nieuwePos = mijnPos + (mijnSpd*0.1);
 	vec2 nieuweSpd = mijnSpd;
+
+	if(teDichtbij>1)
+	{
+		dichtP /= teDichtbij;
+		nieuwePos = nieuwePos + (normalize(mijnPos - dichtP) * 0.001);
+	}
+
 	
 
 	if(ikOverlapMetAnder && jeBentWolf)
@@ -127,10 +173,12 @@ void main()
 			{
 				laagsteHonger 	= wijEIn[i].z;
 				onzeK   		= wijEIn[i].xy;
-				nieuwePos		= -1. * wijPIn[i].xz;
+				nieuwePos		= wijPIn[i].xz;
 				nieuweSpd		= vec2(0.0);
 			}
 		}
+
+		nieuwePos = mix(mijnPos, nieuwePos, 0.25);
 
 	}
 
