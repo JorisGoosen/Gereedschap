@@ -4,7 +4,7 @@
 #include <numbers>
 
 std::random_device						zaaier;
-std::normal_distribution<float> 		willekeur(0.0, 1.0);
+std::normal_distribution<float> 		willekeur(-1.0, 1.0);
 std::uniform_real_distribution<float>	nietNormaal(0.0, 1.0);
 
 Dier::Dier()
@@ -15,7 +15,7 @@ Dier::Dier()
 	levend			= 1;
 }
 
-float hackyWereldGrootte	= 2;
+float hackyWereldGrootte	= 3;
 bool hackySchapenNu			= false;
 
 PlaatsKleur::PlaatsKleur()
@@ -75,6 +75,8 @@ void Dieren::teken(bool wolven)
 {
 	if(wolven)	_wolvenP [0]->bindPuntReeks();
 	else		_schapenP[0]->bindPuntReeks();
+
+	glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "jeBentWolf"), 		wolven);
 
 	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
 

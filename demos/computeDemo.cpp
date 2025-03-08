@@ -14,7 +14,7 @@ int main()
 	scherm.maakRekenShader(	"beweeg",		"shaders/computeDemoBeweeg.comp");
 	scherm.maakShader(		"geefWeer", 	"shaders/computeDemo.vert", 	"shaders/computeDemo.frag");
 
-	Dieren dieren(&scherm, 10, 200, 4.0);
+	Dieren dieren(&scherm, 15, 500, 4.0);
 
 	/*glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);*/
@@ -31,15 +31,16 @@ int main()
 		scherm.zetModelZicht(glm::rotate(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -8.5f)), rot, glm::vec3(0.0f, 1.0f, 0.0f)));
 		scherm.bereidWeergevenVoor("geefWeer");
 		//scherm.geefVierkantWeer();
-		//dieren.teken(true);
+		dieren.teken(true);
 		dieren.teken(false);
 		scherm.rondWeergevenAf();
 
-		rot+= 0.0001f;
+		//rot+= 0.0001f;
 	
 		scherm.laadOmgeving();
 		glDisable(GL_DEPTH_TEST);
 		dieren.beweeg(false);
+		dieren.beweeg(true);
 		dieren.pong();
 	
 	}

@@ -30,26 +30,112 @@ uniform uint anderLengte;
 uniform uint onzeLengte;
 uniform bool jeBentWolf;
 
+const float dimensions = 10.0;
+
+vec2 rotate(vec2 uv, float th) {
+    return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+}
+
 void main()
 {
 	vec2 	mijnPos = wijPIn[gl_GlobalInvocationID.x].xy,
+			mijnSpd = wijPIn[gl_GlobalInvocationID.x].zw,
 		 	onzePos = vec2(0.0),
 			hunPos 	= vec2(0.0),
-			onzeK	= wijEIn[gl_GlobalInvocationID.x].xy;
+			onzeK	= wijEIn[gl_GlobalInvocationID.x].xy,
+			onzeHL	= wijEIn[gl_GlobalInvocationID.x].zw;
 
+	onzeHL.x += 0.0001;
+	//onzeHL.y -= 0.01;
+
+	bool ikOverlapMetAnder = false;
+	const float epsilon = 0.1;
 
 	for(uint i=0; i<onzeLengte; i++)
 		onzePos += wijPIn[i].xy;
 
 	for(uint i=0; i<anderLengte; i++)
+	{
+		if(distance(mijnPos, zijPIn[i].xy) < epsilon)
+			ikOverlapMetAnder = true;
 		hunPos += zijPIn[i].xy;
+	}
 
 	onzePos /= onzeLengte;
 	hunPos /= anderLengte;
 
-	vec2 nieuwePos = mijnPos + (onzePos * onzeK.x * 0.001) + (hunPos * onzeK.y * 0.001);
+	vec2 	onzeRicht = normalize(onzePos - mijnPos),
+			hunRicht = normalize(hunPos - mijnPos);
 
-	wijEUit[gl_GlobalInvocationID.x] = wijEIn[gl_GlobalInvocationID.x];
-	wijPUit[gl_GlobalInvocationID.x] = wijPIn[gl_GlobalInvocationID.x];
+	mijnSpd = mix(mix(mijnSpd * 0.5, onzeRicht, onzeK.y * 0.01), hunRicht, onzeK.x * 0.01);
+
+	if(length(onzeRicht) > 0)
+		mijnSpd += onzeK.y * 0.0001 * onzeRicht;
+
+	if(length(hunRicht) > 0)
+		mijnSpd += onzeK.x * 0.0001 * hunRicht;
+
+	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
+	//	nieuwePos += rotate(normalize(nieuwePos), 1.) * 0.01;
+
+	vec2 nieuwePos = mijnPos + mijnSpd;
+	vec2 nieuweSpd = (nieuwePos - mijnPos);
+	
+
+	if(ikOverlapMetAnder && jeBentWolf)
+	{
+		onzeHL.x = -1.0; //negatieve honger want lekker gesnackt
+		//onzeHL.y = 1.5;
+	}
+
+	if((!jeBentWolf && ikOverlapMetAnder) || (jeBentWolf && onzeHL.x > 1))
+	{
+		//Dus maak een nieuwe	
+		nieuwePos = onzePos;
+		onzeHL  = vec2(0.0, 0.0);
+
+		
+		float laagsteHonger = 100000000000.0;
+
+
+		for(uint i=0; i<onzeLengte; i++)
+		{
+			if(wijEIn[i].z < laagsteHonger) //want die leeft het langst
+			{
+				laagsteHonger 	= wijEIn[i].z;
+				onzeK   		= wijEIn[i].xy;
+				nieuwePos		= wijPIn[i].xz;
+				nieuweSpd		= vec2(0.0);
+			}
+		}
+
+		if(jeBentWolf)
+		{
+			nieuwePos = vec2(-2, 0);
+		}
+
+	}
+
+	//nieuwePos = mod(nieuwePos, dimensions);
+	
+	if(nieuwePos.x > dimensions)
+		nieuwePos.x -= 2  * dimensions;
+
+	else if(nieuwePos.x < -dimensions)
+		nieuwePos.x += 2  * dimensions;
+
+	if(nieuwePos.y > dimensions)
+		nieuwePos.y -= 2  * dimensions;
+
+	else if(nieuwePos.y < -dimensions)
+		nieuwePos.y += 2  * dimensions;
+	
+
+	//nieuwePos -= 0.000001 * nieuwePos;
+
+	wijEUit[gl_GlobalInvocationID.x].xy = onzeK;
+	wijEUit[gl_GlobalInvocationID.x].zw = onzeHL;
 	wijPUit[gl_GlobalInvocationID.x].xy = nieuwePos;
+	wijPUit[gl_GlobalInvocationID.x].zw = nieuweSpd;
+
 }
