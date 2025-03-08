@@ -49,37 +49,55 @@ void main()
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
-	const float epsilon = 0.1;
+	const float epsilon = 0.1,
+			kijk = jeBentWolf ? 4 : 1;
+
+	float onzeGevonden = 0,
+			hunGevonden = 0;
 
 	for(uint i=0; i<onzeLengte; i++)
-		onzePos += wijPIn[i].xy;
+		if(distance(wijPIn[i].xy, mijnPos) < kijk)
+		{
+			onzePos += wijPIn[i].xy;
+			onzeGevonden++;
+		}
 
 	for(uint i=0; i<anderLengte; i++)
 	{
-		if(distance(mijnPos, zijPIn[i].xy) < epsilon)
+		float afstand = distance(mijnPos, zijPIn[i].xy);
+		if(afstand < epsilon)
 			ikOverlapMetAnder = true;
-		hunPos += zijPIn[i].xy;
+		else if(afstand < kijk)
+		{
+			hunPos += zijPIn[i].xy;
+			hunGevonden++;
+		}
 	}
 
-	onzePos /= onzeLengte;
-	hunPos /= anderLengte;
+	if(onzeGevonden>0)
+	{
+		onzePos /= onzeGevonden;
+		mijnSpd = mix(mijnSpd, normalize(onzePos - mijnPos), onzeK.y * 0.1);
+	}
 
-	vec2 	onzeRicht = normalize(onzePos - mijnPos),
-			hunRicht = normalize(hunPos - mijnPos);
+	if(hunGevonden>0)
+	{
+		hunPos /= hunGevonden;
 
-	mijnSpd = mix(mix(mijnSpd * 0.5, onzeRicht, onzeK.y * 0.01), hunRicht, onzeK.x * 0.01);
+		mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos), onzeK.x * 0.1);
+	}
 
-	if(length(onzeRicht) > 0)
-		mijnSpd += onzeK.y * 0.0001 * onzeRicht;
+	if(onzeGevonden==0 && hunGevonden==0)
+	{
+		//mijnSpd = mix(mijnSpd, -1 * normalize(mijnPos), 0.001);
+	}
 
-	if(length(hunRicht) > 0)
-		mijnSpd += onzeK.x * 0.0001 * hunRicht;
 
 	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
 	//	nieuwePos += rotate(normalize(nieuwePos), 1.) * 0.01;
 
-	vec2 nieuwePos = mijnPos + mijnSpd;
-	vec2 nieuweSpd = (nieuwePos - mijnPos);
+	vec2 nieuwePos = mijnPos + (mijnSpd*0.01);
+	vec2 nieuweSpd = mijnSpd;
 	
 
 	if(ikOverlapMetAnder && jeBentWolf)
@@ -116,19 +134,21 @@ void main()
 
 	}
 
+
+
 	//nieuwePos = mod(nieuwePos, dimensions);
 	
 	if(nieuwePos.x > dimensions)
-		nieuwePos.x -= 2  * dimensions;
+		nieuwePos.x = -dimensions + max(0.0, nieuwePos.x - dimensions);
 
 	else if(nieuwePos.x < -dimensions)
-		nieuwePos.x += 2  * dimensions;
+		nieuwePos.x = dimensions + min(0.0, nieuwePos.x + dimensions);
 
 	if(nieuwePos.y > dimensions)
-		nieuwePos.y -= 2  * dimensions;
+		nieuwePos.y = -dimensions + max(0.0, nieuwePos.y - dimensions);
 
 	else if(nieuwePos.y < -dimensions)
-		nieuwePos.y += 2  * dimensions;
+		nieuwePos.y = dimensions + min(0.0, nieuwePos.y + dimensions);
 	
 
 	//nieuwePos -= 0.000001 * nieuwePos;
