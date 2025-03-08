@@ -96,14 +96,27 @@ void Dieren::beweeg(bool wolven)
 	glErrorToConsole("Dieren::beweeg");
 	std::function<void()> schaapVoorbereiding = [&]()
 	{
+		auto & wijE =  wolven ? _wolvenE : _schapenE;
+		auto & wijP =  wolven ? _wolvenP : _schapenP;
+		auto & zijP = !wolven ? _wolvenP : _schapenP;
 
-		//_schapenE[  _pingPong]->zetKnooppunt(0);
-		//_schapenE[1-_pingPong]->zetKnooppunt(1);
-		_schapenP[  _pingPong]->zetKnooppunt(0);
-		_schapenP[1-_pingPong]->zetKnooppunt(1);
+		wijE[  _pingPong]->zetKnooppunt(0);
+		wijE[1-_pingPong]->zetKnooppunt(1);
+		wijP[  _pingPong]->zetKnooppunt(2);
+		wijP[1-_pingPong]->zetKnooppunt(3);
+		zijP[  _pingPong]->zetKnooppunt(4);
 
+		glErrorToConsole("Dieren:::schaapVoorbereiding knooppunten");
 
-		glErrorToConsole("Dieren:::schaapVoorbereiding");
+		glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "onzeLengte"), 		wijP[0]->grootte());
+
+		glErrorToConsole("Dieren:::schaapVoorbereiding uniform onzeLengte");
+		glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "anderLengte"), 		zijP[0]->grootte());
+
+		glErrorToConsole("Dieren:::schaapVoorbereiding uniform anderLengte");
+		glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "jeBentWolf"), 		wolven);
+
+		glErrorToConsole("Dieren:::schaapVoorbereiding uniform jeBentWolf");
 		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
 	};
 

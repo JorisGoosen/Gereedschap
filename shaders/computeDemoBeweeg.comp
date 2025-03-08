@@ -19,13 +19,37 @@ struct
 } PlaatsKleur;
 */
 
-//buffer	wijZijnE	{ vec4 		wijEIn	[]; };
-//buffer	wijWordenE 	{ vec4 		wijEUit	[]; };
-layout(std430, binding = 0) buffer	wijZijnP	{ vec4 		wijPIn	[]; };
-layout(std430, binding = 1) buffer	wijWordenP 	{ vec4 		wijPUit	[]; };
+layout(std430, binding = 0) buffer	wijZijnE	{ vec4 		wijEIn	[]; };
+layout(std430, binding = 1) buffer	wijWordenE 	{ vec4 		wijEUit	[]; };
+layout(std430, binding = 2) buffer	wijZijnP	{ vec4 		wijPIn	[]; };
+layout(std430, binding = 3) buffer	wijWordenP 	{ vec4 		wijPUit	[]; };
+
+layout(std430, binding = 4) buffer	anderP		{ vec4 		zijPIn	[]; };
+
+uniform uint anderLengte;
+uniform uint onzeLengte;
+uniform bool jeBentWolf;
 
 void main()
 {
-	//wijEUit[gl_GlobalInvocationID.x] = wijEIn[gl_GlobalInvocationID.x];
-	wijPUit[gl_GlobalInvocationID.x] = wijPIn[gl_GlobalInvocationID.x] + vec4(0.00001, 0.00001, 0.0, 0.0);
+	vec2 	mijnPos = wijPIn[gl_GlobalInvocationID.x].xy,
+		 	onzePos = vec2(0.0),
+			hunPos 	= vec2(0.0),
+			onzeK	= wijEIn[gl_GlobalInvocationID.x].xy;
+
+
+	for(uint i=0; i<onzeLengte; i++)
+		onzePos += wijPIn[i].xy;
+
+	for(uint i=0; i<anderLengte; i++)
+		hunPos += zijPIn[i].xy;
+
+	onzePos /= onzeLengte;
+	hunPos /= anderLengte;
+
+	vec2 nieuwePos = mijnPos + (onzePos * onzeK.x * 0.001) + (hunPos * onzeK.y * 0.001);
+
+	wijEUit[gl_GlobalInvocationID.x] = wijEIn[gl_GlobalInvocationID.x];
+	wijPUit[gl_GlobalInvocationID.x] = wijPIn[gl_GlobalInvocationID.x];
+	wijPUit[gl_GlobalInvocationID.x].xy = nieuwePos;
 }

@@ -17,6 +17,8 @@ public:
 		glBindBuffer(		GL_SHADER_STORAGE_BUFFER, _opslag);
 		glBufferData(		GL_SHADER_STORAGE_BUFFER, gegevens.size() * sizeof(Soort), gegevens.data(), GL_DYNAMIC_COPY);
 		glBindBufferBase(	GL_SHADER_STORAGE_BUFFER, knooppunt, _opslag);
+
+		_grootte = gegevens.size();
 	}
 
 	void	zetKnooppunt(GLuint knooppunt)
@@ -56,8 +58,14 @@ public:
     //	glBindVertexArray(0);
 	}
 
+
+	GLuint grootte()
+	{
+		return _grootte;
+	}
+
 private:
 	GLuint 	_opslag,
-			_reeksOpslag; ///< Voor als je deze buffer wilt kunnen weergeven als punten, moet wel worden aangemaakt eerst
-
+			_reeksOpslag, ///< Voor als je deze buffer wilt kunnen weergeven als punten, moet wel worden aangemaakt eerst
+			_grootte;
 };

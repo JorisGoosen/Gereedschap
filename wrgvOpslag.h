@@ -66,6 +66,7 @@ public:
 		glBindBuffer(		GL_ARRAY_BUFFER, 	reeksOpslag);
 		glBufferData(		GL_ARRAY_BUFFER, 	ggvns.size() * glHappen<veldType>(), (void *)ggvns.data(), GL_DYNAMIC_DRAW);
 
+		_grootte = ggvns.size();
 		glErrorToConsole("glBufferData: ");
 
 
@@ -104,7 +105,8 @@ public:
 		glErrorToConsole("koppelNieuweGegevens glBindBuffer: ");
 
 		glBufferData(				GL_ARRAY_BUFFER, ggvns.size() * glHappen<veldType>(), (void *)ggvns.data(), GL_DYNAMIC_DRAW);
-		
+		_grootte = ggvns.size();
+
 		//Volgende werkt onder de aanname dat ik altijd floats gebruik als ik float wil
 		if(krijgGLType<veldType>() == GL_FLOAT)	glVertexAttribPointer(	_plekInfos[plek].puntEigenschapPlek, _plekInfos[plek].aantalVelden, krijgGLType<veldType>(), false,	0, 0);
 		else									glVertexAttribIPointer(	_plekInfos[plek].puntEigenschapPlek, _plekInfos[plek].aantalVelden, krijgGLType<veldType>(),			0, 0);
@@ -122,8 +124,13 @@ public:
 		glErrorToConsole("wrgvOpslag::bindPuntReeks(): ");
 	}
 
+	GLuint grootte()
+	{
+		return _grootte;
+	}
 private:
 	/// puntEigenschapPlekken ->  puntEigenschapPlekInfo
 	std::map<GLuint, puntEigenschapPlekInfo> 	_plekInfos;	
-	GLuint 										_reeksOpslag;
+	GLuint 										_reeksOpslag,
+												_grootte;
 };
