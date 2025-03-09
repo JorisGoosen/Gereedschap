@@ -30,7 +30,7 @@ uniform uint anderLengte;
 uniform uint onzeLengte;
 uniform bool jeBentWolf;
 
-const float dimensions = 12.0;
+const float dimensions = 10.0;
 
 vec2 rotate(vec2 uv, float th) {
     return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
@@ -55,12 +55,12 @@ void main()
 	if(jeBentWolf)
 		onzeK.y = -1.0;
 
-	onzeHL.x += 0.00001;
+	onzeHL.x += 0.0001;
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
 	const float epsilon = 0.1,
-			kijk = jeBentWolf ? 7 : 1;
+			kijk = jeBentWolf ? 7 : 3;
 
 	float onzeGevonden = 0,
 			hunGevonden = 0,
@@ -101,8 +101,8 @@ void main()
 	//	mijnSpd = normalize(mijnPos);
 
 	float snelheid = length(mijnSpd);
-
-	float hoek = atan(mijnSpd.y, mijnSpd.x);
+	vec2 ns = normalize(mijnSpd);
+	float hoek = atan(ns.y, ns.x);
 
 	if(onzeGevonden>0)
 	{
@@ -110,7 +110,7 @@ void main()
 		vec2 onzeR = normalize(onzePos - mijnPos);
 
 		//mijnSpd = mix(mijnSpd, onzeR * onzeK.y, mixGehalte);
-		hoek = mix(hoek, atan(onzeR.y, onzeR.x), 0.01);
+		hoek = mix(hoek, atan(onzeR.y, onzeR.x), 0.1);
 	}
 
 	if(hunGevonden>0)
@@ -118,7 +118,7 @@ void main()
 		hunPos /= hunGevonden;
 		vec2 hunR = normalize(hunPos - mijnPos);
 		//mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos) * onzeK.x, mixGehalte);
-		hoek = mix(hoek, atan(hunR.y, hunR.x), 0.03);
+		hoek = mix(hoek, atan(hunR.y, hunR.x), 0.05);
 	}
 
 
@@ -133,8 +133,8 @@ void main()
 	//const float maxSpd = 2.0;
 	//if(length(mijnSpd) > maxSpd)
 	//	mijnSpd = normalize(mijnSpd) * maxSpd;
-	snelheid = 1.0 - clamp(onzeHL.x, 0.0, 1.0);
-	mijnSpd = vec2(cos(hoek), sin(hoek)) * snelheid * ( jeBentWolf ? 0.1 : 0.5);
+	snelheid = 1.0;// - clamp(onzeHL.x, 0.0, 1.0);
+	mijnSpd = vec2(cos(hoek), -1.0 * sin(hoek)) * snelheid * ( jeBentWolf ? 0.3 : 0.1);
 
 
 	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
