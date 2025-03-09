@@ -54,10 +54,10 @@ void main()
 			onzeHL	= wijEIn[gl_GlobalInvocationID.x].zw;
 
 
-	if(jeBentWolf)
-		onzeK.y = -1.0;
+	//if(jeBentWolf)
+	//	onzeK.y = -1.0;
 
-	onzeHL.x += 0.0001;
+	onzeHL.x += 0.0005;
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
@@ -72,7 +72,7 @@ void main()
 	{
 		float afstand = afstandBitte(wijPIn[i].xy, mijnPos);
 
-		if(afstand < epsilon * 2)
+		if(afstand < epsilon)
 		{
 			teDichtbij++;
 			dichtP += wijPIn[i].xy;
@@ -97,7 +97,7 @@ void main()
 		}
 	}
 
-	float mixGehalte = jeBentWolf ? 0.05 : 0.01;
+	float mixGehalte = 0.0025;//jeBentWolf ? 0.01 : 0.01;
 
 	//if(length(mijnSpd) <= 0.00001)
 	//	mijnSpd = normalize(mijnPos);
@@ -129,6 +129,12 @@ void main()
 	}
 
 
+	if(teDichtbij>1)
+	{
+		dichtP /= teDichtbij;
+		mijnSpd = mix(mijnSpd, normalize(mijnPos - dichtP), 0.125);
+	}
+
 	if(onzeGevonden==0 && hunGevonden==0)
 	{
 		//mijnSpd = mix(mijnSpd, -1 * normalize(mijnPos), 0.001);
@@ -150,17 +156,12 @@ void main()
 	vec2 nieuwePos = mijnPos + (mijnSpd * 0.1);
 	vec2 nieuweSpd = mijnSpd;
 
-	if(teDichtbij>1)
-	{
-		dichtP /= teDichtbij;
-		nieuwePos = nieuwePos + (normalize(mijnPos - dichtP) * 0.001);
-	}
 
 	
 
 	if(ikOverlapMetAnder && jeBentWolf)
 	{
-		onzeHL.x = -1.0; //negatieve honger want lekker gesnackt
+		onzeHL.x = -2.0; //negatieve honger want lekker gesnackt
 		//onzeHL.y = 1.5;
 	}
 
@@ -180,12 +181,12 @@ void main()
 			{
 				hoogsteHonger 	= wijEIn[i].z;
 				onzeK   		= wijEIn[i].xy;
-				nieuwePos		= wijPIn[i].xz;
+				nieuwePos		= wijPIn[i].xy;
 				nieuweSpd		= vec2(0.0);
 			}
 		}
 
-		nieuwePos = mix(mijnPos, nieuwePos, 0.85);
+		nieuwePos = mix(mijnPos, nieuwePos, 0.5);
 
 	}
 
