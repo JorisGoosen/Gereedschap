@@ -57,7 +57,7 @@ void main()
 	//if(jeBentWolf)
 	//	onzeK.y = -1.0;
 
-	onzeHL.x += 0.0005;
+	onzeHL.x += 0.001;
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
@@ -195,16 +195,16 @@ void main()
 	//nieuwePos = mod(nieuwePos, dimensions);
 	
 	if(nieuwePos.x > dimensions)
-		nieuwePos.x = -dimensions + max(0.0, nieuwePos.x - dimensions);
+		nieuwePos.x = -dimensions + distance(nieuwePos.x, dimensions);
 
 	else if(nieuwePos.x < -dimensions)
-		nieuwePos.x = dimensions + min(0.0, nieuwePos.x + dimensions);
+		nieuwePos.x = dimensions - distance(nieuwePos.x, dimensions);
 
 	if(nieuwePos.y > dimensions)
-		nieuwePos.y = -dimensions + max(0.0, nieuwePos.y - dimensions);
+		nieuwePos.y = -dimensions + distance(nieuwePos.y, dimensions);
 
 	else if(nieuwePos.y < -dimensions)
-		nieuwePos.y = dimensions + min(0.0, nieuwePos.y + dimensions);
+		nieuwePos.y = dimensions - distance(nieuwePos.y, dimensions);
 	
 
 	//nieuwePos -= 0.000001 * nieuwePos;

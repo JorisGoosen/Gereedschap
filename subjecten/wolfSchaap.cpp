@@ -11,7 +11,7 @@ Dier::Dier()
 {
 	heteroKracht 	= willekeur(zaaier);
 	homoKracht 		= willekeur(zaaier);
-	honger			= 0.0;
+	honger			= 0;
 	levend			= 1;
 }
 
@@ -26,10 +26,10 @@ PlaatsKleur::PlaatsKleur()
 	posX			= sin(hoek) * afstand;
 	posY			= cos(hoek) * afstand;
 
-	glm::vec2 s(posX, posY);
-	s = glm::normalize(s);
-	lichtheid		= -s.x;//willekeur(zaaier);//(hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
-	roodheid		= -s.y;//willekeur(zaaier);//(hackySchapenNu ? 0.2 : 1.0) 	* nietNormaal(zaaier);
+	//glm::vec2 s(posX, posY);
+	//s = glm::normalize(s);
+	lichtheid		= willekeur(zaaier);//(hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
+	roodheid		= willekeur(zaaier);//(hackySchapenNu ? 0.2 : 1.0) 	* nietNormaal(zaaier);
 
 }
 
@@ -82,12 +82,15 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 
 void Dieren::teken(bool wolven)
 {
+
+	//if(wolven)	_wolvenE [_pingPong]->bindPuntReeks();
+	//else		_schapenE[_pingPong]->bindPuntReeks();
+
+
 	if(wolven)	_wolvenP [_pingPong]->bindPuntReeks();
 	else		_schapenP[_pingPong]->bindPuntReeks();
 
-	if(wolven)	_wolvenE [_pingPong]->bindPuntReeks();
-	else		_schapenE[_pingPong]->bindPuntReeks();
-
+	
 	glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "jeBentWolf"), 		wolven);
 
 	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
