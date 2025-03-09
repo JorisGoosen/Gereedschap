@@ -61,7 +61,7 @@ void main()
 	//onzeHL.y -= 0.01;
 
 	bool ikOverlapMetAnder = false;
-	const float epsilon = 0.1,
+	const float epsilon = 0.2,
 			kijk = jeBentWolf ? 7 : 3;
 
 	float onzeGevonden = 0,
@@ -106,26 +106,26 @@ void main()
 	vec2 ns = normalize(mijnSpd);
 	float hoek = atan(ns.x, ns.y);
 
-	/*if(onzeGevonden>0)
+	if(onzeGevonden>0)
 	{
 		onzePos /= onzeGevonden;
 		vec2 onzeR = normalize(onzePos - mijnPos);
 
-		//mijnSpd = mix(mijnSpd, onzeR * onzeK.y, mixGehalte);
+		mijnSpd = mix(mijnSpd, onzeR * onzeK.y, mixGehalte);
 	
-		const float mixMe = 0.25;
-		hoek = mix(hoek, atan(onzeR.x, onzeR.y), mixMe);
-		snelheid = mix(snelheid, onzeK.y,  mixMe);
+		//const float mixMe = 0.25;
+		//hoek = mix(hoek, atan(onzeR.x, onzeR.y), mixMe);
+		//snelheid = mix(snelheid, onzeK.y,  mixMe);
 	}
-*/
+
 	if(hunGevonden>0)
 	{
 		hunPos /= hunGevonden;
 		vec2 hunR = normalize(hunPos - mijnPos);
-		//mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos) * onzeK.x, mixGehalte);
+		mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos) * onzeK.x, mixGehalte);
 		const float mixMe = 0.5;
-		hoek = mix(hoek, atan(hunR.x, hunR.y), mixMe);
-		snelheid = mix(snelheid, onzeK.x,  mixMe);
+		//hoek = mix(hoek, atan(hunR.x, hunR.y), mixMe);
+		//snelheid = mix(snelheid, onzeK.x,  mixMe);
 	}
 
 
@@ -141,13 +141,13 @@ void main()
 	//if(length(mijnSpd) > maxSpd)
 	//	mijnSpd = normalize(mijnSpd) * maxSpd;
 	snelheid = 1.0;// - clamp(onzeHL.x, 0.0, 1.0);
-	mijnSpd = vec2(sin(hoek), cos(hoek)) * snelheid * ( jeBentWolf ? 0.1 : 0.15);
+	//mijnSpd = vec2(sin(hoek), cos(hoek)) * snelheid * ( jeBentWolf ? 0.1 : 0.15);
 
 
 	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
 	//	nieuwePos += rotate(normalize(nieuwePos), 1.) * 0.01;
 
-	vec2 nieuwePos = mijnPos + (mijnSpd);
+	vec2 nieuwePos = mijnPos + (mijnSpd * 0.1);
 	vec2 nieuweSpd = mijnSpd;
 
 	if(teDichtbij>1)
@@ -171,21 +171,21 @@ void main()
 		onzeHL  = vec2(0.0, 0.0);
 
 		
-		float laagsteHonger = 100000000000.0;
+		float hoogsteHonger = -100000000000.0;
 
 
 		for(uint i=0; i<onzeLengte; i++)
 		{
-			if(wijEIn[i].z < laagsteHonger) //want die leeft het langst
+			if(wijEIn[i].z > hoogsteHonger) 
 			{
-				laagsteHonger 	= wijEIn[i].z;
+				hoogsteHonger 	= wijEIn[i].z;
 				onzeK   		= wijEIn[i].xy;
 				nieuwePos		= wijPIn[i].xz;
 				nieuweSpd		= vec2(0.0);
 			}
 		}
 
-		nieuwePos = mix(mijnPos, nieuwePos, 0.25);
+		nieuwePos = mix(mijnPos, nieuwePos, 0.85);
 
 	}
 

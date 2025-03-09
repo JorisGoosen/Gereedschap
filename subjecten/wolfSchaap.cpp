@@ -25,6 +25,7 @@ PlaatsKleur::PlaatsKleur()
 
 	posX			= sin(hoek) * afstand;
 	posY			= cos(hoek) * afstand;
+
 	glm::vec2 s(posX, posY);
 	s = glm::normalize(s);
 	lichtheid		= -s.x;//willekeur(zaaier);//(hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
@@ -50,6 +51,12 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 	schapen		.resize(aantalSchapen);
 	wolfPos		.resize(aantalWolven);
 	schaapPos	.resize(aantalSchapen);
+
+	for(auto & wp : wolfPos)
+	{
+		wp.posX *= 3.0;
+		wp.posY *= 3.0;
+	}
 
 	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	0));
 	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	1));
