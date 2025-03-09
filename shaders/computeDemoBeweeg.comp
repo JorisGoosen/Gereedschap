@@ -38,7 +38,9 @@ vec2 rotate(vec2 uv, float th) {
 
 float afstandBitte(vec2 a, vec2 b)
 {
-	return min(min(distance(a,b), distance(a,b-vec2(dimensions*2, 0))), min(distance(a,b-vec2(0, dimensions*2)), distance(a,b-vec2(dimensions*2, dimensions*2))));
+	return min(
+		min(min(distance(a,b), distance(a,b-vec2(dimensions*2, 0))), min(distance(a,b-vec2(0, dimensions*2)), distance(a,b-vec2(dimensions*2, dimensions*2)))),
+		min(min(distance(a,b), distance(a,b+vec2(dimensions*2, 0))), min(distance(a,b+vec2(0, dimensions*2)), distance(a,b+vec2(dimensions*2, dimensions*2)))));
 }
 
 void main()
@@ -110,7 +112,7 @@ void main()
 		vec2 onzeR = normalize(onzePos - mijnPos);
 
 		//mijnSpd = mix(mijnSpd, onzeR * onzeK.y, mixGehalte);
-		hoek = mix(hoek, atan(onzeR.y, onzeR.x), 0.1);
+		hoek = mix(hoek, atan(onzeR.y, onzeR.x), 0.5);
 	}
 
 	if(hunGevonden>0)
@@ -118,7 +120,7 @@ void main()
 		hunPos /= hunGevonden;
 		vec2 hunR = normalize(hunPos - mijnPos);
 		//mijnSpd = mix(mijnSpd, normalize(hunPos - mijnPos) * onzeK.x, mixGehalte);
-		hoek = mix(hoek, atan(hunR.y, hunR.x), 0.05);
+		hoek = mix(hoek, atan(hunR.y, hunR.x), 0.5);
 	}
 
 
@@ -134,7 +136,7 @@ void main()
 	//if(length(mijnSpd) > maxSpd)
 	//	mijnSpd = normalize(mijnSpd) * maxSpd;
 	snelheid = 1.0;// - clamp(onzeHL.x, 0.0, 1.0);
-	mijnSpd = vec2(cos(hoek), -1.0 * sin(hoek)) * snelheid * ( jeBentWolf ? 0.3 : 0.1);
+	mijnSpd = vec2(sin(hoek), cos(hoek)) * snelheid * ( jeBentWolf ? 0.3 : 0.1);
 
 
 	//if(distance(nieuwePos, vec2(0.0)) > dimensions)
