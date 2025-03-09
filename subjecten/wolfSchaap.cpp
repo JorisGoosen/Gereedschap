@@ -67,26 +67,26 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	6));
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	7));
 
-	_wolvenP [0]->maakReeksOpslag();
-	_wolvenP [1]->maakReeksOpslag();
-	_schapenP[0]->maakReeksOpslag();
-	_schapenP[1]->maakReeksOpslag();
+	_wolvenP [0]->maakReeksOpslag(0);
+	_wolvenP [1]->maakReeksOpslag(0);
+	_schapenP[0]->maakReeksOpslag(0);
+	_schapenP[1]->maakReeksOpslag(0);
 
-	_wolvenE [0]->maakReeksOpslag();
-	_wolvenE [1]->maakReeksOpslag();
-	_schapenE[0]->maakReeksOpslag();
-	_schapenE[1]->maakReeksOpslag();
+	_wolvenE [0]->maakReeksOpslag(1);
+	_wolvenE [1]->maakReeksOpslag(1);
+	_schapenE[0]->maakReeksOpslag(1);
+	_schapenE[1]->maakReeksOpslag(1);
 
 	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
 }
 
 void Dieren::teken(bool wolven)
 {
-	if(wolven)	_wolvenP [0]->bindPuntReeks();
-	else		_schapenP[0]->bindPuntReeks();
+	if(wolven)	_wolvenP [_pingPong]->bindPuntReeks();
+	else		_schapenP[_pingPong]->bindPuntReeks();
 
-	if(wolven)	_wolvenE [0]->bindPuntReeks();
-	else		_schapenE[0]->bindPuntReeks();
+	if(wolven)	_wolvenE [_pingPong]->bindPuntReeks();
+	else		_schapenE[_pingPong]->bindPuntReeks();
 
 	glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "jeBentWolf"), 		wolven);
 

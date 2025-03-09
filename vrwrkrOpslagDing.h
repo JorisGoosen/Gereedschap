@@ -34,7 +34,7 @@ public:
 
 	}
 
-	void 	maakReeksOpslag()
+	void 	maakReeksOpslag(int array = 0)
 	{
 		//Ik neem voor het gemak maar aan dat dit geladen moet worden als vec4 en anders jammer dan
 		assert(sizeof(Soort) == sizeof(float) * 4);
@@ -50,7 +50,7 @@ public:
 		glVertexAttribPointer(0, 4, GL_FLOAT, false, 0, 0);
 		glErrorToConsole("glVertexAttribPointer in vrwrkrOpslagDing::maakReeksOpslag: ");
 
-		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(array);
 		glErrorToConsole("glEnableVertexAttribArray in vrwrkrOpslagDing::maakReeksOpslag: ");
 
 		//ontbind:
