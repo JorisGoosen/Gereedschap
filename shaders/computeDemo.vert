@@ -19,11 +19,11 @@ void main()
 	if(!jeBentWolf)
 	{
 		//vec2 heho = (vec2(1.0) + HeHoHoLe.xy) / 2.0;
-		kleur = vec4(1.0);//heho.x, 1.0, heho.y, 1.0);
+		kleur = vec4(sqrt(PlaatsKleur.z));// - vec4(0., PlaatsKleur.z, PlaatsKleur.z, 0.);//heho.x, 1.0, heho.y, 1.0);
 	}
 	else
 	{
-		kleur = vec4(PlaatsKleur.z, 0.0, 0.0, 1.0);
+		kleur = vec4(PlaatsKleur.z, 0.0, 1.0, 1.0);
 	}
 	// vec4(PlaatsKleur.w, 1.0, PlaatsKleur.z, 1.0);//mix(vec4(1.0), vec4(1, 0, 0, 1), PlaatsKleur.w) * PlaatsKleur.z;
 }
