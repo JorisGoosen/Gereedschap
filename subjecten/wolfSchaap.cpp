@@ -27,8 +27,8 @@ PlaatsKleur::PlaatsKleur()
 	posY			= cos(hoek) * afstand;
 	glm::vec2 s(posX, posY);
 	s = glm::normalize(s);
-	lichtheid		= s.x;//willekeur(zaaier);//(hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
-	roodheid		= s.y;//willekeur(zaaier);//(hackySchapenNu ? 0.2 : 1.0) 	* nietNormaal(zaaier);
+	lichtheid		= -s.x;//willekeur(zaaier);//(hackySchapenNu ? 1 	: 0.5)	* nietNormaal(zaaier);
+	roodheid		= -s.y;//willekeur(zaaier);//(hackySchapenNu ? 0.2 : 1.0) 	* nietNormaal(zaaier);
 
 }
 
