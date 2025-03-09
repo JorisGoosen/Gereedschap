@@ -8,5 +8,5 @@ uniform bool jeBentWolf;
 
 void main()
 {
-	col = jeBentWolf ? vec4(0.0) : vec4(1.0);
+	col = kleur;// jeBentWolf ? vec4(0.0) : vec4(1.0);
 }

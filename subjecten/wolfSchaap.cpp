@@ -85,6 +85,9 @@ void Dieren::teken(bool wolven)
 	if(wolven)	_wolvenP [0]->bindPuntReeks();
 	else		_schapenP[0]->bindPuntReeks();
 
+	if(wolven)	_wolvenE [0]->bindPuntReeks();
+	else		_schapenE[0]->bindPuntReeks();
+
 	glUniform1ui(	glGetUniformLocation(_scherm->huidigProgramma(), "jeBentWolf"), 		wolven);
 
 	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
