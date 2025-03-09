@@ -54,8 +54,8 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 
 	for(auto & wp : wolfPos)
 	{
-		wp.posX *= 3.0;
-		wp.posY *= 3.0;
+		wp.posX *= 6.0;
+		wp.posY *= 4.0;
 	}
 
 	_wolvenE .push_back(new vrwrkrOpslagDing<Dier>(			wolven,  	0));
