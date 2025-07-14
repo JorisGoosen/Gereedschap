@@ -2,10 +2,13 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 plyLezer::plyLezer()
 {
-	_reeks = new wrgvOpslag();
+	_reeks 	= new wrgvOpslag();
+	_xyz	= new wrgvOnderOpslag<float>(3, _reeks, 0);
+	_nxyz	= new wrgvOnderOpslag<float>(3, _reeks, 1);
 }
 
 bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
@@ -16,7 +19,7 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 		return false;
 	}
 
-	std::ifstream bestand(plyBestand);
+	std::ifstream bestand(plyBestand, std::ios::binary);
 
 	if(bestand.fail())
 	{
@@ -82,5 +85,45 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 		}
 	}
 
+	// Nu hebben we het hoofd ingelezen en willen we dus the kleine kant eerst float een voor een gaan inlezen en in de juist wrgOnderOpslag onder brengen
+
+	size_t eigenschapTeller = 0;
+
+	std::map<std::string, float> opgehaald;
+	
+	for(float f; !bestand.eof(); )
+	{
+		bestand.read(reinterpret_cast<char*>(&f), sizeof(float));
+		
+		//std::cout << f << std::endl;
+
+		if(eigenschapTeller == eigenschappen.size())
+		{
+			//verwerk de opgehaalde regel
+			_xyz	->ggvPuntErbij(glm::vec3(opgehaald.at("x"), 		opgehaald.at("y"), 		opgehaald.at("z")));
+			_nxyz	->ggvPuntErbij(glm::vec3(opgehaald.at("nx"), 		opgehaald.at("ny"), 	opgehaald.at("nz")));
+
+			opgehaald.clear();
+
+			eigenschapTeller = 0;
+			_elementen++;
+		}
+
+		opgehaald[eigenschappen[eigenschapTeller++]] = f;
+	}
+
+	_xyz	->spoel();
+	_nxyz	->spoel();
+
+	std::cout << "_elementen: " << _elementen << " puntenGetal: " << puntenGetal << std::endl;
+	assert(_elementen == puntenGetal);
+
 	return true;
+}
+
+void plyLezer::tekenJezelf() const
+{
+	_reeks->bindPuntReeks();
+	glDrawArrays(GL_POINTS, _reeks->reeksBufferVoorPlek(0), _elementen);
+	glErrorToConsole("plyLezer::tekenJezelf(): ");
 }
