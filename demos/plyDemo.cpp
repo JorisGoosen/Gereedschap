@@ -1,5 +1,6 @@
 #include "../weergaveSchermPerspectief.h"
 #include "../geometrie/plylezer.h"
+#include <iostream>
 
 int main()
 {
@@ -9,7 +10,9 @@ int main()
 	glClearColor(0,0,0,0);
 
 	plyLezer ply;
-	ply.openPlyBestand("~/Photogram/BewerktePlys/beertjesuitsnede.ply");
+
+	if(!ply.openPlyBestand("/home/falafel/Photogram/BewerktePlys/beertjesuitsnede.ply"))
+		std::cout << "Inlezen bestand mislukt..." << std::endl;
 
 	//float rot = 0.0f;
 	//while(!scherm.stopGewenst())

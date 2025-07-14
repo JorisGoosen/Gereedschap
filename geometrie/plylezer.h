@@ -11,7 +11,7 @@ public:
 	bool openPlyBestand(const std::filesystem::path & plyfile);
 
 	///Teken jezelf met puntjes
-	virtual void tekenJezelf() 			const; 
+	void tekenJezelf() 			const {}
 
 	void bindPuntReeks() const { _reeks->bindPuntReeks();	 }
 	
