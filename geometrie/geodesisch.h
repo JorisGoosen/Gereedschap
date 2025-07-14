@@ -1,3 +1,4 @@
+#pragma once
 #include "icosahedron.h"
 #include <stdexcept>
 #include <map>
