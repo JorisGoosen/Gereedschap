@@ -29,7 +29,7 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 
 	std::string regel;
 
-	if(!std::getline(bestand, regel) || regel != "ply")
+	if(!std::getline(bestand, regel, char(0x0a)) || regel != "ply")
 	{
 		std::cerr << "Geen ply magic string: '" << regel << "'" << std::endl;
 		return false;
@@ -47,7 +47,7 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 
 	auto isDit = [&regel](const std::string & isHetDit) { return regel.size() >= isHetDit.size() && regel.substr(0, isHetDit.size()) == isHetDit; };
 
-	for(;std::getline(bestand, regel) && !hoofdKlaar;)
+	for(;!hoofdKlaar && std::getline(bestand, regel, char(0x0a));)
 	{
 		std::cout << regel << std::endl;
 		if(isDit(formatS))
@@ -72,7 +72,7 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 		{
 			std::string eigenschap = regel.substr(propertyS.size() + 1);
 			eigenschappen.push_back(eigenschap);
-			std::cout << "Eigenschap: " << eigenschap << std::endl;
+			std::cout << "Eigenschap #" << eigenschappen.size() << ": " << eigenschap << std::endl;
 		}
 		else if(isDit(endHeaderS))
 		{
@@ -90,33 +90,41 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 	size_t eigenschapTeller = 0;
 
 	std::map<std::string, float> opgehaald;
-	
-	for(float f; !bestand.eof(); )
+
+	auto verwerkOpgehaaldeFloats = [&]()
+	{
+		_xyz	->ggvPuntErbij(glm::vec3(opgehaald.at("x"), 		opgehaald.at("y"), 		opgehaald.at("z")));
+		_nxyz	->ggvPuntErbij(glm::vec3(opgehaald.at("nx"), 		opgehaald.at("ny"), 	opgehaald.at("nz")));
+
+		opgehaald.clear();
+
+		eigenschapTeller = 0;
+	};
+
+	int floatsGeteld=0;
+	float f;
+
+	do
 	{
 		bestand.read(reinterpret_cast<char*>(&f), sizeof(float));
+		floatsGeteld++;
 		
 		//std::cout << f << std::endl;
 
-		if(eigenschapTeller == eigenschappen.size())
-		{
-			//verwerk de opgehaalde regel
-			_xyz	->ggvPuntErbij(glm::vec3(opgehaald.at("x"), 		opgehaald.at("y"), 		opgehaald.at("z")));
-			_nxyz	->ggvPuntErbij(glm::vec3(opgehaald.at("nx"), 		opgehaald.at("ny"), 	opgehaald.at("nz")));
-
-			opgehaald.clear();
-
-			eigenschapTeller = 0;
-			_elementen++;
-		}
-
 		opgehaald[eigenschappen[eigenschapTeller++]] = f;
+
+		if(eigenschapTeller == eigenschappen.size())
+			verwerkOpgehaaldeFloats();	
 	}
+	while(bestand.good());
+
+	//verwerkOpgehaaldeFloats();
 
 	_xyz	->spoel();
 	_nxyz	->spoel();
 
-	std::cout << "_elementen: " << _elementen << " puntenGetal: " << puntenGetal << std::endl;
-	assert(_elementen == puntenGetal);
+	std::cout << "_xyz->grootte(): " << _xyz->grootte() << " puntenGetal: " << puntenGetal << " floatsGeteld: " << floatsGeteld << std::endl;
+	assert(_xyz->grootte() == puntenGetal);
 
 	return true;
 }
@@ -124,6 +132,6 @@ bool plyLezer::openPlyBestand(const std::filesystem::path & plyBestand)
 void plyLezer::tekenJezelf() const
 {
 	_reeks->bindPuntReeks();
-	glDrawArrays(GL_POINTS, _reeks->reeksBufferVoorPlek(0), _elementen);
+	glDrawArrays(GL_POINTS, _reeks->reeksBufferVoorPlek(0), _xyz->grootte());
 	glErrorToConsole("plyLezer::tekenJezelf(): ");
 }

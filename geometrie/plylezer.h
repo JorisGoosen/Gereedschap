@@ -16,8 +16,6 @@ public:
 	void bindPuntReeks() const { _reeks->bindPuntReeks();	 }
 	
 protected:
-	int								_elementen	= -1;
-
 	wrgvOpslag						* _reeks  	= nullptr;
 	wrgvOnderOpslag<float>			* _xyz 		= nullptr;
 	wrgvOnderOpslag<float>			* _nxyz 	= nullptr;
