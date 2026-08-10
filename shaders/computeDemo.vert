@@ -1,19 +1,38 @@
-#version 400
+//WGSL vertex-shader voor computeDemo: instanced vierkantjes voor de schapen en wolven
 
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-layout(location = 0) in vec4 PlaatsKleur;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-uniform mat4 modelView;
-uniform mat4 projectie;
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
+struct VertexIn {
+    @location(0) vierkant : vec2f,
+    @location(1) plaatsKleur : vec4f,
+};
 
-out vec4 kleur;
+struct VertexUit {
+    @builtin(position) positie : vec4f,
+    @location(0) kleur : vec4f,
+};
 
-void main()
-{
-	gl_Position = projectie * modelView *  vec4(PlaatsKleur.xy, 0.0, 1.0);
-	gl_PointSize = max(1.0,  10.0 - 2.0*gl_Position.z);
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
 
-	kleur = vec4(PlaatsKleur.w, 0, PlaatsKleur.z, 1.0);//mix(vec4(1.0), vec4(1, 0, 0, 1), PlaatsKleur.w) * PlaatsKleur.z;
+    uit.positie = matrices.projectie * matrices.modelZicht * vec4f(in.vierkant + in.plaatsKleur.xy, 0.0, 1.0);
+    uit.kleur = vec4f(in.plaatsKleur.w, 0.0, in.plaatsKleur.z, 1.0);
+
+    return uit;
 }

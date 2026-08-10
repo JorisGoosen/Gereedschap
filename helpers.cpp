@@ -8,72 +8,31 @@
 #include <regex>
 #include <filesystem>
 
-void glErrorToConsole(const std::string & huidigeActie)
-{
-	GLenum Fout = glGetError();
+static bool 				wgpHadFout 			= false;
+static std::string 			wgpLaatsteFoutBoodschap;
 
-	if(Fout == GL_NO_ERROR)
+void meldWgpFout(const std::string & boodschap)
+{
+	wgpHadFout 				= true;
+	wgpLaatsteFoutBoodschap	= boodschap;
+	std::cout << "WebGPU: " << boodschap << std::endl;
+}
+
+void wgpFoutControle(const std::string & huidigeActie)
+{
+	if(!wgpHadFout)
 		return;
+
+	wgpHadFout = false;
 
 	if(huidigeActie != "")
 		std::cout << huidigeActie << ": ";
 
-	switch(Fout)
-	{
-	case GL_INVALID_FRAMEBUFFER_OPERATION:	std::cout << "GL_INVALID_FRAMEBUFFER_OPERATION!";	break;
-	case GL_INVALID_ENUM:					std::cout << "GL_INVALID_ENUM!";					break;
-	case GL_OUT_OF_MEMORY:					std::cout << "GL_OUT_OF_MEMORY!";					break;
-	case GL_STACK_UNDERFLOW:				std::cout << "GL_STACK_UNDERFLOW!";					break;
-	case GL_STACK_OVERFLOW:					std::cout << "GL_STACK_OVERFLOW!";					break;
-	case GL_INVALID_VALUE:					std::cout << "GL_INVALID_VALUE!";					break;
-	case GL_INVALID_OPERATION:				std::cout << "GL_INVALID_OPERATION!";				break;
-	default:								std::cout << "Onbekende fout!";						break;
-	}
+	std::cout << wgpLaatsteFoutBoodschap << std::endl;
 
-	std::cout << std::endl;
+	wgpLaatsteFoutBoodschap.clear();
 
-	throw std::runtime_error("...");
-}
-
-
-bool checkvoorshadercompileerfout(GLuint shader, const std::string & naam)
-{
-	GLint isCompiled = 0;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-	if(isCompiled == GL_FALSE)
-	{
-			GLint maxLength = 0;
-			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-	 
-			//The maxLength includes the nullptr character
-			GLchar * errorLog = new GLchar[maxLength];
-			glGetShaderInfoLog(shader, maxLength, NULL, errorLog);
-
-			glErrorToConsole("glGetShaderInfoLog " + naam);
-	 
-	 		std::cout << "Shadercompilatie van " << naam << " is gefaald..\nCheck dit: " <<  errorLog << std::endl;
-
-			delete[] errorLog;
-
-			glDeleteShader(shader); //Don't leak the shader.
-			return false;
-	}
-	
-	return true;
-}
-
-std::string GetShaderTypeString(GLenum ShaderType)
-{
-	switch(ShaderType)
-	{
-	case GL_COMPUTE_SHADER:			return "GL_COMPUTE_SHADER";
-	case GL_VERTEX_SHADER:			return "GL_VERTEX_SHADER";		
-	case GL_TESS_CONTROL_SHADER:	return "GL_TESS_CONTROL_SHADER";		
-	case GL_TESS_EVALUATION_SHADER:	return "GL_TESS_EVALUATION_SHADER";
-	case GL_GEOMETRY_SHADER:		return "GL_GEOMETRY_SHADER";		
-	case GL_FRAGMENT_SHADER:		return "GL_FRAGMENT_SHADER";
-	default:						return "Unknown" ;
-	}
+	throw std::runtime_error("Er is een WebGPU fout opgetreden...");
 }
 
 
@@ -106,97 +65,37 @@ std::string tekstInlezen(const std::string & bestandsNaam)
 }
 
 
-GLuint _maakShaderObject(const std::string & shaderBestandsnaam, GLenum shadertype)
+void werpOnondersteund(const std::string & wat)
 {
-	GLuint shaderobject = glCreateShader(shadertype);
+	throw std::runtime_error("Nog niet ondersteund in WebGPU: " + wat);
+}
 
-	std::string shaderSource = tekstInlezen(shaderBestandsnaam);
 
-	//The following seems a bit weird no?
-	char const * pointerToCStr = shaderSource.c_str();
+WGPUShaderModule _maakShaderModule(const std::string & shaderBestandsnaam, WGPUDevice apparaat)
+{
+	std::string shaderBron = tekstInlezen(shaderBestandsnaam);
 
-	char const ** shadersourcefakearray = const_cast<char const **>(&pointerToCStr);
-	
-	glShaderSource(shaderobject, 1, shadersourcefakearray, nullptr);
+	WGPUShaderSourceWGSL wgslBron = WGPU_SHADER_SOURCE_WGSL_INIT;
+	wgslBron.code.data 	= shaderBron.c_str();
+	wgslBron.code.length = shaderBron.size();
+
+	WGPUShaderModuleDescriptor beschrijving = WGPU_SHADER_MODULE_DESCRIPTOR_INIT;
+	beschrijving.nextInChain = &wgslBron.chain;
+	beschrijving.label		= { shaderBestandsnaam.c_str(), shaderBestandsnaam.size() };
 
 	std::cout << "Compiling " << shaderBestandsnaam << "..." << std::endl;
 
-	glCompileShader(shaderobject);
+	WGPUShaderModule module = wgpuDeviceCreateShaderModule(apparaat, &beschrijving);
 
-	glErrorToConsole("_makeShaderObject " + shaderBestandsnaam);
-	
-	if(!checkvoorshadercompileerfout(shaderobject, shaderBestandsnaam.c_str())) 
-		exit(1);
+	if(!module)
+	{
+		meldWgpFout("Het aanmaken van de shader module '" + shaderBestandsnaam + "' is mislukt (controleer de WGSL!)");
+		throw std::runtime_error("Shader module aanmaken mislukt: " + shaderBestandsnaam);
+	}
 
-	return shaderobject;
-}
+	wgpFoutControle("_maakShaderModule('" + shaderBestandsnaam + "'): ");
 
-GLuint _maakGeometrieShader(const std::string & vertShaderBestandsnaam, const std::string & fragShaderBestandsnaam, const std::string & geomShaderBestandsnaam)
-{
-	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, GL_FRAGMENT_SHADER	);
-	GLuint geomshaderobject = _maakShaderObject(geomShaderBestandsnaam, GL_GEOMETRY_SHADER	);
-
-	GLuint prog = glCreateProgram();
-	
-	glAttachShader(prog, fragshaderobject);
-	glAttachShader(prog, vertshaderobject);
-	glAttachShader(prog, geomshaderobject);
-
-	glLinkProgram(prog);
-	return prog;
-}
-
-GLuint _maakVlakVerdelingShader(	const std::string & vertShaderBestandsnaam, 	const std::string & fragShaderBestandsnaam, 
-								const std::string & vlakEvalBestandsnaam, 		const std::string & vlakCtrlBestandsnaam)
-{
-	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, 	GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, 	GL_FRAGMENT_SHADER	);
-	GLuint tessEvalObject 	= _maakShaderObject(vlakEvalBestandsnaam, 		GL_TESS_EVALUATION_SHADER);
-
-	GLuint tessCtrlObject	= vlakCtrlBestandsnaam == "" ? 0 : _maakShaderObject(vlakCtrlBestandsnaam, GL_TESS_CONTROL_SHADER);
-
-	GLuint prog = glCreateProgram();
-	
-	glAttachShader(prog, fragshaderobject);
-	glAttachShader(prog, vertshaderobject);
-	glAttachShader(prog, tessEvalObject);
-
-	if(vlakCtrlBestandsnaam != "")
-		glAttachShader(prog, tessCtrlObject);
-
-	glLinkProgram(prog);
-	return prog;
-}
-
-
-
-GLuint _maakShader(const std::string & vertShaderBestandsnaam, const std::string & fragShaderBestandsnaam)
-{
-	GLuint vertshaderobject = _maakShaderObject(vertShaderBestandsnaam, GL_VERTEX_SHADER	);
-	GLuint fragshaderobject = _maakShaderObject(fragShaderBestandsnaam, GL_FRAGMENT_SHADER	);
-
-	GLuint prog = glCreateProgram();
-	
-	glAttachShader(prog, fragshaderobject);
-	glAttachShader(prog, vertshaderobject);
-
-	glLinkProgram(prog);
-	return prog;
-}
-
-
-
-GLuint _maakBerekenShader(const std::string & shaderBestandsnaam)
-{
-	GLuint compshaderobject = _maakShaderObject(shaderBestandsnaam, GL_COMPUTE_SHADER);
-
-	GLuint prog = glCreateProgram();
-	
-	glAttachShader(prog, compshaderobject);
-
-	glLinkProgram(prog);
-	return prog;
+	return module;
 }
 
 

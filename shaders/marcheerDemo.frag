@@ -1,113 +1,99 @@
-#version 400
+//WGSL fragment-shader voor marcheerDemo: een heel kort ray-march over een hoogtekaart
 
-//in vec2 tex;
-in vec3 pixelPlek;
-out vec4 FragColor;
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-//uniform  float schermVerhouding;
-uniform sampler2D landTwee;
-uniform mat4 modelZicht;
-uniform mat4 inversie;
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
-float dot2( in vec2 v ) { return dot(v,v); }
-float dot2( in vec3 v ) { return dot(v,v); }
-float ndot( in vec2 a, in vec2 b ) { return a.x*b.x - a.y*b.y; }
+@group(1) @binding(0) var landTwee : texture_2d<f32>;
+@group(1) @binding(1) var landTweeSampler : sampler;
 
+struct FragIn {
+    @location(0) pixelPlek : vec3f,
+};
 
-float sdBox( vec3 p, vec3 b )
-{
-  vec3 q = abs(p) - b;
-  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+struct FragUit {
+    @location(0) FragColor : vec4f,
+};
+
+fn sdBox(p : vec3f, b : vec3f) -> f32 {
+    let q = abs(p) - b;
+    return length(max(q, vec3f(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0);
 }
 
-void main()
-{
-	const vec3 oog = vec3(0., 1.0, -1.9);
-	
-	vec3 straal = normalize(pixelPlek - mat3(modelZicht) * oog);
-	const float stapje = 0.0015;
-	
-	
-	vec3 positie = pixelPlek;
-	float hoogte = 0.0;
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
 
-	float totaal = 0.0;
-	const float maxTotaal = 12.0;
-	const vec4 water = vec4(0.,0.,0.4, 1.0),
-						plant = vec4(0.0, 0.5, 0., 1.),
-						rots	= vec4(vec3(0.5), 1.),
-						strand = vec4(0.5, 0.8, 0.2, 1.);
+    const oog = vec3f(0.0, 1.0, -1.9);
+    let straal = normalize(in.pixelPlek - (matrices.modelZicht * vec4f(oog, 0.0)).xyz);
+    const stapje = 0.0015;
 
-	float afstand, vorigeAfstand;
-	const vec3 landDoos = vec3(.5, .5, .5);
-	const float plantHoogteMod = 0.02;
-	vec4 landKleur, kleurHier;
+    var positie = in.pixelPlek;
+    var hoogte = 0.0;
 
-	ivec2 plek, laatstePlek;
-	vec2 fPlek, textuurGrootte = vec2(textureSize(landTwee, 0));
+    var totaal = 0.0;
+    const maxTotaal = 12.0;
+    const water = vec4f(0.0, 0.0, 0.4, 1.0);
+    const plant = vec4f(0.0, 0.5, 0.0, 1.0);
+    const rots  = vec4f(0.5, 0.5, 0.5, 1.0);
+    const strand = vec4f(0.5, 0.8, 0.2, 1.0);
 
-	while(totaal < maxTotaal)
-	{
-		vorigeAfstand = afstand;
+    var afstand = 0.0;
+    var vorigeAfstand = 0.0;
+    const landDoos = vec3f(0.5, 0.5, 0.5);
+    const plantHoogteMod = 0.02;
+    var landKleur = rots;
+    var kleurHier = rots;
 
-		afstand = sdBox(positie + vec3(0., 0., .5), landDoos);
+    loop {
+        if (totaal >= maxTotaal) { break; }
 
-		if(afstand > vorigeAfstand && afstand > 0.5)
-		{
-			FragColor = water;//mix(water, vec4(0., 0., (straal.y), 1.), clamp(1. + positie.y * 0.5, 0., 1.));
+        vorigeAfstand = afstand;
+        afstand = sdBox(positie + vec3f(0.0, 0.0, 0.5), landDoos);
 
-			break;
-		}
+        if (afstand > vorigeAfstand && afstand > 0.5) {
+            uit.FragColor = water;
+            return uit;
+        }
 
-		//if(positie.x >= -0.5 && positie.x <= 0.5 && positie.z >= 0.0 && positie.z <= 1.0)
-		if(afstand < stapje)
-		{
-			positie = positie;
-			//in plaatje, raken we iets?
-			fPlek = positie.xz + vec2(0.5, 1.);
-			//fPlek = vec2(clamp(fPlek.x, 0., 1.), clamp(fPlek.y, 0., 1.));
-			//plek = ivec2(textuurGrootte * fPlek);
+        if (afstand < stapje) {
+            let fPlek = positie.xz + vec2f(0.5, 1.0);
+            kleurHier = textureSample(landTwee, landTweeSampler, fPlek);
 
-			//if(plek != laatstePlek)
-			kleurHier = texture(landTwee, fPlek);//texelFetch(landTwee, plek, 0);
+            hoogte = kleurHier.r + kleurHier.g * plantHoogteMod;
 
-			//laatstePlek = plek;
+            if (hoogte * landDoos.y > positie.y) {
+                const waterHoogte = 0.025;
 
-			hoogte = kleurHier.r + kleurHier.g * plantHoogteMod;
+                if (hoogte < waterHoogte) {
+                    landKleur = mix(water, plant, clamp(hoogte - kleurHier.g * plantHoogteMod, 0.0, waterHoogte) / waterHoogte);
+                } else if (hoogte < 0.5) {
+                    landKleur = mix(rots, plant, kleurHier.g);
+                } else if (hoogte > 0.7) {
+                    landKleur = mix(rots, vec4f(1.0), kleurHier.g);
+                } else {
+                    landKleur = rots;
+                }
 
-			if(hoogte * landDoos.y > positie.y)
-			{
-			//	hoogte = positie.y;//mix(hoogte, positie.y, 0.5);
-				//FragColor = vec4(positie.y * 5., positie.y - hoogte, hoogte - positie.y, 1.0);
-				//hoogte = hoogte * 2.0;
-				//FragColor = vec4(hoogte, 1.0 - 0.5*totaal/maxTotaal - hoogte, hoogte, 1.); //vec4(positie.y * 5., hoogte * 3., 0.0, 1.0);
-				const float waterHoogte = 0.025;
-				if(hoogte < waterHoogte)
-					landKleur = mix(water, plant, clamp(hoogte-kleurHier.g * plantHoogteMod, 0.0, waterHoogte) / waterHoogte);
-				else if(hoogte < 0.5)
-					landKleur = mix(rots, plant, kleurHier.g);
-				else if(hoogte > 0.7)
-					landKleur = mix(rots, vec4(1.0), kleurHier.g);
-				else
-					landKleur = rots;
+                landKleur *= kleurHier.b;
 
-				landKleur *= kleurHier.b;
+                uit.FragColor = landKleur;
+                return uit;
+            }
 
-				FragColor = landKleur;//mix(water, landKleur, clamp(hoogte - kleurHier.g * plantHoogteMod, 0., 0.01) * 100.);	 //mix(strand, landKleur, clamp(hoogte - 0.05, 0., .1) * 10.), clamp(hoogte, 0., 0.05) * 20.);
-				//FragColor = kleurHier;
-				//FragColor.x = fPlek.x;
-				//FragColor.z = fPlek.y;
+            totaal += stapje;
+        } else {
+            totaal += afstand;
+        }
 
-				break;
-			}
-		
-			totaal += stapje;
-		}
-		else
-			totaal += afstand;
+        positie = in.pixelPlek + (totaal * straal);
+    }
 
-		positie = pixelPlek + (totaal * straal);
-	};
+    uit.FragColor = vec4f(totaal);
 
-	//FragColor = vec4(totaal);	
+    return uit;
 }

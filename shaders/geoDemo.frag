@@ -1,14 +1,20 @@
-#version 400
+//WGSL fragment-shader voor geoDemo
 
-out vec4 uitKleur;
+struct FragIn {
+    @location(0) normaal : vec3f,
+    @location(1) texU : vec2f,
+    @location(2) kleur : vec4f,
+};
 
-in vec3 normal;
-in vec2 texU;
-in vec4 kleur;
+struct FragUit {
+    @location(0) uitKleur : vec4f,
+};
 
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
 
-void main()
-{
-	uitKleur = kleur;
+    uit.uitKleur = in.kleur;
+
+    return uit;
 }
-	

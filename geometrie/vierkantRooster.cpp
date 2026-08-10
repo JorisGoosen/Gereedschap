@@ -6,17 +6,34 @@ using namespace glm;
 
 void vierkantRooster::tekenJezelf() const
 {
-	bindPuntReeks();
-	glDrawElements(GL_QUADS, _vierkanten.size(), GL_UNSIGNED_INT, _vierkanten.data());
-	glErrorToConsole("vierkantRooster::tekenJezelf(): ");
+	//WebGPU kent geen GL_QUADS; elk vierkant wordt daarom in twee driehoeken geknipt
+	std::vector<glm::uint32> driehoeken;
+	driehoeken.reserve(_vierkanten.size() / 4 * 6);
+
+	for(size_t i = 0; i < _vierkanten.size(); i += 4)
+	{
+		uint32_t a = _vierkanten[i + 0],
+				 b = _vierkanten[i + 1],
+				 c = _vierkanten[i + 2],
+				 d = _vierkanten[i + 3];
+
+		driehoeken.push_back(a);
+		driehoeken.push_back(b);
+		driehoeken.push_back(c);
+
+		driehoeken.push_back(a);
+		driehoeken.push_back(c);
+		driehoeken.push_back(d);
+	}
+
+	_reeks->zetIndexGegevens(driehoeken);
+	_reeks->zetTopologie(WGPUPrimitiveTopology_TriangleList);
+	_reeks->tekenGeïndexeerd();
 }
 
 void vierkantRooster::tekenJezelfPatchy() const
 {
-	glPatchParameteri(GL_PATCH_VERTICES, 4);
-	bindPuntReeks();
-	glDrawElements(GL_PATCHES, _vierkanten.size(), GL_UNSIGNED_INT, _vierkanten.data());
-	glErrorToConsole("vierkantRooster::tekenJezelfPatchy(): ");
+	werpOnondersteund("vierkantRooster::tekenJezelfPatchy (tessellation bestaat niet in WebGPU)");
 }
 
 
@@ -26,8 +43,6 @@ vierkantRooster::vierkantRooster(size_t breedte, size_t hoogte, float schaling) 
 	_reeks  	= new wrgvOpslag			();
 	_punten		= new wrgvOnderOpslag<float>(	3, _reeks, 0);
 	_texturen	= new wrgvOnderOpslag<float>(	2, _reeks, 1);
-
-	glErrorToConsole("vierkantRooster::vierkantRooster(): ");
 
 	genereer();
 }

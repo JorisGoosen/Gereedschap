@@ -1,20 +1,30 @@
-#version 400
+//WGSL vertex-shader voor bewerkHetLand (deelt het scherm-vierkant met toonHetLand)
 
-in vec2 vPos;
-in vec2 vTex;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-//out vec2 tex;
-out vec2 pixelPlek;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
-uniform float schermVerhouding;
-uniform sampler2D landRuis;
+struct VertexIn {
+    @location(0) vPos : vec2f,
+    @location(1) vTex : vec2f,
+};
 
-void main(){
-	gl_Position = vec4(vPos, 0.0, 1.0);
-  	//tex = vTex;
+struct VertexUit {
+    @builtin(position) positie : vec4f,
+    @location(0) pixelPlek : vec2f,
+};
 
-	
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
 
-	pixelPlek =  vec2(0.5) + (0.5 * vTex);
-	//pixelPlek = ivec2(int((float(textuurBreedte) * (0.5 + 0.5 * vTex.x))), int((float(textuurHoogte) * (0.5 + 0.5 * vTex.y))));
+    uit.positie = vec4f(in.vPos, 0.0, 1.0);
+    uit.pixelPlek = vec2f(0.5) + (0.5 * in.vTex);
+
+    return uit;
 }

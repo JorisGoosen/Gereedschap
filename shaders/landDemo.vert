@@ -1,26 +1,56 @@
-#version 400
+//WGSL vertex-shader voor landDemo
 
-layout(location = 0) in vec3 vPos;
-layout(location = 1) in vec2 vTex;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-uniform mat4 projectie;
-uniform mat4 modelView;
-uniform int vermindering;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
-out vec2 textuur;
-out float hoogte;
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-uniform sampler2D handLand;
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
-void main()
-{
-	textuur =  vTex;// (vTex + vec2(1.0)) / 2.0;
+struct ExtraParameters {
+    vermindering : f32,
+    reserve1 : f32,
+    reserve2 : f32,
+    reserve3 : f32,
+};
 
-	vec4 pos = vec4(vPos, 1.0);
-	//pos.y = textureLod(handLand, textuur, float(vermindering)).r * 0.5;
-	pos.y = texture(handLand, textuur).r*0.5;
+@group(0) @binding(2) var<uniform> extra : ExtraParameters;
 
-	gl_Position = projectie * modelView * pos;
+@group(1) @binding(0) var handLand : texture_2d<f32>;
+@group(1) @binding(1) var handLandSampler : sampler;
 
-	hoogte = pos.y;
+struct VertexIn {
+    @location(0) vPos : vec3f,
+    @location(1) vTex : vec2f,
+};
+
+struct VertexUit {
+    @builtin(position) pos : vec4f,
+    @location(0) textuur : vec2f,
+    @location(1) hoogte : f32,
+};
+
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
+
+    uit.textuur = in.vTex;
+
+    var pos = vec4f(in.vPos, 1.0);
+    pos.y = textureSampleLevel(handLand, handLandSampler, uit.textuur, extra.vermindering).r * 0.5;
+    uit.hoogte = pos.y;
+
+    uit.pos = matrices.projectie * matrices.modelZicht * pos;
+
+    return uit;
 }

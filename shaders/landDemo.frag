@@ -1,41 +1,53 @@
-#version 400
+//WGSL fragment-shader voor landDemo
 
-out vec4 kleur;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-in vec2 textuur;
-in float hoogte;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
-uniform sampler2D handLand;
-//uniform int vermindering;
+@group(1) @binding(0) var handLand : texture_2d<f32>;
+@group(1) @binding(1) var handLandSampler : sampler;
 
-void main()
-{
-	//vec3  tsjakka = normalize(vec3(dFdx(hoogte) * 500., dFdy(hoogte) * 500., 1.));
-	const float hH = 0.05;
-	//vec4 kleur = texture(handLand, textuur);
-	float h = texture(handLand, textuur).r, //kleur.r,
-				l = texture(handLand, textuur).b,// = 1.,//kleur.b,// = dot(vec3(0., 0., 1.), tsjakka),
-				r = 1.-texture(handLand, textuur).g,//1.-kleur.g,
-				w = h < hH ? 1.0 - h/hH : 0.;
+struct FragIn {
+    @location(0) textuur : vec2f,
+    @location(1) hoogte : f32,
+};
 
-	vec2 texG = vec2(textureSize(handLand, 0));
+struct FragUit {
+    @location(0) kleur : vec4f,
+};
 
-	vec2 invT = vec2(1.) / texG;
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
 
-	//float verminderingF = float(vermindering);
+    const hH = 0.05;
 
-	float xAfg = texture(handLand, textuur + vec2(invT.x, .0)).r - texture(handLand, textuur - vec2(invT.x, .0)).r,
-				yAfg = texture(handLand, textuur + vec2(.0, invT.y)).r - texture(handLand, textuur - vec2(.0, invT.y)).r;
+    let h = textureSample(handLand, handLandSampler, in.textuur).r;
+    let l = textureSample(handLand, handLandSampler, in.textuur).b;
+    let r = 1.0 - textureSample(handLand, handLandSampler, in.textuur).g;
+    let w = select(0.0, 1.0 - h / hH, h < hH);
 
-	vec3  tsjakka = normalize(vec3(xAfg * 40., 1., yAfg * 40.));
+    let texG = vec2f(textureDimensions(handLand, 0));
+    let invT = vec2f(1.0) / texG;
 
-	l *= 0.3 + 0.7 * dot(normalize(vec3(-1., 1., 0.5)), tsjakka);
+    let xAfg = textureSample(handLand, handLandSampler, in.textuur + vec2f(invT.x, 0.0)).r
+             - textureSample(handLand, handLandSampler, in.textuur - vec2f(invT.x, 0.0)).r;
+    let yAfg = textureSample(handLand, handLandSampler, in.textuur + vec2f(0.0, invT.y)).r
+             - textureSample(handLand, handLandSampler, in.textuur - vec2f(0.0, invT.y)).r;
 
-	//r = clamp((max(abs(xAfg), abs(yAfg)) * 160.), 0., 1.);
+    var tsjakka = normalize(vec3f(xAfg * 40.0, 1.0, yAfg * 40.0));
+    let verlicht = l * (0.3 + 0.7 * dot(normalize(vec3f(-1.0, 1.0, 0.5)), tsjakka));
 
-	const vec4 	water 	= vec4(0.0,  0.0, 0.5, 1.),
-						rots	= vec4(0.6,  0.5, 0.4, 1.),
-						plant	= vec4(0.05, 0.6, 0.0, 1.);
+    const water = vec4f(0.0, 0.0, 0.5, 1.0);
+    const rots  = vec4f(0.6, 0.5, 0.4, 1.0);
+    const plant = vec4f(0.05, 0.6, 0.0, 1.0);
 
-	kleur = l * mix(mix(plant, rots, r), water, w); 
+    uit.kleur = verlicht * mix(mix(plant, rots, r), water, w);
+
+    return uit;
 }

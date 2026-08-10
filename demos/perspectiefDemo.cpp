@@ -7,7 +7,7 @@ int main()
 	weergaveSchermPerspectief scherm("Perspectief Demo");
 	scherm.maakShader("perspectiefDemo", "shaders/perspectiefDemo.vert", "shaders/perspectiefDemo.frag");
 
-	glClearColor(0,0,0,0);
+	scherm.zetWeergaveKleur(0, 0, 0, 0);
 
 	icosahedron ico;
 
@@ -19,7 +19,6 @@ int main()
 		ico.tekenJezelf();
 		//scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
-
 
 		rot += 0.01f;
 	}

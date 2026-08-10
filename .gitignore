@@ -2,4 +2,7 @@
 *.so
 vgcore.*
 bin/*
+build/
+build-*/
 libgereedschap.a
+libwebgereedschap.a

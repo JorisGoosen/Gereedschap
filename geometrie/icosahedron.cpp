@@ -54,17 +54,14 @@ glm::ivec3 	lijn::geefGeorienteerdeDriehoek(const lijn & deEen, const lijn & deA
 
 void icosahedron::tekenJezelf() const
 {
-	bindPuntReeks();
-	glDrawElements(GL_TRIANGLES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
-	glErrorToConsole("icosahedron::tekenJezelf(): ");
+	_reeks->zetIndexGegevens(_drieHk);
+	_reeks->zetTopologie(WGPUPrimitiveTopology_TriangleList);
+	_reeks->tekenGeïndexeerd();
 }
 
 void icosahedron::tekenJezelfPatchy() const
 {
-	glPatchParameteri(GL_PATCH_VERTICES, 3);
-	bindPuntReeks();
-	glDrawElements(GL_PATCHES, _drieHk.size(), GL_UNSIGNED_INT, _drieHk.data());
-	glErrorToConsole("icosahedron::tekenJezelfPatchy(): ");
+	werpOnondersteund("icosahedron::tekenJezelfPatchy (tessellation bestaat niet in WebGPU)");
 }
 
 
@@ -73,8 +70,6 @@ icosahedron::icosahedron()
 {
 	_reeks  	= new wrgvOpslag			();
 	_punten	= new wrgvOnderOpslag<float>(	3, _reeks, 0);
-
-	glErrorToConsole("icosahedron::icosahedron(): ");
 
 	genereer();
 }
@@ -93,8 +88,6 @@ void icosahedron::genereer()
 	_drieHk.push_back(0);
 	_drieHk.push_back(1);
 	_drieHk.push_back(2);
-
-	glErrorToConsole("icosahedron::genereer: ");
 
 	return;
 #else

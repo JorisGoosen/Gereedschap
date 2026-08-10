@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/glew.h>
+#include <webgpu.h>
 #include <string>
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_SWIZZLE 
@@ -13,18 +13,25 @@
 #include <iomanip>
 #include <sstream>
 
-void glErrorToConsole(const std::string & huidigeActie = "");
+///Controleert of het wgpu-apparaat fouten heeft gemeld en meldt die dan; bij echte fouten wordt gegooid
+void wgpFoutControle(const std::string & huidigeActie = "");
 
-GLuint 		_maakShaderObject(			const std::string &  shaderBestandsnaam, 		GLenum shadertype);
-GLuint 		_maakBerekenShader(			const std::string &  shaderBestandsnaam);
-GLuint 		_maakShader(				const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam);
-GLuint 		_maakGeometrieShader(		const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  geomShaderBestandsnaam);
-GLuint 		_maakVlakVerdelingShader(	const std::string &  vertShaderBestandsnaam, 	const std::string &  fragShaderBestandsnaam, const std::string &  vlakEvalBestandsnaam, const std::string &  vlakCtrlBestandsnaam = "");
+///Wordt aangeroepen door de foutmelding-callback van het apparaat om een fout te registreren
+void meldWgpFout(const std::string & boodschap);
+
+///Maakt een WGSL shader module van het bestand (met #include verwerking) en gooit bij compileerfouten
+WGPUShaderModule _maakShaderModule(const std::string & shaderBestandsnaam, WGPUDevice apparaat);
+
+///Leest een bestand en vouwt "#include \"bestand\"" regels in (net als vroeger in OpenGL)
+std::string tekstInlezen(const std::string & bestandsNaam);
 
 		glm::vec3	willekeurigeVec3();
 inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 
 png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
+
+///WebGPU kent geen geometry- of vlak-verdelings shaders (alleen de reken en vertex/fragment)
+[[noreturn]] void werpOnondersteund(const std::string & wat);
 
 
 inline std::string		_doubleStr(double number) 

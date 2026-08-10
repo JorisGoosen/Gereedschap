@@ -1,4 +1,5 @@
 #include "../vrwrkrOpslagDing.h"
+#include <vector>
 
 struct Dier
 {
@@ -21,13 +22,12 @@ struct PlaatsKleur
 };
 
 class weergaveScherm;
-class nepScherm;
-class vierkantRooster;
 
 class Dieren
 {
 public:
 	Dieren(weergaveScherm * scherm, int wolven = 10, int schapen = 200, float wereldGrootte = 2);
+	~Dieren();
 
 	void pong();
 	void beweeg(bool wolven);
@@ -37,12 +37,12 @@ public:
 protected:
 	std::vector<vrwrkrOpslagDing<Dier>*>		_wolvenE ,	///< Ping pong met wolven, eigenschappen
 												_schapenE;	///< Ping pong met schapen, eigenschappen
-	std::vector<vrwrkrOpslagDing<PlaatsKleur>*>	_wolvenP ,	///< Ping pong met wolven, positie, mss beter vertex arary ofzo?
+	std::vector<vrwrkrOpslagDing<PlaatsKleur>*>	_wolvenP ,	///< Ping pong met wolven, positie
 												_schapenP;	///< Ping pong met schapen, positie
-	vierkantRooster 						*	_vierkant;
-	nepScherm								*	_nepScherm;
-	float										_wereldGrootte;
-	int											_pingPong,
-												_aantalWolven,	
-												_aantalSchapen;
+	weergaveScherm 						*	_scherm = nullptr;
+	WGPUBuffer 								_vierkantje = nullptr;	///< het vierkantje dat op elke plek getekend wordt
+	float									_wereldGrootte;
+	int										_pingPong,
+											_aantalWolven,	
+											_aantalSchapen;
 };

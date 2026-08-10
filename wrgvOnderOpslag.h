@@ -1,10 +1,6 @@
 #pragma once
-#include <GL/glew.h>
-#include <string>
-#include <GLFW/glfw3.h>
-#include <array>
-
 #include "wrgvOpslag.h"
+#include <array>
 
 
 template <class T>

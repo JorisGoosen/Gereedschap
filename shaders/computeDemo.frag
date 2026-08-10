@@ -1,10 +1,18 @@
-#version 400
+//WGSL fragment-shader voor computeDemo
 
-out vec4 col;
+struct FragIn {
+    @location(0) kleur : vec4f,
+};
 
-in vec4 kleur;
+struct FragUit {
+    @location(0) kleur : vec4f,
+};
 
-void main()
-{
-	col = kleur;
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
+
+    uit.kleur = in.kleur;
+
+    return uit;
 }

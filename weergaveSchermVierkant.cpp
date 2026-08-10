@@ -41,6 +41,10 @@ void weergaveSchermVierkant::initVierkant()
 
 	_punten->spoel();
 	_tex->spoel();
+
+	//De indexbuffer en de driehoek-strook-topologie zoals OpenGL dat ook deed
+	_reeks->zetIndexGegevens(std::vector<uint32_t>({1, 2, 0, 3}));
+	_reeks->zetTopologie(WGPUPrimitiveTopology_TriangleStrip);
 }
 
 void weergaveSchermVierkant::geefVierkantWeer()
@@ -48,10 +52,8 @@ void weergaveSchermVierkant::geefVierkantWeer()
 	if(!_reeks)
 		initVierkant();
 
-	glDisable(GL_DEPTH_TEST);
-	unsigned int indices[] = {1, 2, 0, 3};
+	if(!_weergavePass)
+		return;
 
-	_reeks->bindPuntReeks();	
-	glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, indices);
-	glErrorToConsole("weergaveSchermVierkant::geefVierkantWeer(): ");
+	_reeks->tekenGeïndexeerd();
 }

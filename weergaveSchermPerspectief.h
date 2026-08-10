@@ -18,7 +18,7 @@ public:
 void		setModelView(glm::mat4 modelView) { zetModelZicht(modelView); }
 	void 		toetsVerwerker(int key, int scancode, int action, int mods) override;
 
-	void 		extraVoorbereidingen(GLuint programma) override;
+	void 		extraVoorbereidingen(WGPURenderPipeline programma) override;
 
 private:
 	float		_fovYScale			= FPI * 0.5f,

@@ -1,10 +1,18 @@
-#version 400
+//WGSL fragment-shader voor perspectiefDemo
 
-out vec4 col;
+struct FragIn {
+    @location(0) normaal : vec3f,
+};
 
-in vec3 normal;
+struct FragUit {
+    @location(0) kleur : vec4f,
+};
 
-void main()
-{
-	col = vec4((vec3(1) + normal) / vec3(2), 1);
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
+
+    uit.kleur = vec4f((vec3f(1.0) + in.normaal) / vec3f(2.0), 1.0);
+
+    return uit;
 }

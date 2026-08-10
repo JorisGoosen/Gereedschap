@@ -1,20 +1,37 @@
-#version 400
+//WGSL vertex-shader voor perspectiefDemo
 
-layout(location = 0) in vec3 vPos;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-uniform mat4 projectie;
-uniform mat4 modelView;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
-out vec3 normal;
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-void main()
-{
-	normal = normalize(vPos);
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
-	gl_Position =// projectie * 
-	//mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
-	projectie * 
-	//mat4(1) * 
-	modelView * 
-	vec4(vPos, 1.0);// * modelView;// * ;
+struct VertexIn {
+    @location(0) vPos : vec3f,
+};
+
+struct VertexUit {
+    @builtin(position) positie : vec4f,
+    @location(0) normaal : vec3f,
+};
+
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
+
+    uit.normaal = normalize(in.vPos);
+    uit.positie = matrices.projectie * matrices.modelZicht * vec4f(in.vPos, 1.0);
+
+    return uit;
 }

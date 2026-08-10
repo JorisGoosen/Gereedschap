@@ -1,18 +1,40 @@
-#version 400
+//WGSL vertex-shader voor marcheerDemo
 
-in vec2 vPos;
-in vec2 vTex;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-//out vec2 tex;
-out vec3 pixelPlek;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
-uniform sampler2D landTwee;
-uniform float schermVerhouding;
-uniform mat4 modelZicht;
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-void main(){
-	gl_Position = vec4(vPos, 0.0, 1.0);
-  	//tex = vTex;
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
-	pixelPlek = mat3(modelZicht) * vec3(vTex.x, (vTex.y / schermVerhouding) + 0.5, -1.0);
+struct VertexIn {
+    @location(0) vPos : vec2f,
+    @location(1) vTex : vec2f,
+};
+
+struct VertexUit {
+    @builtin(position) positie : vec4f,
+    @location(0) pixelPlek : vec3f,
+};
+
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
+
+    uit.positie = vec4f(in.vPos, 0.0, 1.0);
+
+    //de bovenste 3x3 van modelZicht: M * (v, 0).xyz
+    uit.pixelPlek = (matrices.modelZicht * vec4f(in.vTex.x, (in.vTex.y / beeld.schermVerhouding) + 0.5, -1.0, 0.0)).xyz;
+
+    return uit;
 }

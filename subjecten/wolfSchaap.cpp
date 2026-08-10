@@ -1,6 +1,5 @@
 #include "wolfSchaap.h"
 #include "../weergaveScherm.h"
-#include "../nepScherm.h"
 #include "../geometrie/vierkantRooster.h"
 #include <random>
 #include <numbers>
@@ -36,10 +35,8 @@ PlaatsKleur::PlaatsKleur()
 Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, float wereldGrootte)
 : _wereldGrootte(wereldGrootte), _aantalWolven(aantalWolven), _aantalSchapen(aantalSchapen)
 {
+	_scherm = scherm;
 	hackyWereldGrootte = _wereldGrootte;
-
-	_vierkant 	= new vierkantRooster(1, 1);
-	_nepScherm 	= new nepScherm(scherm, glm::uvec2({128, 128}));
 
 	std::vector<Dier>			wolven,
 								schapen;
@@ -60,22 +57,39 @@ Dieren::Dieren(weergaveScherm * scherm, int aantalWolven, int aantalSchapen, flo
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	6));
 	_schapenP.push_back(new vrwrkrOpslagDing<PlaatsKleur>(	schaapPos, 	7));
 
-	_wolvenP [0]->maakReeksOpslag();
-	_wolvenP [1]->maakReeksOpslag();
-	_schapenP[0]->maakReeksOpslag();
-	_schapenP[1]->maakReeksOpslag();
+	//het vierkantje (twee driehoeken) dat op elke plek wordt neergezet
+	const float grootte = 0.03f;
+	const float kaders[12] = {
+		-grootte, -grootte,  grootte, -grootte,  grootte,  grootte,
+		-grootte, -grootte,  grootte,  grootte, -grootte,  grootte,
+	};
 
-	glErrorToConsole("Dieren::Dieren(wolven=" + std::to_string(aantalWolven) + ", schapen=" + std::to_string(aantalSchapen) + ", wereldGrootte=" + std::to_string(wereldGrootte) + "): ");
+	WGPUBufferDescriptor beschrijving = WGPU_BUFFER_DESCRIPTOR_INIT;
+	beschrijving.usage = WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst;
+	beschrijving.size  = sizeof(kaders);
+	_vierkantje = wgpuDeviceCreateBuffer(gedeeldApparaat(), &beschrijving);
+	wgpuQueueWriteBuffer(gedeeldeRij(), _vierkantje, 0, kaders, sizeof(kaders));
+}
+
+Dieren::~Dieren()
+{
+	for(auto * ding : _wolvenE)		delete ding;
+	for(auto * ding : _wolvenP)		delete ding;
+	for(auto * ding : _schapenE)	delete ding;
+	for(auto * ding : _schapenP)	delete ding;
+
+	if(_vierkantje)		wgpuBufferRelease(_vierkantje);
 }
 
 void Dieren::teken(bool wolven)
 {
-	if(wolven)	_wolvenP [0]->bindPuntReeks();
-	else		_schapenP[0]->bindPuntReeks();
+	auto	& 	plekken 	= wolven ? _wolvenP : _schapenP;
+	int 		aantal 		= wolven ? _aantalWolven : _aantalSchapen;
 
-	glDrawArrays( GL_POINTS, 0, wolven ? _aantalWolven : _aantalSchapen);
+	if(!_scherm)
+		return;
 
-	glErrorToConsole(std::string("Dieren::teken(") + (wolven ? "wolven":"schapen") + "): ");
+	_scherm->tekenKadertjes(_vierkantje, 6, plekken[_pingPong]->opslag(), aantal);
 }
 
 void Dieren::pong()
@@ -85,39 +99,21 @@ void Dieren::pong()
 
 void Dieren::beweeg(bool wolven)
 {
-	_nepScherm->bereidWeergevenVoor("beweeg", false);
+	auto	& 	plaatsE 	= wolven ? _wolvenE : _schapenE;
+	auto	& 	plaatsP 	= wolven ? _wolvenP : _schapenP;
+	int 		aantal 		= wolven ? _aantalWolven : _aantalSchapen;
 
-	weergaveScherm * scherm = _nepScherm->scherm();
-
-	std::function<void()> schaapVoorbereiding = [&]()
+	std::function<void()> voorbereiding = [&]()
 	{
-
-		_schapenE[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnE"));
-		_schapenE[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
-		_schapenP[  _pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijZijnP"));
-		_schapenP[1-_pingPong]->zetKnooppunt(glGetUniformBlockIndex(scherm->huidigProgramma(), "wijWorden"));
-
-		//glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
+		_scherm->verbindRekenBuffer(0, plaatsP[  _pingPong]->opslag());	// wijZijnP
+		_scherm->verbindRekenBuffer(1, plaatsP[1-_pingPong]->opslag());	// wijWordenP
+		_scherm->verbindRekenBuffer(2, plaatsE[  _pingPong]->opslag());	// wijZijnE
+		_scherm->verbindRekenBuffer(3, plaatsE[1-_pingPong]->opslag());	// wijWordenE
 	};
 
-
-	scherm->doeRekenVerwerker("beweeg", glm::uvec3(_aantalSchapen, 1, 1), schaapVoorbereiding);
-
-	glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT);
+	if(_scherm)
+	{
+		_scherm->doeRekenVerwerker("beweeg", glm::uvec3(aantal, 1, 1), voorbereiding);
+		_scherm->ontkoppelRekenBuffers();
+	}
 }
-
-/*
-void Dieren::bindDingenRekenVerwerker(weergaveScherm * scherm, const std::string & verwerker, bool pong)
-{
-	if(pong)
-		_pingPong = !_pingPong;
-
-	std::function<void(int)> DierBinder = [&](int prog)
-	{
-		glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
-		glUniform1i(glGetUniformLocation(scherm->huidigProgramma(), "pingPong"), _pingPong);
-	};
-
-	scherm->doeRekenVerwerker(verwerker, {_aantalWolven, 1, 1}, wolfBinder);
-}*/
-

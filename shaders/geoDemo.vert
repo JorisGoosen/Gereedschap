@@ -1,22 +1,45 @@
-#version 400
+//WGSL vertex-shader voor geoDemo
 
-layout(location = 0) in vec3	pos;
-layout(location = 1) in vec2	tex;
+struct BeeldParameters {
+    schermBreedte : f32,
+    schermHoogte : f32,
+    schermVerhouding : f32,
+    _opvulling : f32,
+};
 
-uniform mat4 modelView;
-uniform mat4 projectie;
+@group(0) @binding(0) var<uniform> beeld : BeeldParameters;
 
+struct Matrices {
+    projectie : mat4x4f,
+    modelZicht : mat4x4f,
+    transInvMV : mat4x4f,
+};
 
-out vec3 normal;
-out vec2 texU;
-out vec4 kleur;
+@group(0) @binding(1) var<uniform> matrices : Matrices;
 
-void main()
-{
-	const vec3 mults = vec3(33, 61, 12);
+struct VertexIn {
+    @location(0) pos : vec3f,
+    @location(1) tex : vec2f,
+};
 
-	normal		= normalize(pos);
-	texU		= tex;
-	kleur		= vec4(sin(tex.x * 3.142 * mults.x), sin(tex.y * 3.142 * mults.y), sin((tex.x + tex.y) * 3.142 * mults.z), 1) ;
-	gl_Position	= projectie * modelView * vec4(pos, 1);	
+struct VertexUit {
+    @builtin(position) positie : vec4f,
+    @location(0) normaal : vec3f,
+    @location(1) texU : vec2f,
+    @location(2) kleur : vec4f,
+};
+
+@vertex
+fn main(in : VertexIn) -> VertexUit {
+    var uit : VertexUit;
+
+    let mults = vec3f(33.0, 61.0, 12.0);
+
+    uit.normaal = normalize(in.pos);
+    uit.texU = in.tex;
+    uit.kleur = vec4f(sin(in.tex.x * 3.142 * mults.x), sin(in.tex.y * 3.142 * mults.y), sin((in.tex.x + in.tex.y) * 3.142 * mults.z), 1.0);
+
+    uit.positie = matrices.projectie * matrices.modelZicht * vec4f(in.pos, 1.0);
+
+    return uit;
 }

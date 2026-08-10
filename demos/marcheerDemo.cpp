@@ -2,6 +2,7 @@
 #include "../weergaveSchermVierkant.h"
 #include "../nepScherm.h"
 #include <iostream>
+#include <string>
 
 int main(int argc, const char * argv[])
 {
@@ -15,7 +16,6 @@ int main(int argc, const char * argv[])
 	
 
 	glm::uvec2 textuurGrootte = scherm.laadTextuurUitPng("plaatjes/handLand.png", "handLand", false, false, false);
-	//scherm.maakTextuur("handLandTwee", textuurGrootte.x, textuurGrootte.y, false, false, false);
 	scherm.laadTextuurUitPng("plaatjes/handLand.png", "handLandTwee", false, false, false);
 
 	nepScherm nepperd(&scherm, "handLandTwee");
@@ -23,7 +23,6 @@ int main(int argc, const char * argv[])
 	scherm.initVierkant();
 	nepperd.bereidWeergevenVoor("bewerkHetLand");
 	scherm.bindTextuur("handLand", 0);
-	glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landRuis"), 0);
 	scherm.geefVierkantWeer();
 	nepperd.rondWeergevenAf();
 	
@@ -35,11 +34,9 @@ int main(int argc, const char * argv[])
 
 		glm::mat4 modelZicht = glm::rotate(glm::mat4(1.0f), sinf(rot) * 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 inversie   = glm::transpose(glm::inverse(modelZicht));
-		glUniformMatrix4fv(glGetUniformLocation(scherm.huidigProgramma(), "modelZicht"), 1, GL_FALSE, glm::value_ptr(modelZicht));
-		glUniformMatrix4fv(glGetUniformLocation(scherm.huidigProgramma(), "inversie"), 1, GL_FALSE, glm::value_ptr(inversie));
+		scherm.zetMatrices(glm::mat4(1.0f), modelZicht, inversie);
 
 		scherm.bindTextuur("handLandTwee", 0);
-		glUniform1i(glGetUniformLocation(scherm.huidigProgramma(), "landTwee"), 0);
 		scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
 

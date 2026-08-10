@@ -1,97 +1,85 @@
-#version 400
+//WGSL fragment-shader voor bewerkHetLand: maakt een "verlichte" hoogtekaart
 
-//in vec2 tex;
-in vec2 pixelPlek;
-out vec4 FragColor;
+@group(1) @binding(0) var landRuis : texture_2d<f32>;
 
-//uniform  float schermVerhouding;
-uniform sampler2D landRuis;
+struct FragIn {
+    @location(0) pixelPlek : vec2f,
+};
 
-float hoogtes[9];
+struct FragUit {
+    @location(0) FragColor : vec4f,
+};
 
-float haalHoogte(int x, int y)
-{
-	return hoogtes[x*3 + y];
+var<private> hoogtes : array<f32, 9>;
+var<private> textuurGrootte : vec2i;
+
+fn haalHoogte(x : i32, y : i32) -> f32 {
+    return hoogtes[x * 3 + y];
 }
 
-ivec2 textuurGrootte;
-
-int vorigeX = -1, vorigeY = -1;
-float vorigeH = -1.;
-
-float texelHoogte(int x, int y)
-{
-	x= clamp(x, 0, textuurGrootte.x);
-	y =  clamp(y, 0, textuurGrootte.y);
-	/*if(x == vorigeX && y == vorigeY)
-		return vorigeH;
-
-	vorigeX = x;
-	vorigeY = y;
-
-	vorigeH = */
-	
-	return texelFetch(landRuis, ivec2(x,y), 0).r;
-
-	//return vorigeH;
+fn texelHoogte(x : i32, y : i32) -> f32 {
+    let mx = clamp(x, 0, textuurGrootte.x);
+    let my = clamp(y, 0, textuurGrootte.y);
+    return textureLoad(landRuis, vec2i(mx, my), 0).r;
 }
 
-void main()
-{
-	//FragColor =  vec4(texelFetch(landRuis, pixelPlek, 0).r);
-	//FragColor = texture(landRuis, pixelPlek);
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
 
-	textuurGrootte =  textureSize(landRuis, 0);
-	ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
+    textuurGrootte = vec2i(textureDimensions(landRuis, 0));
+    let texelPos = vec2i(vec2f(textuurGrootte) * in.pixelPlek);
 
-	for(int x=-1;x<2;x++)
-		for(int y=-1;y<2;y++)
-			if(!(x==y && (x == -1 || x == 1)))
-				hoogtes[(x+1)*3 + y+1] = texelHoogte(texelPos.x + x, texelPos.y + y); 
+    for (var x: i32 = -1; x < 2; x = x + 1) {
+        for (var y: i32 = -1; y < 2; y = y + 1) {
+            if (!(x == y && (x == -1 || x == 1))) {
+                hoogtes[(x + 1) * 3 + (y + 1)] = texelHoogte(texelPos.x + x, texelPos.y + y);
+            }
+        }
+    }
 
-	//float hoogte = haalHoogte(1, 1);
+    let gradienten = abs(vec4f(
+        haalHoogte(0, 1) - haalHoogte(1, 1),
+        haalHoogte(2, 1) - haalHoogte(1, 1),
+        haalHoogte(1, 0) - haalHoogte(1, 1),
+        haalHoogte(1, 2) - haalHoogte(1, 1)));
 
-	vec4 gradienten = abs(vec4(
-		haalHoogte(0, 1) - haalHoogte(1, 1), 
-		haalHoogte(2, 1) - haalHoogte(1, 1), 
-		haalHoogte(1, 0) - haalHoogte(1, 1), 
-		haalHoogte(1, 2) - haalHoogte(1, 1)));
+    let maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
+    let groente = clamp(1.0 - (maxGrad * 120.0), 0.0, 1.0);
 
-	float maxGrad = max(max(gradienten.x, gradienten.y), max(gradienten.z, gradienten.w));
+    //de zon komt schuin van een kant
+    const zonHoekPerStapje = 0.003;
+    var huidigeZonHoogte = haalHoogte(1, 1);
+    var volgendeZonHoogte : f32;
+    var zonLicht = 1.0;
+    var doorGaan = true;
+    const zonStraal = vec2f(1.0, -0.5);
+    var zonPos = vec2f(texelPos);
 
+    loop {
+        if (!doorGaan) { break; }
+        if (zonPos.x < 0.0 || zonPos.y < 0.0 || zonPos.x >= f32(textuurGrootte.x) || zonPos.y >= f32(textuurGrootte.y)) { break; }
 
-	float groente = clamp(1.0 - (maxGrad * 120.), 0., 1.);
+        huidigeZonHoogte += zonHoekPerStapje;
+        volgendeZonHoogte = texelHoogte(i32(ceil(zonPos.x)), i32(ceil(zonPos.y)));
 
-	// nu gaan we licht bakken?
-	// stel de zon komt schuin van een kant
-	const float zonHoekPerStapje = 0.003;
-		float		huidigeZonHoogte = haalHoogte(1,1),
-				volgendeZonHoogte,
-				zonLicht = 1.;
+        if (volgendeZonHoogte >= huidigeZonHoogte) {
+            zonLicht = 0.5;
+            doorGaan = false;
+        }
 
-	bool doorGaan = true;
+        if (huidigeZonHoogte > 1.0) {
+            doorGaan = false;
+        }
 
-	const vec2 zonStraal = vec2(1., -0.5);
+        zonPos += zonStraal;
+    }
 
-	for(vec2 zonPos = vec2(texelPos); 
-		doorGaan && zonPos.x >= 0. && zonPos.y >= 0. && zonPos.x < float(textuurGrootte.x) && zonPos.y < float(textuurGrootte.y);
-		zonPos += zonStraal
-		)
-	
-		{
-			huidigeZonHoogte += zonHoekPerStapje;
-			volgendeZonHoogte = texelHoogte(int(ceil(zonPos.x)), int(ceil(zonPos.y)));
+    uit.FragColor = vec4f(
+        haalHoogte(1, 1),
+        groente,
+        zonLicht,
+        mix(mix(gradienten.x, gradienten.y, 0.5), mix(gradienten.z, gradienten.w, 0.5), 0.5));
 
-			if(volgendeZonHoogte >= huidigeZonHoogte)
-			{
-				zonLicht = 0.5;
-				doorGaan = false;
-			}
-			
-			if(huidigeZonHoogte > 1.0)
-				doorGaan = false;
-		}
-		
-
-	FragColor = vec4(haalHoogte(1,1), groente, zonLicht, mix(mix(gradienten.x, gradienten.y, 0.5), mix(gradienten.z, gradienten.w, 0.5), 0.5));//vec4(hoogte);
+    return uit;
 }

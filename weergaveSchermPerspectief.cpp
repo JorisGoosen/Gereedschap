@@ -64,21 +64,17 @@ void weergaveSchermPerspectief::zetModelZicht(glm::mat4 modelView)
 	_transInvMV = glm::transpose(glm::inverse(_modelZicht));
 }
 
-void weergaveSchermPerspectief::extraVoorbereidingen(GLuint programma)
+void weergaveSchermPerspectief::extraVoorbereidingen(WGPURenderPipeline programma)
 {
-	glEnable(GL_DEPTH_TEST);
-
 	herberekenProjectie();	
 
-	glUniformMatrix4fv(glGetUniformLocation(programma, "projectie"), 1, GL_FALSE, glm::value_ptr(_projectie));
-	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> projectie");
+	//Projectie, modelZicht en transInvMV gaan als drie mat4's naar de matrix-buffer.
+	//GLM slaat mat4 op in kolom-voorkeur, net als een WGSL uniform mat4.
+	glm::mat4 matrices[3] = { _projectie, _modelZicht, _transInvMV };
 
-	glUniformMatrix4fv(glGetUniformLocation(programma, "modelView"), 1, GL_FALSE, glm::value_ptr(_modelZicht));
-	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> modelView");
+	wgpuQueueWriteBuffer(_wgpRij, _matrixBuffer, 0, glm::value_ptr(matrices[0]), sizeof(matrices));
 
-	glUniformMatrix4fv(glGetUniformLocation(programma, "transInvMV"), 1, GL_FALSE, glm::value_ptr(_transInvMV));
-	glErrorToConsole("weergaveSchermPerspectief::extraVoorbereidingen() -> transInvMV");
+	wgpFoutControle("weergaveSchermPerspectief::extraVoorbereidingen(): ");
 
-
-	
+	(void)programma; //de matrices staan in de gedeelde matrix-buffer
 }

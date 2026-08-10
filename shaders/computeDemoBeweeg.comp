@@ -1,29 +1,33 @@
-#version 310 es
+//WGSL reken-shader voor de schapen en wolven.
 
-/*
-struct
-{
-	float	heteroKracht,
-			homoKracht,	
-			honger,		
-			levend;		
-} dier;
+const stap = 0.02;
 
-struct
-{
-	float	posX,
-			posY,
-			lichtheid,
-			roodheid;
-} PlaatsKleur;*/
+@group(0) @binding(0) var<storage, read_write>       wijZijnP  : array<vec4f>;
+@group(0) @binding(1) var<storage, read_write> wijWordenP : array<vec4f>;
+@group(0) @binding(2) var<storage, read_write>       wijZijnE  : array<vec4f>;
+@group(0) @binding(3) var<storage, read_write> wijWordenE : array<vec4f>;
 
-buffer	{ vec4 		wijEIn	[]; } wijZijnE	;
-buffer	{ vec4 		wijEUit	[]; } wijWordenE;
-buffer	{ vec4 		wijPIn	[]; } wijZijnP	;
-buffer	{ vec4 		wijPUit	[]; } wijWordenP;
+//een klein "gewoonte"-trekje zodat de beestjes in willekeurige richtingen wegdromen
+var<private> zaad : u32 = 12345u;
 
-void main()
-{
-	wijPUit[gl_GlobalInvocationID.x].posX = wijPIn[gl_GlobalInvocationID.x].posX + 0.01;
-	wijPUit[gl_GlobalInvocationID.x].posY = wijPIn[gl_GlobalInvocationID.x].posY + 0.01;
+fn willekeurig() -> f32 {
+    zaad = zaad * 1664525u + 1013904223u;
+    //tweede stap om het wat rommeliger te maken
+    let u = f32((zaad >> 8u) & 0x00FFFFFFu) / 16777216.0;
+    return u * 2.0 - 1.0;
+}
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) id : vec3u) {
+    let p = wijZijnP[id.x];
+
+    //een klein tangentieel duwtje zodat de beesten rondjes lopen
+    var richting = vec2f(-p.y, p.x);
+    let eenheid = max(length(richting), 0.0001);
+    richting = (richting / eenheid) * stap;
+
+    wijWordenP[id.x] = vec4f(p.x + richting.x, p.y + richting.y, p.z, p.w);
+
+    //de eigenschappen verhuizen gewoon mee
+    wijWordenE[id.x] = wijZijnE[id.x];
 }

@@ -1,14 +1,23 @@
-#version 400
+//WGSL fragment-shader voor toonHetLand
 
-//in vec2 tex;
-in vec2 pixelPlek;
-out vec4 FragColor;
+@group(1) @binding(0) var landTwee : texture_2d<f32>;
 
-uniform sampler2D landTwee;
+struct FragIn {
+    @location(0) pixelPlek : vec2f,
+};
 
-void main()
-{
-	ivec2 textuurGrootte = textureSize(landTwee, 0);
-	ivec2 texelPos = ivec2(vec2(textuurGrootte) * pixelPlek);
-	FragColor =  texelFetch(landTwee, texelPos, 0);
+struct FragUit {
+    @location(0) FragColor : vec4f,
+};
+
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
+
+    let textuurGrootte = textureDimensions(landTwee, 0);
+    let texelPos = vec2i(vec2f(textuurGrootte) * in.pixelPlek);
+
+    uit.FragColor = textureLoad(landTwee, texelPos, 0);
+
+    return uit;
 }

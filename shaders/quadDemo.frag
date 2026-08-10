@@ -1,8 +1,21 @@
-#version 400 core
+//WGSL fragment-shader voor quadDemo (voormalig quadDemo.frag)
 
-in vec2 tex;
-out vec4 FragColor;
+struct FragIn {
+    @location(0) tex : vec2f,
+};
 
-void main(){
-	FragColor = vec4(vec2(1.) + (2. * sin(tex * 33.)), 1. + (2. * cos(tex.y * tex.x * 133.7)), 1.);
+struct FragUit {
+    @location(0) kleur : vec4f,
+};
+
+@fragment
+fn main(in : FragIn) -> FragUit {
+    var uit : FragUit;
+
+    let golven = vec2f(1.0) + (2.0 * sin(in.tex * 33.0));
+    let restkl  = 1.0 + (2.0 * cos(in.tex.y * in.tex.x * 133.7));
+
+    uit.kleur = vec4f(golven, restkl, 1.0);
+
+    return uit;
 }

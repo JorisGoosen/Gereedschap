@@ -7,6 +7,9 @@ nepScherm::nepScherm(weergaveScherm * scherm, glm::uvec2 grootte, bool alsTextuu
 	_textuurBasis(alsTextuur),
 	_metDiepte(metDiepteTesten)
 {
+	if(!_textuurBasis)
+		throw std::runtime_error("nepScherm zonder textuur wordt hier alleen nog maar ondersteund door een eigen textuur te bouwen...");
+
 	gedeeldeBouwer();
 }
 
@@ -16,42 +19,24 @@ nepScherm::nepScherm(weergaveScherm * scherm, const std::string & dezeTextuur, b
 	_textuurBasis(true),
 	_metDiepte(metDiepteTesten)
 {
-	gedeeldeBouwer(scherm->textuurId(dezeTextuur));
+	//we tekenen in een bestaande textuur (die moet wel renderbaar zijn, en dat zijn ze)
+	_textuurId = scherm->textuurId(dezeTextuur);
 }
 
 void nepScherm::gedeeldeBouwer(int dezeTextuur)
 {
-	glGenFramebuffers(1, &_nepSchermId);
+	static int nepSchermTextuurTeller = 0;
 
-	glBindFramebuffer(GL_FRAMEBUFFER, _nepSchermId);
+	(void)dezeTextuur;
 
-	if(_textuurBasis)
-	{
-		static int nepSchermTextuurTeller = 0;
-		_textuurId = dezeTextuur != -1 ? dezeTextuur : _scherm->maakTextuur("nepSchermTextuur#" + std::to_string(nepSchermTextuurTeller++), _grootte.x, _grootte.y);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textuurId, 0);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-		if(_metDiepte)
-		{
-			_diepteId = _scherm->maakTextuur("nepSchermDiepteTextuur#" + std::to_string(nepSchermTextuurTeller-1), _grootte.x, _grootte.y, false, false, false, GL_DEPTH_COMPONENT16, nullptr, GL_2_BYTES, GL_2_BYTES);
-			glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _diepteId, 0);
-		}
-	}
-	else
-	{
-		throw std::runtime_error("luiwammes");
-	}
+	_textuurId = _scherm->maakTextuur("nepSchermTextuur#" + std::to_string(nepSchermTextuurTeller++), _grootte.x, _grootte.y, false, false, false);
 }
 
 
 void nepScherm::bereidWeergevenVoor(const std::string & verwerker, bool wisScherm)
 {
-	_scherm->laadOmgeving();
-
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _nepSchermId);
-	
-	glErrorToConsole("nepScherm::bereidWeergevenVoor weergave opslag binden: ");
+	//zorg dat het scherm in onze textuur tekent in plaats van op het venster
+	_scherm->zetWeergaveDoel(_textuurId, _grootte);
 
 	_scherm->_bereidWeergevenVoor(verwerker, wisScherm, _grootte.x, _grootte.y);
 }
@@ -59,15 +44,6 @@ void nepScherm::bereidWeergevenVoor(const std::string & verwerker, bool wisScher
 
 void nepScherm::rondWeergevenAf()
 {
-	glFlush();
-	glErrorToConsole("nepScherm::rondWeergevenAf: ");
-
-	glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT);
-
-
-	if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-	{
-		std::cerr << "Er is een fout opgetreden tijdens weergeven van een nepScherm, doehoeg!" << std::endl;
-		exit(1);
-	}
+	//rondWeergevenAf ziet dat er naar een doel-textuur werd getekend en zal daarom niet presenteren
+	_scherm->rondWeergevenAf();
 }

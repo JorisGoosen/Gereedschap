@@ -1,13 +1,14 @@
 //This file simply opens an OpenGL window where an icosahedron will be rendered with a nice geometry shader to make it rounder, press escape to exit.
+//WebGPU kent geen geometry-shader; het werk dat die deed zit nu in de vertex-shader zelf.
 #include "../weergaveSchermPerspectief.h"
 #include "../geometrie/icosahedron.h"
 
 int main()
 {
 	weergaveSchermPerspectief scherm("Geometry Shader Demo");
-	scherm.maakGeometrieShader("geometryDemo", "shaders/geometryDemo.vert", "shaders/geometryDemo.frag", "shaders/geometryDemo.geom");
+	scherm.maakShader("geometryDemo", "shaders/geometryDemo.vert", "shaders/geometryDemo.frag");
 
-	glClearColor(0,0,0,0);
+	scherm.zetWeergaveKleur(0, 0, 0, 0);
 
 	icosahedron ico;
 
@@ -19,7 +20,6 @@ int main()
 		ico.tekenJezelf();
 		//scherm.geefVierkantWeer();
 		scherm.rondWeergevenAf();
-
 
 		rot += 0.01f;
 	}

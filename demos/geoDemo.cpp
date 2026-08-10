@@ -9,7 +9,7 @@ int main()
 
 	scherm.maakShader("geoDemo", "shaders/geoDemo.vert", "shaders/geoDemo.frag");
 
-	glClearColor(0,0,0,0);
+	scherm.zetWeergaveKleur(0, 0, 0, 0);
 
 	geodesisch geo(6);
 
@@ -21,9 +21,8 @@ int main()
 		scherm.bereidWeergevenVoor();
 
 		geo.tekenJezelf();
-		glErrorToConsole("Woppaloppa Mainloop ");
+
 		scherm.rondWeergevenAf();
-		glErrorToConsole("rondWeergevenAf: ");
 
 		rot += 0.007f;
 	}
