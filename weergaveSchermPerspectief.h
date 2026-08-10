@@ -12,8 +12,10 @@ public:
 
 	glm::mat4	projectie()					{ return _projectie; 	}
 	glm::mat4	modelZicht()				{ return _modelZicht; 	}
+	glm::mat4	modelView()					{ return _modelZicht; 	}
 
 	void		zetModelZicht(glm::mat4 modelZicht);
+void		setModelView(glm::mat4 modelView) { zetModelZicht(modelView); }
 	void 		toetsVerwerker(int key, int scancode, int action, int mods) override;
 
 	void 		extraVoorbereidingen(GLuint programma) override;

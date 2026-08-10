@@ -7,14 +7,10 @@ weergaveScherm::toetsVerwerkerFunc weergaveScherm::_eigenVerwerker = nullptr;
 
 std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
-weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples, bool volledigScherm) 
+ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples, bool volledigScherm) 
 : _schermVerhouding(float(W) / float(H)), _naam(Naam)
 {
 	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 	4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 	1);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, 		GLFW_OPENGL_CORE_PROFILE);
 
     if (_schermen.size() == 0 && !glfwInit())
 		throw std::runtime_error("Failed to intialize glfw");
@@ -22,12 +18,44 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	if(samples > 1)
 		glfwWindowHint(GLFW_SAMPLES, samples);
         
+    // Try to create OpenGL 4.6 core profile first (macOS Apple Silicon compatible)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
     _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    
+    // Fallback to 4.5 if 4.6 not available
+    if (!_glfwScherm)
+    {
+        std::cerr << "Failed to create OpenGL 4.6 context, trying 4.5..." << std::endl;
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+        _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    }
+    
+    // Fallback to 4.4 if 4.5 not available
+    if (!_glfwScherm)
+    {
+        std::cerr << "Failed to create OpenGL 4.5 context, trying 4.4..." << std::endl;
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+        _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    }
+    
+    // Fallback to 4.4 if 4.5 not available (minimum for GLSL 440 shaders)
+    if (!_glfwScherm)
+    {
+        std::cerr << "Failed to create OpenGL 4.5 context, trying 4.4..." << std::endl;
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+        _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+    }
 
     if (!_glfwScherm)
     {
         glfwTerminate();
-        throw std::runtime_error("Failed to create window!");
+        throw std::runtime_error("Failed to create any OpenGL window!");
     }
 
 

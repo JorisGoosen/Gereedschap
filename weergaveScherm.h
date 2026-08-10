@@ -29,15 +29,18 @@ public:
 				~weergaveScherm();
 
 	void		bereidWeergevenVoor(const std::string & verwerker = "", bool wisScherm = true);
+void		bereidRenderVoor(const std::string & verwerker = "", bool wisScherm = true) { bereidWeergevenVoor(verwerker, wisScherm); }
     void		_bereidWeergevenVoor(const std::string &shader, bool wisScherm, int breedte, int hoogte);
 	void		laadOmgeving();
     void 		rondWeergevenAf();
+void		rondRenderAf() { rondWeergevenAf(); }
 
     bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
 	static 	void toetsVerwerkerCentraal(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
 	virtual void toetsVerwerker(								int key, int scancode, int action, int mods);
 	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
+void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerwerker(eigenVerwerker); }
 
 	GLuint 		maakVlakVerdelingsShader(	const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  vlakEvaluatieBestand, const std::string &  vlakControleBestand = "");
 	GLuint 		maakGeometrieShader(		const std::string & shaderNaam,		const std::string &  vertshaderbestand, 	const std::string &  fragshaderbestand, const std::string &  geomshaderbestand);
