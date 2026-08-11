@@ -536,11 +536,12 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 	kleurHechting.storeOp 	= WGPUStoreOp_Store;
 	kleurHechting.clearValue = { _weergaveKleur[0], _weergaveKleur[1], _weergaveKleur[2], _weergaveKleur[3] };
 
-	//de z-buffer wordt elke frame schoongemaakt
+	//De z-buffer wordt elke frame schoongemaakt; bij een overnames-pass (hergebruik van het
+	//oppervlak) moet de eerder geschreven diepte echter bewaard blijven voor de diepte-test.
 	WGPURenderPassDepthStencilAttachment diepteHechting = WGPU_RENDER_PASS_DEPTH_STENCIL_ATTACHMENT_INIT;
 	diepteHechting.view 			= _diepteZicht;
-	diepteHechting.depthLoadOp 		= WGPULoadOp_Clear;
-	diepteHechting.depthStoreOp 	= WGPUStoreOp_Discard;
+	diepteHechting.depthLoadOp 		= hergebruik ? WGPULoadOp_Load   : WGPULoadOp_Clear;
+	diepteHechting.depthStoreOp 	= hergebruik ? WGPUStoreOp_Store  : WGPUStoreOp_Discard;
 	diepteHechting.depthClearValue 	= 1.0;
 	diepteHechting.stencilLoadOp 	= WGPULoadOp_Clear;
 	diepteHechting.stencilStoreOp 	= WGPUStoreOp_Discard;
