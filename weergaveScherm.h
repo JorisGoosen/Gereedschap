@@ -36,6 +36,15 @@ namespace wgpGL
 using namespace wgpGL;
 
 
+///Instellingen waarmee een render-pipeline gebouwd (of hergebruikt) wordt.
+///Elke combinatie die afwijkt van de standaard krijgt een eigen pipeline-cache-sleutel.
+struct weergaveInstellingen
+{
+	bool 			blenden 			= false;				///< alpha-blending (SRC_ALPHA / ONE_MINUS_SRC_ALPHA)
+	bool 			diepteSchrijven 		= true;
+	WGPUCullMode 	cullMode 			= WGPUCullMode_None;
+};
+
 
 class weergaveScherm
 {
@@ -51,6 +60,15 @@ void		bereidRenderVoor(const std::string & verwerker = "", bool wisScherm = true
 	void		laadOmgeving();
     void 		rondWeergevenAf();
 void		rondRenderAf() { rondWeergevenAf(); }
+	///Beëindigt de huidige weergave-pass maar houdt de commando-encoder en het
+	///tekenoppervlak in leven, zodat er direct nog een volgende pass overheen
+	///getekend kan worden. Rond ten slotte af met rondWeergevenAf (één submit).
+    void		pasRondWeergevenAf();
+void		pasRondRenderAf() { pasRondWeergevenAf(); }
+
+	///Zet de instellingen voor de pipelines die de volgende weergave-pass bouwt
+	void		zetWeergaveInstellingen(const weergaveInstellingen & instellingen) { _weergaveInstellingen = instellingen; }
+	const weergaveInstellingen & geefWeergaveInstellingen() const { return _weergaveInstellingen; }
 
     bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
@@ -109,6 +127,9 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	///Bindt de actief gebonden textuur aan bind-groep 1 van de pass
 	void _bindTextuurAanPass(WGPURenderPassEncoder pass);
 
+	///Bindt de geregistreerde opslag-buffers aan bind-groep 2 van de pass
+	void _bindOpslagAanPass(WGPURenderPassEncoder pass);
+
 	WGPURenderPipeline geefProgrammaHandvat(const std::string & naam) 	const;
 	WGPURenderPipeline geefEnigeProgrammaHandvat() 					const;
 	WGPURenderPipeline huidigProgramma()								const { return _huidigProgramma; }
@@ -165,8 +186,9 @@ WGPUBindGroupLayout 		_textuurBindGroepLayout	= nullptr;
 	WGPUTexture 			_doelTextuur 			= nullptr; ///< off-screen doel
 	WGPUTextureFormat 		_doelFormaat 			= WGPUTextureFormat_RGBA8Unorm; ///< formaat van het off-screen doel
 	glm::uvec2 				_doelGrootte 			= glm::uvec2(1, 1);			///< grootte van het off-screen doel
-	WGPUBindGroupLayout 	_rekenBindGroepLayout 	= nullptr; ///< layout voor het reken-programma (opslag-buffers)
-	WGPUBuffer 				_leegRekenBuffer 		= nullptr; ///< opvul-buffer voor ongebruikte reken-bindings
+	WGPUBindGroupLayout 	_rekenBindGroepLayout 		= nullptr; ///< layout voor opslag-buffers in reken-shaders (read_write)
+	WGPUBindGroupLayout 	_renderOpslagBindGroepLayout = nullptr; ///< layout voor opslag-buffers in weergave-shaders (read)
+	WGPUBuffer 				_leegRekenBuffer 		= nullptr; ///< opvul-buffer voor ongebruikte opslag-bindings
 
 private:
 	WGPURenderPipeline slaShaderOp(const std::string & naam, WGPURenderPipeline shaderProgramma);
@@ -191,6 +213,8 @@ private:
 
 	float 					_weergaveKleur[4] 	= { 0.0f, 0.0f, 0.0f, 1.0f };
 
+	weergaveInstellingen 	_weergaveInstellingen;
+
 	std::vector<WGPUBindGroup> _gevormdeBindGroepen;
 
 	std::map<std::string, std::pair<WGPUShaderModule, WGPUShaderModule>> 	_shaderModules;
@@ -198,7 +222,7 @@ private:
 	std::map<std::string, WGPUComputePipeline>								_rekenProgrammas;
 	std::map<std::string, WGPUTexture>										_texturen;
 	std::vector<WGPUBindGroup>												_rekenBindGroepen;	///< al gevormde reken-bind-groepen, netjes opruimen
-	std::array<WGPUBuffer, 4>												_rekenBufferBinden;	///< geregistreerde opslag-buffers voor het reken-programma
+	std::array<WGPUBuffer, 4>												_rekenBufferBinden = { nullptr, nullptr, nullptr, nullptr };	///< geregistreerde opslag-buffers voor het reken-programma
 	std::map<std::string, glm::uvec2>										_textuurGroottes;
 	std::map<std::string, WGPUBindGroup>									_textuurBindGroepen;///< per textuur een bind-groep voor groep 1
 	std::string																_gebondenTextuur;	///< de textuur die aan bind-groep 1 hangt
@@ -224,4 +248,13 @@ private:
 
 	///Vraagt (of maakt) de bind-groep voor een textuur (groep 1)
 	WGPUBindGroup _bindgroepVoorTextuur(const std::string & textuurNaam);
+
+	///Zorgt dat de opslag-bind-groep-layouts bestaan (reken èn weergave)
+	void		_zorgOpslagBindGroep();
+
+	///Maakt een bind-groep van de geregistreerde opslag-buffers (met lege opvulling)
+	WGPUBindGroup _maakOpslagBindGroep(WGPUBindGroupLayout layout);
+
+	///Achtervoegsels voor de pipeline-cache-sleutel op basis van de instellingen
+	std::string _instellingenSleutel() const;
 };

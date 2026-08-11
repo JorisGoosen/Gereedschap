@@ -1,5 +1,6 @@
 #include "weergaveScherm.h"
 #include "metaalLaag.h"
+#include <wgpu.h>
 #include <iostream>
 
 using namespace glm;
@@ -17,9 +18,6 @@ WGPUQueue  gedeeldeRij()	 { return s_gedeeldeRij; 	}
 
 ///Het scherm dat op dit moment een weergave-pass open heeft staan
 static weergaveScherm * s_huidigScherm = nullptr;
-
-///wgpu-native-extensie: de surface is niet zichtbaar maar levert wel een geldige teken-textuur
-constexpr WGPUSurfaceGetCurrentTextureStatus WGPUSurfaceGetCurrentTextureStatus_Occluded = (WGPUSurfaceGetCurrentTextureStatus)0x00030001;
 
 
 static std::string _wgpFoutNaam(WGPUErrorType type)
@@ -301,6 +299,23 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 	beschrijving.uncapturedErrorCallbackInfo.callback 	= wgpFoutMelder;
 	beschrijving.uncapturedErrorCallbackInfo.userdata1 	= this;
 
+	//wgpu-native: opslag-buffers die (ook) zichtbaar zijn voor de vertex-shader zijn een native
+	//feature (anders mag er geen storage-binding aan de vertex-stage hangen). De bibliotheek biedt
+	//dat nu altijd aan, dus vraagt de feature aan zodra het apparaat hem ondersteunt.
+	WGPUFeatureName verplichteFeatures[1];
+	uint32_t verplichteFeaturesAantal = 0;
+
+	if(wgpuAdapterHasFeature(_wgpAdapter, (WGPUFeatureName)WGPUNativeFeature_VertexWritableStorage))
+		verplichteFeatures[verplichteFeaturesAantal++] = (WGPUFeatureName)WGPUNativeFeature_VertexWritableStorage;
+
+	beschrijving.requiredFeatureCount = verplichteFeaturesAantal;
+	beschrijving.requiredFeatures 	  = verplichteFeaturesAantal > 0 ? verplichteFeatures : nullptr;
+
+	//grote textuurbronnen (zoals de 8416x4208 Mars-hoogtekaart) vragen om ruimere limieten
+	WGPULimits limieten = WGPU_LIMITS_INIT;
+	limieten.maxTextureDimension2D = 16384;
+	beschrijving.requiredLimits = &limieten;
+
 	WGPUDevice resultaat = nullptr;
 
 	WGPURequestDeviceCallbackInfo verwerkerInfo = WGPU_REQUEST_DEVICE_CALLBACK_INFO_INIT;
@@ -374,7 +389,8 @@ weergaveScherm::~weergaveScherm()
 	if(_witteTextuur) 			wgpuTextureRelease(_witteTextuur);
 
 	if(_sampler) 		wgpuSamplerRelease(_sampler);
-	if(_rekenBindGroepLayout) wgpuBindGroupLayoutRelease(_rekenBindGroepLayout);
+	if(_rekenBindGroepLayout) 		wgpuBindGroupLayoutRelease(_rekenBindGroepLayout);
+	if(_renderOpslagBindGroepLayout) wgpuBindGroupLayoutRelease(_renderOpslagBindGroepLayout);
 	if(_leegRekenBuffer) 	  wgpuBufferRelease(_leegRekenBuffer);
 
 	if(_beeldBuffer) 	wgpuBufferRelease(_beeldBuffer);
@@ -413,11 +429,20 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 
 	int breedte, hoogte;
 
+	//Loopt er nog een commando-encoder (van een net beëindigde pass)? Dan tekenen we
+	//verder op hetzelfde oppervlak (zonder opnieuw een tekenfragment te vragen).
+	const bool hergebruik = _commandEncoder && !_weergavePass;
+
 	if(_doelTextuur)
 	{
 		//off-screen doel: de grootte van de doel-textuur telt
 		breedte = _doelGrootte.x;
 		hoogte  = _doelGrootte.y;
+	}
+	else if(hergebruik)
+	{
+		breedte = _oppervlakBreedte;
+		hoogte  = _oppervlakHoogte;
 	}
 	else
 	{
@@ -451,41 +476,47 @@ void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisSc
 
 _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderProgrammas[_huidigProgrammaNaam] : nullptr;
 
-	//Een "apparaat" tekstuur als doel (off-screen) of het tekenfragment van het wgpu-oppervlak
-	if(_doelTextuur)
-	{
-		_oppervlakTextuur = _doelTextuur;
-		_oppervlakZicht   = wgpuTextureCreateView(_oppervlakTextuur, nullptr);
-	}
-	else
-	{
-		//Haal het tekenfragment (textuur) van het wgpu-oppervlak
-		WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
-		wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
+	//Een "apparaat" tekstuur als doel (off-screen) of het tekenfragment van het wgpu-oppervlak.
+	//Wanneer de vorige pass nog niet verzonden is (hergebruik) blijven oppervlak en encoder staan.
+	const bool hergebruik = _commandEncoder && !_weergavePass;
 
-		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_Occluded || !oppervlakTextuur.texture)
+	if(!hergebruik)
+	{
+		if(_doelTextuur)
 		{
-			//extensie "Occluded": het venster is (even) niet zichtbaar en levert geen tekstuur,
-			//dus wordt deze frame overgeslagen (rondWeergevenAf doet dan niets)
-			static bool occludedGemeld = false;
+			_oppervlakTextuur = _doelTextuur;
+			_oppervlakZicht   = wgpuTextureCreateView(_oppervlakTextuur, nullptr);
+		}
+		else
+		{
+			//Haal het tekenfragment (textuur) van het wgpu-oppervlak
+			WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
+			wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
 
-			if(!occludedGemeld)
+			if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_Occluded || !oppervlakTextuur.texture)
 			{
-				std::cout << "wgpu-oppervlak is (even) niet zichtbaar: frames worden overgeslagen..." << std::endl;
-				occludedGemeld = true;
+				//extensie "Occluded": het venster is (even) niet zichtbaar en levert geen tekstuur,
+				//dus wordt deze frame overgeslagen (rondWeergevenAf doet dan niets)
+				static bool occludedGemeld = false;
+
+				if(!occludedGemeld)
+				{
+					std::cout << "wgpu-oppervlak is (even) niet zichtbaar: frames worden overgeslagen..." << std::endl;
+					occludedGemeld = true;
+				}
+
+				_oppervlakTextuur = nullptr;
+				_oppervlakZicht   = nullptr;
+				return;
 			}
 
-			_oppervlakTextuur = nullptr;
-			_oppervlakZicht   = nullptr;
-			return;
+			if(oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+			   oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+				throw std::runtime_error("Er kon geen tekenfragment worden verkregen van het wgpu-oppervlak... (status " + std::to_string((int)oppervlakTextuur.status) + ")");
+
+			_oppervlakTextuur = oppervlakTextuur.texture;
+			_oppervlakZicht   = wgpuTextureCreateView(_oppervlakTextuur, nullptr);
 		}
-
-		if(oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
-		   oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
-			throw std::runtime_error("Er kon geen tekenfragment worden verkregen van het wgpu-oppervlak... (status " + std::to_string((int)oppervlakTextuur.status) + ")");
-
-		_oppervlakTextuur = oppervlakTextuur.texture;
-		_oppervlakZicht   = wgpuTextureCreateView(_oppervlakTextuur, nullptr);
 	}
 
 	_gebondenTextuur.clear();
@@ -496,11 +527,12 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 
 	_zorgDiepteTextuur(breedte, hoogte);
 
-	_commandEncoder = wgpuDeviceCreateCommandEncoder(_wgpApparaat, nullptr);
+	if(!hergebruik)
+		_commandEncoder = wgpuDeviceCreateCommandEncoder(_wgpApparaat, nullptr);
 
 	WGPURenderPassColorAttachment kleurHechting = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
 	kleurHechting.view 		= _oppervlakZicht;
-	kleurHechting.loadOp 	= wisScherm ? WGPULoadOp_Clear : WGPULoadOp_Load;
+	kleurHechting.loadOp 	= hergebruik ? WGPULoadOp_Load : (wisScherm ? WGPULoadOp_Clear : WGPULoadOp_Load);
 	kleurHechting.storeOp 	= WGPUStoreOp_Store;
 	kleurHechting.clearValue = { _weergaveKleur[0], _weergaveKleur[1], _weergaveKleur[2], _weergaveKleur[3] };
 
@@ -638,18 +670,115 @@ void weergaveScherm::_bindTextuurAanPass(WGPURenderPassEncoder pass)
 		wgpuRenderPassEncoderSetBindGroup(pass, 1, bindGroep, 0, nullptr);
 }
 
+void weergaveScherm::_zorgOpslagBindGroep()
+{
+	if(_rekenBindGroepLayout && _renderOpslagBindGroepLayout)
+		return;
+
+	//opslag-buffers die (ook) uit de vertex-shader gelezen worden zijn een wgpu-native feature
+	//(vraag ernaar in _vraagApparaat). De reken-layout is voor alle reken-shaders (read_write,
+	//net als voorheen), de weergave-layout is alleen-lezen. De min-grootte per binding moet
+	//minstens de struct-grootte van het array-element zijn (vak = 72, vakMeta = 96).
+	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
+	const uint64_t minGroottes[4] = { 72, 72, 96, 32 };
+
+	for(int i = 0; i < 4; i++)
+	{
+		invoeren[i].binding 		= i;
+		invoeren[i].visibility 		= WGPUShaderStage_Vertex | WGPUShaderStage_Fragment | WGPUShaderStage_Compute;
+		invoeren[i].buffer.type 	= WGPUBufferBindingType_Storage;
+		invoeren[i].buffer.minBindingSize = minGroottes[i];
+	}
+
+	WGPUBindGroupLayoutDescriptor layoutBeschrijving = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
+	layoutBeschrijving.entryCount = 4;
+	layoutBeschrijving.entries 	  = invoeren;
+	_rekenBindGroepLayout = wgpuDeviceCreateBindGroupLayout(_wgpApparaat, &layoutBeschrijving);
+
+	//voor de weergave-shaders zijn alle opslag-buffers alleen-lezen
+	for(int i = 0; i < 4; i++)
+	{
+		invoeren[i].binding 		= i;
+		invoeren[i].visibility 		= WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
+		invoeren[i].buffer.type 	= WGPUBufferBindingType_ReadOnlyStorage;
+		invoeren[i].buffer.minBindingSize = minGroottes[i];
+	}
+
+	_renderOpslagBindGroepLayout = wgpuDeviceCreateBindGroupLayout(_wgpApparaat, &layoutBeschrijving);
+
+	if(!_leegRekenBuffer)
+	{
+		WGPUBufferDescriptor legeBeschrijving = WGPU_BUFFER_DESCRIPTOR_INIT;
+		legeBeschrijving.usage = WGPUBufferUsage_Storage | WGPUBufferUsage_CopyDst;
+		legeBeschrijving.size  = 128; //groot genoeg voor elke binding (dummy-opvulling)
+		_leegRekenBuffer = wgpuDeviceCreateBuffer(_wgpApparaat, &legeBeschrijving);
+	}
+}
+
+WGPUBindGroup weergaveScherm::_maakOpslagBindGroep(WGPUBindGroupLayout layout)
+{
+	if(!layout)
+		return nullptr;
+
+	WGPUBindGroupEntry invoeren[4] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
+
+	for(int i = 0; i < 4; i++)
+	{
+		invoeren[i].binding = i;
+		invoeren[i].buffer 	= _rekenBufferBinden[i] ? _rekenBufferBinden[i] : _leegRekenBuffer;
+		invoeren[i].size 	= WGPU_WHOLE_SIZE;
+	}
+
+	WGPUBindGroupDescriptor bindGroepBeschrijving = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+	bindGroepBeschrijving.layout 		= layout;
+	bindGroepBeschrijving.entryCount 	= 4;
+	bindGroepBeschrijving.entries 		= invoeren;
+
+	return wgpuDeviceCreateBindGroup(_wgpApparaat, &bindGroepBeschrijving);
+}
+
+void weergaveScherm::_bindOpslagAanPass(WGPURenderPassEncoder pass)
+{
+	if(!_renderOpslagBindGroepLayout)
+		return;
+
+	WGPUBindGroup bindGroep = _maakOpslagBindGroep(_renderOpslagBindGroepLayout);
+
+	if(!bindGroep)
+		return;
+
+	wgpuRenderPassEncoderSetBindGroup(pass, 2, bindGroep, 0, nullptr);
+
+	//In leven houden tot deze frame is verzonden (zie rondWeergevenAf)
+	_rekenBindGroepen.push_back(bindGroep);
+}
+
+std::string weergaveScherm::_instellingenSleutel() const
+{
+	std::string sleutel;
+
+	if(_weergaveInstellingen.blenden)			sleutel += ":blend";
+	if(!_weergaveInstellingen.diepteSchrijven)	sleutel += ":geenDiepte";
+	if(_weergaveInstellingen.cullMode != WGPUCullMode_None)
+		sleutel += ":cull" + std::to_string((int)_weergaveInstellingen.cullMode);
+
+	return sleutel;
+}
+
 WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNaam, const std::string & moduleNaam, const std::vector<WGPUVertexBufferLayout> & vertexLayouts, WGPUPrimitiveTopology topologie, WGPUIndexFormat stripFormaat)
 {
 	if(!_shaderModules.count(moduleNaam))
 		throw std::runtime_error("_maakPipeline: er zijn geen shader modules voor \"" + moduleNaam + "\"...");
 
+	_zorgOpslagBindGroep();
+
 	auto [vertModule, fragModule] = _shaderModules[moduleNaam];
 
-	WGPUBindGroupLayout groepen[2] = { _basisBindGroepLayout, _textuurBindGroepLayout };
+	WGPUBindGroupLayout groepen[3] = { _basisBindGroepLayout, _textuurBindGroepLayout, _renderOpslagBindGroepLayout };
 
 	WGPUPipelineLayoutDescriptor layoutBeschrijving = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
 	layoutBeschrijving.label 				= { programmaNaam.c_str(), programmaNaam.size() };
-	layoutBeschrijving.bindGroupLayoutCount 	= 2;
+	layoutBeschrijving.bindGroupLayoutCount 	= 3;
 	layoutBeschrijving.bindGroupLayouts 		= groepen;
 
 	WGPUPipelineLayout layout = wgpuDeviceCreatePipelineLayout(_wgpApparaat, &layoutBeschrijving);
@@ -664,6 +793,20 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 	kleurDoel.format 	= _doelTextuur ? _doelFormaat : _oppervlakFormaat;
 	kleurDoel.writeMask = WGPUColorWriteMask_All;
 
+	WGPUBlendState blendStaat = WGPU_BLEND_STATE_INIT;
+
+	if(_weergaveInstellingen.blenden)
+	{
+		blendStaat.color.srcFactor 	= WGPUBlendFactor_SrcAlpha;
+		blendStaat.color.dstFactor 	= WGPUBlendFactor_OneMinusSrcAlpha;
+		blendStaat.color.operation 	= WGPUBlendOperation_Add;
+		blendStaat.alpha.srcFactor 	= WGPUBlendFactor_One;
+		blendStaat.alpha.dstFactor 	= WGPUBlendFactor_OneMinusSrcAlpha;
+		blendStaat.alpha.operation 	= WGPUBlendOperation_Add;
+
+		kleurDoel.blend = &blendStaat;
+	}
+
 	WGPUFragmentState fragmentStaat = WGPU_FRAGMENT_STATE_INIT;
 	fragmentStaat.module 		= fragModule;
 	fragmentStaat.entryPoint 	= { "main", 4 };
@@ -673,7 +816,7 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 	WGPUPrimitiveState primitief = WGPU_PRIMITIVE_STATE_INIT;
 	primitief.topology 	= topologie;
 	primitief.frontFace = WGPUFrontFace_CCW;
-	primitief.cullMode 	= WGPUCullMode_None;
+	primitief.cullMode 	= _weergaveInstellingen.cullMode;
 	if(topologie == WGPUPrimitiveTopology_TriangleStrip)
 		primitief.stripIndexFormat = stripFormaat;
 
@@ -683,7 +826,7 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 
 	WGPUDepthStencilState diepteStaat = WGPU_DEPTH_STENCIL_STATE_INIT;
 	diepteStaat.format 			= WGPUTextureFormat_Depth32Float;
-	diepteStaat.depthWriteEnabled 	= WGPUOptionalBool_True;
+	diepteStaat.depthWriteEnabled 	= _weergaveInstellingen.diepteSchrijven ? WGPUOptionalBool_True : WGPUOptionalBool_False;
 	diepteStaat.depthCompare 		= WGPUCompareFunction_Less;
 	diepteStaat.stencilReadMask 		= 0xFFFFFFFF;
 	diepteStaat.stencilWriteMask 		= 0xFFFFFFFF;
@@ -772,6 +915,7 @@ void weergaveScherm::tekenKadertjes(WGPUBuffer vierkantje, uint32_t vierkantPunt
 	wgpuRenderPassEncoderSetPipeline(_weergavePass, _shaderProgrammas[sleutel]);
 	wgpuRenderPassEncoderSetBindGroup(_weergavePass, 0, _basisBindGroep, 0, nullptr);
 	_bindTextuurAanPass(_weergavePass);
+	_bindOpslagAanPass(_weergavePass);
 
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 0, vierkantje, 0, wgpuBufferGetSize(vierkantje));
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 1, plekken, 0, wgpuBufferGetSize(plekken));
@@ -790,6 +934,7 @@ void weergaveScherm::tekenAlsPunten(WGPUBuffer buffer, uint32_t puntAantal)
 	wgpuRenderPassEncoderSetPipeline(_weergavePass, programma);
 	wgpuRenderPassEncoderSetBindGroup(_weergavePass, 0, _basisBindGroep, 0, nullptr);
 	_bindTextuurAanPass(_weergavePass);
+	_bindOpslagAanPass(_weergavePass);
 
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 0, buffer, 0, wgpuBufferGetSize(buffer));
 	wgpuRenderPassEncoderDraw(_weergavePass, puntAantal, 1, 0, 0);
@@ -845,6 +990,7 @@ void wrgvOpslag::tekenGeïndexeerd()
 
 	bindVoorWeergave(pass);
 	scherm->_bindTextuurAanPass(pass);
+	scherm->_bindOpslagAanPass(pass);
 
 	if(aantalIndices() > 0)
 		wgpuRenderPassEncoderDrawIndexed(pass, (uint32_t)aantalIndices(), 1, 0, 0, 0);
@@ -868,22 +1014,7 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 
 	renderVoorbereiding(); //o.a. verbindRekenBuffer
 
-	//bouw de bind-groep met de groepsbuffers (en opvul-buffers voor ongebruikte bindings)
-	WGPUBindGroupEntry invoeren[4] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
-
-	for(int i = 0; i < 4; i++)
-	{
-		invoeren[i].binding = i;
-		invoeren[i].buffer 	= _rekenBufferBinden[i] ? _rekenBufferBinden[i] : _leegRekenBuffer;
-		invoeren[i].size 	= WGPU_WHOLE_SIZE;
-	}
-
-	WGPUBindGroupDescriptor bindGroepBeschrijving = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
-	bindGroepBeschrijving.layout 		= _rekenBindGroepLayout;
-	bindGroepBeschrijving.entryCount 	= 4;
-	bindGroepBeschrijving.entries 		= invoeren;
-
-	WGPUBindGroup bindGroep = wgpuDeviceCreateBindGroup(_wgpApparaat, &bindGroepBeschrijving);
+	WGPUBindGroup bindGroep = _maakOpslagBindGroep(_rekenBindGroepLayout);
 
 	wgpuComputePassEncoderSetBindGroup(rekenPass, 0, bindGroep, 0, nullptr);
 
@@ -903,13 +1034,14 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 
 void weergaveScherm::rondWeergevenAf()
 {
-	if(!_weergavePass)
+	if(!_weergavePass && !_commandEncoder)
 	{
 		glfwPollEvents();
 		return;
 	}
 
-	wgpuRenderPassEncoderEnd(_weergavePass);
+	if(_weergavePass)
+		wgpuRenderPassEncoderEnd(_weergavePass);
 
 	WGPUCommandBuffer commando = wgpuCommandEncoderFinish(_commandEncoder, nullptr);
 
@@ -926,6 +1058,11 @@ void weergaveScherm::rondWeergevenAf()
 	if(!_doelTextuur)
 		wgpuTextureRelease(_oppervlakTextuur);
 
+	//de gebonden opslag-bind-groepen waren alleen voor deze frame nodig
+	for(WGPUBindGroup bindGroep : _rekenBindGroepen)
+		wgpuBindGroupRelease(bindGroep);
+	_rekenBindGroepen.clear();
+
 	_weergavePass		= nullptr;
 	_commandEncoder 	= nullptr;
 	_oppervlakZicht 	= nullptr;
@@ -937,6 +1074,18 @@ void weergaveScherm::rondWeergevenAf()
 
 	glfwPollEvents();
 	wgpFoutControle("weergaveScherm::rondWeergevenAf(): ");
+}
+
+void weergaveScherm::pasRondWeergevenAf()
+{
+	if(!_weergavePass)
+	{
+		glfwPollEvents();
+		return;
+	}
+
+	wgpuRenderPassEncoderEnd(_weergavePass);
+	_weergavePass = nullptr;
 }
 
 ///WebGPU kent geen vlak-verdelings shaders (dus geen tessellation)
@@ -966,29 +1115,8 @@ WGPUComputePipeline weergaveScherm::maakRekenShader(const std::string & shaderNa
 {
 	WGPUShaderModule module = _maakShaderModule(shaderbestand, _wgpApparaat);
 
-	//de reken-layout: vier opslag-buffers op binding 0..3
-	if(!_rekenBindGroepLayout)
-	{
-		WGPUBindGroupLayoutEntry rekenInvoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-
-		for(int i = 0; i < 4; i++)
-		{
-			rekenInvoeren[i].binding 	= i;
-			rekenInvoeren[i].visibility = WGPUShaderStage_Compute;
-			rekenInvoeren[i].buffer.type = WGPUBufferBindingType_Storage;
-			rekenInvoeren[i].buffer.minBindingSize = 16;
-		}
-
-		WGPUBindGroupLayoutDescriptor layoutBeschrijving = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
-		layoutBeschrijving.entryCount = 4;
-		layoutBeschrijving.entries 		= rekenInvoeren;
-		_rekenBindGroepLayout = wgpuDeviceCreateBindGroupLayout(_wgpApparaat, &layoutBeschrijving);
-
-		WGPUBufferDescriptor legeBeschrijving = WGPU_BUFFER_DESCRIPTOR_INIT;
-		legeBeschrijving.usage = WGPUBufferUsage_Storage | WGPUBufferUsage_CopyDst;
-		legeBeschrijving.size = 16;
-		_leegRekenBuffer = wgpuDeviceCreateBuffer(_wgpApparaat, &legeBeschrijving);
-	}
+	//de opslag-layout: vier opslag-buffers op binding 0..3 (gedeeld met de render-pipelines)
+	_zorgOpslagBindGroep();
 
 	WGPUPipelineLayoutDescriptor layoutBeschrijving = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
 	layoutBeschrijving.label 				= { shaderNaam.c_str(), shaderNaam.size() };
@@ -1027,12 +1155,14 @@ WGPURenderPipeline weergaveScherm::slaShaderOp(const std::string & naam, WGPURen
 
 WGPURenderPipeline weergaveScherm::zorgVoorProgramma(wrgvOpslag * puntReeks)
 {
-	if(_shaderProgrammas.count(_huidigProgrammaNaam))
-		return _shaderProgrammas[_huidigProgrammaNaam];
+	const std::string sleutel = _huidigProgrammaNaam + _instellingenSleutel();
 
-	WGPURenderPipeline programma = _maakPipeline(_huidigProgrammaNaam, _huidigProgrammaNaam, puntReeks->vertexBufferLayouts(), puntReeks->topologie(), puntReeks->indexFormaat());
+	if(_shaderProgrammas.count(sleutel))
+		return _shaderProgrammas[sleutel];
 
-	slaShaderOp(_huidigProgrammaNaam, programma);
+	WGPURenderPipeline programma = _maakPipeline(sleutel, _huidigProgrammaNaam, puntReeks->vertexBufferLayouts(), puntReeks->topologie(), puntReeks->indexFormaat());
+
+	slaShaderOp(sleutel, programma);
 
 	return programma;
 }
