@@ -40,9 +40,10 @@ using namespace wgpGL;
 ///Elke combinatie die afwijkt van de standaard krijgt een eigen pipeline-cache-sleutel.
 struct weergaveInstellingen
 {
-	bool 			blenden 			= false;				///< alpha-blending (SRC_ALPHA / ONE_MINUS_SRC_ALPHA)
-	bool 			diepteSchrijven 		= true;
-	WGPUCullMode 	cullMode 			= WGPUCullMode_None;
+	bool 				blenden 			= false;				///< alpha-blending (SRC_ALPHA / ONE_MINUS_SRC_ALPHA)
+	bool 				diepteSchrijven 		= true;
+	WGPUCullMode 		cullMode 			= WGPUCullMode_None;
+	WGPUCompareFunction 	diepteVergelijk 	= WGPUCompareFunction_Less;
 };
 
 

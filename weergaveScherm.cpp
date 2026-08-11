@@ -760,6 +760,8 @@ std::string weergaveScherm::_instellingenSleutel() const
 
 	if(_weergaveInstellingen.blenden)			sleutel += ":blend";
 	if(!_weergaveInstellingen.diepteSchrijven)	sleutel += ":geenDiepte";
+	if(_weergaveInstellingen.diepteVergelijk != WGPUCompareFunction_Less)
+		sleutel += ":vergelijk" + std::to_string((int)_weergaveInstellingen.diepteVergelijk);
 	if(_weergaveInstellingen.cullMode != WGPUCullMode_None)
 		sleutel += ":cull" + std::to_string((int)_weergaveInstellingen.cullMode);
 
@@ -828,7 +830,7 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 	WGPUDepthStencilState diepteStaat = WGPU_DEPTH_STENCIL_STATE_INIT;
 	diepteStaat.format 			= WGPUTextureFormat_Depth32Float;
 	diepteStaat.depthWriteEnabled 	= _weergaveInstellingen.diepteSchrijven ? WGPUOptionalBool_True : WGPUOptionalBool_False;
-	diepteStaat.depthCompare 		= WGPUCompareFunction_Less;
+	diepteStaat.depthCompare 		= _weergaveInstellingen.diepteVergelijk;
 	diepteStaat.stencilReadMask 		= 0xFFFFFFFF;
 	diepteStaat.stencilWriteMask 		= 0xFFFFFFFF;
 
