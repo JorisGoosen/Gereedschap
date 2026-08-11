@@ -73,6 +73,13 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 
     bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
 
+	///Of het wgpu-tekenoppervlak het laatst zichtbaar was (niet geOccludeerd).
+	///Handig om de hoofdloop te stoppen zolang de planeet buiten beeld is.
+	bool		oppervlakZichtbaar() const { return _oppervlakZichtbaar; }
+	///Blokkeert tot er een venster-gebeurtenis is (gebruiken wanneer het oppervlak
+	///onvisible is; een visibil/size-event wekt de loop vanzelf weer op).
+	void		wachtOpGebeurtenissen();
+
 	static 	void toetsVerwerkerCentraal(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
 	virtual void toetsVerwerker(								int key, int scancode, int action, int mods);
 	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
@@ -139,6 +146,8 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	static WGPUDevice 	deelApparaat() 		{ return gedeeldApparaat(); }
 	static WGPUQueue 	deelRij() 			{ return gedeeldeRij(); 		}
 
+	WGPUInstance		instantie()			const { return _wgpInstantie; }
+
 	glm::ivec2 	laadTextuurUitPng(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, unsigned int internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
 	void 		bindTextuur(		const std::string & textuurNaam, uint32_t actieveTextuur) const;
 	void 		bindTextuurPlaatje(	const std::string & textuurNaam, uint32_t actieveTextuur, bool schrijven = true, bool lezen = true) const;
@@ -203,6 +212,8 @@ private:
 
 	uint32_t 				_oppervlakBreedte 	= 0,
 							_oppervlakHoogte 	= 0;
+
+	bool 					_oppervlakZichtbaar = true;	///< of het oppervlak het laatst zichtbaar was (niet geOccludeerd)
 
 	WGPUTexture 			_oppervlakTextuur 	= nullptr;
 	WGPUTextureView 		_oppervlakZicht 	= nullptr;

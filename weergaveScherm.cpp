@@ -505,10 +505,13 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 					occludedGemeld = true;
 				}
 
+				_oppervlakZichtbaar = false;
 				_oppervlakTextuur = nullptr;
 				_oppervlakZicht   = nullptr;
 				return;
 			}
+
+			_oppervlakZichtbaar = true;
 
 			if(oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
 			   oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
@@ -680,10 +683,11 @@ void weergaveScherm::_zorgOpslagBindGroep()
 
 	//opslag-buffers die (ook) uit de vertex-shader gelezen worden zijn een wgpu-native feature
 	//(vraag ernaar in _vraagApparaat). De reken-layout is voor alle reken-shaders (read_write,
-	//net als voorheen), de weergave-layout is alleen-lezen. De min-grootte per binding moet
-	//minstens de struct-grootte van het array-element zijn (vak = 72, vakMeta = 96).
+	//net als voorheen), de weergave-layout is alleen-lezen. De min-grootte per binding staat op 0
+	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
+	//de vak-struct) het niet breken; alleen vakMeta (96) houdt een minimum voor de veiligheid.
 	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 72, 72, 96, 32 };
+	const uint64_t minGroottes[4] = { 0, 0, 96, 64 };
 
 	for(int i = 0; i < 4; i++)
 	{
@@ -1035,6 +1039,31 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 	wgpuCommandEncoderRelease(encoder);
 
 	wgpFoutControle("doeRekenVerwerker('" + verwerker + "'): ");
+}
+
+void weergaveScherm::wachtOpGebeurtenissen()
+{
+	//Blokkeert tot het wgpu-oppervlak weer een tekstuur levert (het venster is dan
+	//weer zichtbaar). Een venster-event (bijv. weer in beeld) wekt de wachter direct,
+	//anders wekt de timeout hem periodiek; beide keren peilen we opnieuw of het
+	//oppervlak bruikbaar is. Zo draait de hoofdloop niet ongeremd door, maar loopt
+	//hij ook niet meer stuk als het venster weer opduikt.
+	while(!_oppervlakZichtbaar)
+	{
+		glfwWaitEventsTimeout(0.05);
+
+		WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
+		wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
+
+		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_Occluded || !oppervlakTextuur.texture)
+			continue;
+
+		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal ||
+		   oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+			_oppervlakZichtbaar = true;
+
+		wgpuTextureRelease(oppervlakTextuur.texture);
+	}
 }
 
 void weergaveScherm::rondWeergevenAf()

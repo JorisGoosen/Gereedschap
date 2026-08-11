@@ -63,7 +63,7 @@ private:
 			grootte = sizeof(Soort);
 
 		WGPUBufferDescriptor beschrijving = WGPU_BUFFER_DESCRIPTOR_INIT;
-		beschrijving.usage 	= WGPUBufferUsage_Storage | WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst;
+		beschrijving.usage 	= WGPUBufferUsage_Storage | WGPUBufferUsage_Vertex | WGPUBufferUsage_CopyDst | WGPUBufferUsage_CopySrc;
 		beschrijving.size 	= grootte;
 
 		return wgpuDeviceCreateBuffer(_apparaat, &beschrijving);
