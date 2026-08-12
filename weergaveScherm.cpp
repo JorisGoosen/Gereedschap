@@ -1122,7 +1122,9 @@ void weergaveScherm::rondWeergevenAf()
 	_commandEncoder 	= nullptr;
 	_oppervlakZicht 	= nullptr;
 	_oppervlakTextuur 	= nullptr;
-	_doelTextuur	 	= nullptr;
+	//NB: _doelTextuur blijft staan (off-screen doel), zodat meerdere passes
+	//achter elkaar naar dezelfde framebuffer kunnen tekenen (--schermafbeelding).
+	//nepScherm zet het doel vóór elke render zelf opnieuw.
 
 	if(_diepteZicht) 	{ wgpuTextureViewRelease(_diepteZicht); 	_diepteZicht = nullptr; }
 	if(_diepteTextuur) 	{ wgpuTextureRelease(_diepteTextuur);	_diepteTextuur = nullptr; }
