@@ -52,7 +52,7 @@ class weergaveScherm
 public:
 	typedef std::function<void(int key, int scancode, int action, int mods)> toetsVerwerkerFunc;
 
-				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1, bool volledigScherm = true);
+				weergaveScherm(std::string Naam = "weergaveScherm", size_t W = 1280, size_t H = 720, size_t multiSamples = 1, bool volledigScherm = true, bool hoofdloos = false);
 				~weergaveScherm();
 
 	void		bereidWeergevenVoor(const std::string & verwerker = "", bool wisScherm = true);
@@ -71,11 +71,11 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 	void		zetWeergaveInstellingen(const weergaveInstellingen & instellingen) { _weergaveInstellingen = instellingen; }
 	const weergaveInstellingen & geefWeergaveInstellingen() const { return _weergaveInstellingen; }
 
-    bool		stopGewenst() { return glfwWindowShouldClose(_glfwScherm); }
+    bool		stopGewenst() { return _hoofdloos ? false : glfwWindowShouldClose(_glfwScherm); }
 
 	///Of het wgpu-tekenoppervlak het laatst zichtbaar was (niet geOccludeerd).
 	///Handig om de hoofdloop te stoppen zolang de planeet buiten beeld is.
-	bool		oppervlakZichtbaar() const { return _oppervlakZichtbaar; }
+	bool		oppervlakZichtbaar() const { return _hoofdloos ? false : _oppervlakZichtbaar; }
 	///Blokkeert tot er een venster-gebeurtenis is (gebruiken wanneer het oppervlak
 	///onvisible is; een visibil/size-event wekt de loop vanzelf weer op).
 	void		wachtOpGebeurtenissen();
@@ -168,6 +168,7 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 protected:
 	float					_schermVerhouding = 16.0f / 9.0f;
 	std::string				_naam;
+	bool					_hoofdloos		= false;
 	WGPURenderPipeline		_huidigProgramma;
 	std::string				_huidigProgrammaNaam;
 

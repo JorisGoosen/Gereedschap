@@ -4,8 +4,8 @@
 using namespace glm;
 
 
- weergaveSchermVierkant::weergaveSchermVierkant(std::string Naam, size_t W, size_t H, bool texVanafNul) 
-: weergaveScherm(Naam, W, H, 1, false), _texVanafNul(texVanafNul)
+ weergaveSchermVierkant::weergaveSchermVierkant(std::string Naam, size_t W, size_t H, bool texVanafNul, bool hoofdloos) 
+: weergaveScherm(Naam, W, H, 1, false, hoofdloos), _texVanafNul(texVanafNul)
 {}
 
 weergaveSchermVierkant::~weergaveSchermVierkant()

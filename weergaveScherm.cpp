@@ -73,31 +73,45 @@ static void apparaatVerwerver(WGPURequestDeviceStatus status, WGPUDevice apparaa
 }
 
 
-weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples, bool volledigScherm)
-: _schermVerhouding(float(W) / float(H)), _naam(Naam)
+weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samples, bool volledigScherm, bool hoofdloos)
+: _schermVerhouding(float(W) / float(H)), _naam(Naam), _hoofdloos(hoofdloos)
 {
-	std::cout << "weergaveScherm " << _naam << " created!" << std::endl;
+	std::cout << "weergaveScherm " << _naam << (hoofdloos ? " (hoofdloos)" : "") << " created!" << std::endl;
 
-    if (_schermen.size() == 0 && !glfwInit())
-		throw std::runtime_error("Failed to intialize glfw");
+	//Hoofdloze modus: geen GLFW-venster, geen Metal-laag, geen tekenoppervlak.
+	//Alleen device/rij/bind-groepen/sampler en (reken-)pipelines worden gemaakt,
+	//zodat compute-verificatie zonder display/aqua kan draaien.
+	if(!_hoofdloos)
+	{
+		if (_schermen.size() == 0 && !glfwInit())
+			throw std::runtime_error("Failed to intialize glfw");
 
-	//We maken geen OpenGL context meer maar een venster puur voor wgpu
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		//We maken geen OpenGL context meer maar een venster puur voor wgpu
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    _glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+		_glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
-    if (!_glfwScherm)
-    {
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-        glfwTerminate();
-        throw std::runtime_error("Failed to create window!");
-    }
+		if (!_glfwScherm)
+		{
+			glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+			glfwTerminate();
+			throw std::runtime_error("Failed to create window!");
+		}
 
-	//De metalen laag waar wgpu zijn tekenoppervlak aan kan hangen (macOS)
-	_metaalLaag = maakMetaalLaag(_glfwScherm);
+		//De metalen laag waar wgpu zijn tekenoppervlak aan kan hangen (macOS)
+		_metaalLaag = maakMetaalLaag(_glfwScherm);
+	}
 
 	int breedte, hoogte;
-	glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
+	if(!_hoofdloos)
+	{
+		glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
+	}
+	else
+	{
+		breedte = (int)W;
+		hoogte  = (int)H;
+	}
 
 	//------------ wgpu basis ------------
 	_wgpInstantie = wgpuCreateInstance(nullptr);
@@ -114,28 +128,31 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	s_gedeeldeRij	  = _wgpRij;
 
 	//------------ tekenoppervlak (surface) ------------
-	WGPUSurfaceSourceMetalLayer metaalBron = WGPU_SURFACE_SOURCE_METAL_LAYER_INIT;
-	metaalBron.layer = _metaalLaag;
+	if(!_hoofdloos)
+	{
+		WGPUSurfaceSourceMetalLayer metaalBron = WGPU_SURFACE_SOURCE_METAL_LAYER_INIT;
+		metaalBron.layer = _metaalLaag;
 
-	WGPUSurfaceDescriptor oppervlakBeschrijving = WGPU_SURFACE_DESCRIPTOR_INIT;
-	oppervlakBeschrijving.label 		= { _naam.c_str(), _naam.size() };
-	oppervlakBeschrijving.nextInChain 	= &metaalBron.chain;
+		WGPUSurfaceDescriptor oppervlakBeschrijving = WGPU_SURFACE_DESCRIPTOR_INIT;
+		oppervlakBeschrijving.label 		= { _naam.c_str(), _naam.size() };
+		oppervlakBeschrijving.nextInChain 	= &metaalBron.chain;
 
-	_wgpOppervlak = wgpuInstanceCreateSurface(_wgpInstantie, &oppervlakBeschrijving);
+		_wgpOppervlak = wgpuInstanceCreateSurface(_wgpInstantie, &oppervlakBeschrijving);
 
-	if(!_wgpOppervlak)
-		throw std::runtime_error("Het aanmaken van het wgpu-oppervlak is mislukt...");
+		if(!_wgpOppervlak)
+			throw std::runtime_error("Het aanmaken van het wgpu-oppervlak is mislukt...");
 
-	//------------ formaat bepalen ------------
-	WGPUSurfaceCapabilities mogelijkheden = WGPU_SURFACE_CAPABILITIES_INIT;
-	wgpuSurfaceGetCapabilities(_wgpOppervlak, _wgpAdapter, &mogelijkheden);
+		//------------ formaat bepalen ------------
+		WGPUSurfaceCapabilities mogelijkheden = WGPU_SURFACE_CAPABILITIES_INIT;
+		wgpuSurfaceGetCapabilities(_wgpOppervlak, _wgpAdapter, &mogelijkheden);
 
-	if(mogelijkheden.formatCount > 0)
-		_oppervlakFormaat = mogelijkheden.formats[0];
-	else
-		throw std::runtime_error("Het oppervlak ondersteunt geen enkel tekenformaat...");
+		if(mogelijkheden.formatCount > 0)
+			_oppervlakFormaat = mogelijkheden.formats[0];
+		else
+			throw std::runtime_error("Het oppervlak ondersteunt geen enkel tekenformaat...");
 
-	wgpuSurfaceCapabilitiesFreeMembers(mogelijkheden);
+		wgpuSurfaceCapabilitiesFreeMembers(mogelijkheden);
+	}
 
 	//------------ uniform-buffers en de basis-bind-groep ------------
 	//bind-groep 0: binding 0 = beeld, binding 1 = matrices, binding 2 = extra
@@ -259,11 +276,12 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
 	wgpuTextureViewRelease(witteZicht);
 
-	_configureerOppervlak(breedte, hoogte);
-
-	_schermen[_glfwScherm] = this;
-
-	glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
+	if(!_hoofdloos)
+	{
+		_configureerOppervlak(breedte, hoogte);
+		_schermen[_glfwScherm] = this;
+		glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
+	}
 
 	(void)samples; // multi-sampling is (nog) niet volledig overgezet naar WebGPU
 }
@@ -372,7 +390,8 @@ void weergaveScherm::toetsVerwerker(int key, int , int action, int )
 
 weergaveScherm::~weergaveScherm()
 {
-	_schermen.erase(_glfwScherm);
+	if(!_hoofdloos)
+		_schermen.erase(_glfwScherm);
 
 	for(WGPUBindGroup bindGroep : _gevormdeBindGroepen)
 		wgpuBindGroupRelease(bindGroep);
@@ -417,10 +436,12 @@ weergaveScherm::~weergaveScherm()
 	if(_wgpApparaat) 	wgpuDeviceRelease(_wgpApparaat);
 	if(_wgpInstantie) 	wgpuInstanceRelease(_wgpInstantie);
 
-   	glfwDestroyWindow(_glfwScherm);
-
-	if(_schermen.size() == 0)
-		glfwTerminate();
+	if(!_hoofdloos)
+	{
+		glfwDestroyWindow(_glfwScherm);
+		if(_schermen.size() == 0)
+			glfwTerminate();
+	}
 }
 
 void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisScherm)
@@ -687,7 +708,7 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
 	//de vak-struct) het niet breken; alleen vakMeta (96) houdt een minimum voor de veiligheid.
 	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 0, 0, 96, 64 };
+	const uint64_t minGroottes[4] = { 0, 0, 96, 80 };
 
 	for(int i = 0; i < 4; i++)
 	{
