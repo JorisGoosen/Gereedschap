@@ -29,6 +29,7 @@ namespace wgpGL
 	inline constexpr unsigned int GL_RGBA16 			= 0x805B;
 	inline constexpr unsigned int GL_RGBA16F 			= 0x881A;
 	inline constexpr unsigned int GL_DEPTH_COMPONENT16 	= 0x81A5;
+	inline constexpr unsigned int GL_DEPTH_COMPONENT32F	= 0x8CAC;
 	inline constexpr unsigned int GL_UNSIGNED_BYTE 		= 0x1401;
 	inline constexpr unsigned int GL_FLOAT 				= 0x1406;
 	inline constexpr unsigned int GL_2_BYTES			= 0x1407;
@@ -117,6 +118,21 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	///Laat de volgende bereidWeergevenVoor naar de gegeven textuur tekenen (off-screen)
 	void zetWeergaveDoel(WGPUTexture textuur, glm::uvec2 grootte = glm::uvec2(1, 1));
 
+	///Laat de volgende bereidWeergevenVoor alléén naar een dieptedoel tekenen
+	///(depth-only pass, geen kleur-attachment; bijv. een schaduwkaart). De textuur
+	///moet een diepteformaat hebben met RenderAttachment-gebruik. Zet nullptr om
+	///weer terug te keren naar het normale (kleur-)doel.
+	void zetDiepteDoel(WGPUTexture textuur, glm::uvec2 grootte = glm::uvec2(1, 1));
+
+	///Maakt een diepte-only render-programma: alleen een vertex-shader (geen fragment),
+	///bedoeld voor passes zonder kleur-attachment (zoals een schaduwkaart-pass).
+	WGPURenderPipeline maakDiepteShader(const std::string & shaderNaam, const std::string & vertshaderbestand);
+
+	///Bindt een schaduwkaart (dieptetextuur) aan bind-groep 3 van de render-pipelines
+	///(nearest sampler, handmatige diepte-vergelijking in de shader). Een lege naam
+	///bindt het 1x1-witte hulpje (diepte 1.0 = alles verlicht).
+	void bindSchaduwKaart(const std::string & textuurNaam);
+
 	///Registreert een opslag-buffer voor het reken (compute) programma (binding 0..3)
 	void verbindRekenBuffer(uint32_t binding, WGPUBuffer buffer);
 
@@ -134,6 +150,12 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 
 	///Bindt de actief gebonden textuur aan bind-groep 1 van de pass
 	void _bindTextuurAanPass(WGPURenderPassEncoder pass);
+
+	///Bindt de schaduwkaart (of het witte hulpje) aan bind-groep 3 van de pass
+	void _bindSchaduwAanPass(WGPURenderPassEncoder pass);
+
+	///Bindt de gebonden textuur (of het witte hulpje) aan bind-groep 1 van de reken-pass
+	void _bindTextuurAanRekenPass(WGPUComputePassEncoder pass);
 
 	///Bindt de geregistreerde opslag-buffers aan bind-groep 2 van de pass
 	void _bindOpslagAanPass(WGPURenderPassEncoder pass);
@@ -194,9 +216,16 @@ WGPUBindGroupLayout 		_textuurBindGroepLayout	= nullptr;
 	WGPUTexture 			_witteTextuur 			= nullptr;	///< 1x1 wit hulpje voor de lege textuur-bind-groep
 	WGPUBindGroup 			_witteBindGroep 		= nullptr;	///< bind-groep 1 zonder echte textuur
 
+	WGPUBindGroupLayout 	_schaduwBindGroepLayout	= nullptr;	///< textuur (unfilterable-float) + nearest sampler, voor diepte-/schaduwkaarten
+	WGPUSampler 			_schaduwSampler 		= nullptr;	///< nearest sampler (dieptekaarten zijn niet filterbaar)
+	WGPUBindGroup 			_schaduwDummyBindGroep 	= nullptr;	///< lege schaduw-bind-groep (wit hulpje: diepte 1.0)
+
 	WGPUTexture 			_doelTextuur 			= nullptr; ///< off-screen doel
 	WGPUTextureFormat 		_doelFormaat 			= WGPUTextureFormat_RGBA8Unorm; ///< formaat van het off-screen doel
 	glm::uvec2 				_doelGrootte 			= glm::uvec2(1, 1);			///< grootte van het off-screen doel
+	WGPUTexture 			_diepteDoel 			= nullptr; ///< depth-only doel (schaduwkaart-pass)
+	WGPUTextureView 		_diepteDoelZicht 		= nullptr; ///< zicht op het depth-only doel
+	glm::uvec2 				_diepteDoelGrootte 		= glm::uvec2(1, 1);			///< grootte van het depth-only doel
 	WGPUBindGroupLayout 	_rekenBindGroepLayout 		= nullptr; ///< layout voor opslag-buffers in reken-shaders (read_write)
 	WGPUBindGroupLayout 	_renderOpslagBindGroepLayout = nullptr; ///< layout voor opslag-buffers in weergave-shaders (read)
 	WGPUBuffer 				_leegRekenBuffer 		= nullptr; ///< opvul-buffer voor ongebruikte opslag-bindings
@@ -239,6 +268,8 @@ private:
 	std::map<std::string, glm::uvec2>										_textuurGroottes;
 	std::map<std::string, WGPUBindGroup>									_textuurBindGroepen;///< per textuur een bind-groep voor groep 1
 	std::string																_gebondenTextuur;	///< de textuur die aan bind-groep 1 hangt
+	std::map<std::string, WGPUBindGroup>									_schaduwBindGroepen;///< per textuur een schaduw-bind-groep
+	std::string																_schaduwKaart;		///< de textuur die als schaduwkaart (groep 3) hangt
 	std::set<std::string>													_3dTexturen,
 																			_1dTexturen;
 	static std::map<GLFWwindow *, weergaveScherm*>							_schermen;
@@ -261,6 +292,9 @@ private:
 
 	///Vraagt (of maakt) de bind-groep voor een textuur (groep 1)
 	WGPUBindGroup _bindgroepVoorTextuur(const std::string & textuurNaam);
+
+	///Vraagt (of maakt) de schaduw-bind-groep voor een textuur (groep 3 render / groep 1 reken)
+	WGPUBindGroup _bindgroepVoorSchaduw(const std::string & textuurNaam);
 
 	///Zorgt dat de opslag-bind-groep-layouts bestaan (reken èn weergave)
 	void		_zorgOpslagBindGroep();

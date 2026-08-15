@@ -276,6 +276,51 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
 	wgpuTextureViewRelease(witteZicht);
 
+	//------------ schaduwkaart-bind-groep (nearest sampler, diepte niet filterbaar) ------------
+	//Deze layout dient twee rollen: bind-groep 3 van de render-pipelines (schaduwlookup
+	//in de fragmentshader) én bind-groep 1 van de reken-pipelines (compute die een
+	//textuur bemonstert, bijv. de schaduwkaart voor de zonlicht-benadering).
+	//sampleType UnfilterableFloat accepteert zowel dieptekaarten als gewone kleurkaarten.
+	WGPUSamplerDescriptor schaduwSamplerBeschrijving = WGPU_SAMPLER_DESCRIPTOR_INIT;
+	schaduwSamplerBeschrijving.addressModeU 	= WGPUAddressMode_ClampToEdge;
+	schaduwSamplerBeschrijving.addressModeV 	= WGPUAddressMode_ClampToEdge;
+	schaduwSamplerBeschrijving.magFilter		= WGPUFilterMode_Nearest;
+	schaduwSamplerBeschrijving.minFilter		= WGPUFilterMode_Nearest;
+	schaduwSamplerBeschrijving.mipmapFilter		= WGPUMipmapFilterMode_Nearest;
+	_schaduwSampler = wgpuDeviceCreateSampler(_wgpApparaat, &schaduwSamplerBeschrijving);
+
+	WGPUBindGroupLayoutEntry schaduwInvoeren[2] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
+
+	schaduwInvoeren[0].binding = 0;
+	schaduwInvoeren[0].visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment | WGPUShaderStage_Compute;
+	schaduwInvoeren[0].texture.sampleType		= WGPUTextureSampleType_UnfilterableFloat;
+	schaduwInvoeren[0].texture.viewDimension	= WGPUTextureViewDimension_2D;
+
+	schaduwInvoeren[1].binding = 1;
+	schaduwInvoeren[1].visibility = WGPUShaderStage_Vertex | WGPUShaderStage_Fragment | WGPUShaderStage_Compute;
+	schaduwInvoeren[1].sampler.type = WGPUSamplerBindingType_NonFiltering;
+
+	WGPUBindGroupLayoutDescriptor schaduwLayoutBeschrijving = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
+	schaduwLayoutBeschrijving.entryCount = 2;
+	schaduwLayoutBeschrijving.entries = schaduwInvoeren;
+	_schaduwBindGroepLayout = wgpuDeviceCreateBindGroupLayout(_wgpApparaat, &schaduwLayoutBeschrijving);
+
+	WGPUTextureView witteSchaduwZicht = wgpuTextureCreateView(_witteTextuur, nullptr);
+
+	WGPUBindGroupEntry schaduwDummyInvoeren[2] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
+	schaduwDummyInvoeren[0].binding = 0;
+	schaduwDummyInvoeren[0].textureView = witteSchaduwZicht;
+	schaduwDummyInvoeren[1].binding = 1;
+	schaduwDummyInvoeren[1].sampler = _schaduwSampler;
+
+	WGPUBindGroupDescriptor schaduwDummyBeschrijving = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+	schaduwDummyBeschrijving.layout 	 = _schaduwBindGroepLayout;
+	schaduwDummyBeschrijving.entryCount = 2;
+	schaduwDummyBeschrijving.entries 	 = schaduwDummyInvoeren;
+	_schaduwDummyBindGroep = wgpuDeviceCreateBindGroup(_wgpApparaat, &schaduwDummyBeschrijving);
+
+	wgpuTextureViewRelease(witteSchaduwZicht);
+
 	if(!_hoofdloos)
 	{
 		_configureerOppervlak(breedte, hoogte);
@@ -397,6 +442,8 @@ weergaveScherm::~weergaveScherm()
 		wgpuBindGroupRelease(bindGroep);
 	for(auto & [naam, bindGroep] : _textuurBindGroepen)
 		wgpuBindGroupRelease(bindGroep);
+	for(auto & [naam, bindGroep] : _schaduwBindGroepen)
+		wgpuBindGroupRelease(bindGroep);
 	for(WGPUBindGroup bindGroep : _rekenBindGroepen)
 		wgpuBindGroupRelease(bindGroep);
 
@@ -406,6 +453,10 @@ weergaveScherm::~weergaveScherm()
 	if(_textuurBindGroepLayout)	wgpuBindGroupLayoutRelease(_textuurBindGroepLayout);
 	if(_witteBindGroep) 		wgpuBindGroupRelease(_witteBindGroep);
 	if(_witteTextuur) 			wgpuTextureRelease(_witteTextuur);
+
+	if(_schaduwDummyBindGroep) 	wgpuBindGroupRelease(_schaduwDummyBindGroep);
+	if(_schaduwBindGroepLayout) wgpuBindGroupLayoutRelease(_schaduwBindGroepLayout);
+	if(_schaduwSampler) 		wgpuSamplerRelease(_schaduwSampler);
 
 	if(_sampler) 		wgpuSamplerRelease(_sampler);
 	if(_rekenBindGroepLayout) 		wgpuBindGroupLayoutRelease(_rekenBindGroepLayout);
@@ -423,13 +474,16 @@ weergaveScherm::~weergaveScherm()
 	for(auto & [naam, modules] : _shaderModules)
 	{
 		wgpuShaderModuleRelease(modules.first);
-		wgpuShaderModuleRelease(modules.second);
+		if(modules.second)
+			wgpuShaderModuleRelease(modules.second);
 	}
 	for(auto & [naam, textuur] : _texturen)
 		if(textuur) wgpuTextureRelease(textuur);
 
 	if(_diepteZicht) 	wgpuTextureViewRelease(_diepteZicht);
 	if(_diepteTextuur) 	wgpuTextureRelease(_diepteTextuur);
+
+	if(_diepteDoelZicht) wgpuTextureViewRelease(_diepteDoelZicht);
 
 	if(_wgpOppervlak) 	wgpuSurfaceRelease(_wgpOppervlak);
 	if(_wgpAdapter) 	wgpuAdapterRelease(_wgpAdapter);
@@ -454,7 +508,13 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 	//verder op hetzelfde oppervlak (zonder opnieuw een tekenfragment te vragen).
 	const bool hergebruik = _commandEncoder && !_weergavePass;
 
-	if(_doelTextuur)
+	if(_diepteDoel)
+	{
+		//depth-only doel (schaduwkaart-pass): de grootte van het dieptedoel telt
+		breedte = _diepteDoelGrootte.x;
+		hoogte  = _diepteDoelGrootte.y;
+	}
+	else if(_doelTextuur)
 	{
 		//off-screen doel: de grootte van de doel-textuur telt
 		breedte = _doelGrootte.x;
@@ -503,7 +563,13 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 
 	if(!hergebruik)
 	{
-		if(_doelTextuur)
+		if(_diepteDoel)
+		{
+			//depth-only pass: geen kleur-attachment nodig (het doel is de dieptekaart)
+			_oppervlakTextuur = nullptr;
+			_oppervlakZicht   = nullptr;
+		}
+		else if(_doelTextuur)
 		{
 			_oppervlakTextuur = _doelTextuur;
 			_oppervlakZicht   = wgpuTextureCreateView(_oppervlakTextuur, nullptr);
@@ -549,7 +615,9 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 	_beeldenUniformen(breedte, hoogte);
 	extraVoorbereidingen(_huidigProgramma);
 
-	_zorgDiepteTextuur(breedte, hoogte);
+	//Bij een depth-only doel is het doel zelf de z-buffer; geen aparte dieptetextuur nodig
+	if(!_diepteDoel)
+		_zorgDiepteTextuur(breedte, hoogte);
 
 	if(!hergebruik)
 		_commandEncoder = wgpuDeviceCreateCommandEncoder(_wgpApparaat, nullptr);
@@ -565,7 +633,7 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 	//de diepte-test. Omdat de dieptetextuur per frame opnieuw wordt aangemaakt en de eerste
 	//pass hem wist, is 'Store' altijd veilig.
 	WGPURenderPassDepthStencilAttachment diepteHechting = WGPU_RENDER_PASS_DEPTH_STENCIL_ATTACHMENT_INIT;
-	diepteHechting.view 			= _diepteZicht;
+	diepteHechting.view 			= _diepteDoel ? _diepteDoelZicht : _diepteZicht;
 	diepteHechting.depthLoadOp 		= hergebruik ? WGPULoadOp_Load   : WGPULoadOp_Clear;
 	diepteHechting.depthStoreOp 	= WGPUStoreOp_Store;
 	diepteHechting.depthClearValue 	= 1.0;
@@ -574,8 +642,8 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 
 	WGPURenderPassDescriptor passBeschrijving = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
 	passBeschrijving.label 				= { _huidigProgrammaNaam.c_str(), _huidigProgrammaNaam.size() };
-	passBeschrijving.colorAttachmentCount 	= 1;
-	passBeschrijving.colorAttachments 		= &kleurHechting;
+	passBeschrijving.colorAttachmentCount 	= _diepteDoel ? 0 : 1;
+	passBeschrijving.colorAttachments 		= _diepteDoel ? nullptr : &kleurHechting;
 	passBeschrijving.depthStencilAttachment = &diepteHechting;
 
 	_weergavePass = wgpuCommandEncoderBeginRenderPass(_commandEncoder, &passBeschrijving);
@@ -641,6 +709,21 @@ void weergaveScherm::zetWeergaveDoel(WGPUTexture textuur, glm::uvec2 grootte)
 	_doelGrootte 	= grootte;
 }
 
+void weergaveScherm::zetDiepteDoel(WGPUTexture textuur, glm::uvec2 grootte)
+{
+	if(_diepteDoelZicht)
+	{
+		wgpuTextureViewRelease(_diepteDoelZicht);
+		_diepteDoelZicht = nullptr;
+	}
+
+	_diepteDoel 		= textuur;
+	_diepteDoelGrootte 	= grootte;
+
+	if(_diepteDoel)
+		_diepteDoelZicht = wgpuTextureCreateView(_diepteDoel, nullptr);
+}
+
 void weergaveScherm::verbindRekenBuffer(uint32_t binding, WGPUBuffer buffer)
 {
 	if(binding >= _rekenBufferBinden.size())
@@ -697,6 +780,71 @@ void weergaveScherm::_bindTextuurAanPass(WGPURenderPassEncoder pass)
 		wgpuRenderPassEncoderSetBindGroup(pass, 1, bindGroep, 0, nullptr);
 }
 
+///Vraagt (of maakt) de schaduw-bind-groep voor een textuur (nearest sampler)
+WGPUBindGroup weergaveScherm::_bindgroepVoorSchaduw(const std::string & textuurNaam)
+{
+	auto gevonden = _schaduwBindGroepen.find(textuurNaam);
+
+	if(gevonden != _schaduwBindGroepen.end())
+		return gevonden->second;
+
+	if(!_texturen.count(textuurNaam) || !_schaduwBindGroepLayout)
+		return nullptr;
+
+	WGPUTextureView zicht = wgpuTextureCreateView(_texturen.at(textuurNaam), nullptr);
+
+	WGPUBindGroupEntry invoeren[2] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
+
+	invoeren[0].binding 	 = 0;
+	invoeren[0].textureView  = zicht;
+
+	invoeren[1].binding 	= 1;
+	invoeren[1].sampler 	= _schaduwSampler;
+
+	WGPUBindGroupDescriptor beschrijving = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
+	beschrijving.layout 	 = _schaduwBindGroepLayout;
+	beschrijving.entryCount = 2;
+	beschrijving.entries 	 = invoeren;
+
+	WGPUBindGroup bindGroep = wgpuDeviceCreateBindGroup(_wgpApparaat, &beschrijving);
+
+	wgpuTextureViewRelease(zicht);
+
+	if(bindGroep)
+		_schaduwBindGroepen[textuurNaam] = bindGroep;
+
+	return bindGroep;
+}
+
+///Bindt de schaduwkaart aan bind-groep 3 van de pass (of het witte hulpje)
+void weergaveScherm::_bindSchaduwAanPass(WGPURenderPassEncoder pass)
+{
+	WGPUBindGroup bindGroep = _schaduwDummyBindGroep;
+
+	if(!_schaduwKaart.empty())
+		bindGroep = _bindgroepVoorSchaduw(_schaduwKaart);
+
+	if(bindGroep)
+		wgpuRenderPassEncoderSetBindGroup(pass, 3, bindGroep, 0, nullptr);
+}
+
+///Bindt de gebonden textuur aan bind-groep 1 van de reken-pass (of het witte hulpje)
+void weergaveScherm::_bindTextuurAanRekenPass(WGPUComputePassEncoder pass)
+{
+	WGPUBindGroup bindGroep = _schaduwDummyBindGroep;
+
+	if(!_gebondenTextuur.empty())
+		bindGroep = _bindgroepVoorSchaduw(_gebondenTextuur);
+
+	if(bindGroep)
+		wgpuComputePassEncoderSetBindGroup(pass, 1, bindGroep, 0, nullptr);
+}
+
+void weergaveScherm::bindSchaduwKaart(const std::string & textuurNaam)
+{
+	_schaduwKaart = textuurNaam;
+}
+
 void weergaveScherm::_zorgOpslagBindGroep()
 {
 	if(_rekenBindGroepLayout && _renderOpslagBindGroepLayout)
@@ -708,7 +856,7 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
 	//de vak-struct) het niet breken; alleen vakMeta (144) houdt een minimum voor de veiligheid.
 	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 0, 0, 144, 80 };
+	const uint64_t minGroottes[4] = { 0, 0, 144, 96 };
 
 	for(int i = 0; i < 4; i++)
 	{
@@ -791,6 +939,8 @@ std::string weergaveScherm::_instellingenSleutel() const
 		sleutel += ":vergelijk" + std::to_string((int)_weergaveInstellingen.diepteVergelijk);
 	if(_weergaveInstellingen.cullMode != WGPUCullMode_None)
 		sleutel += ":cull" + std::to_string((int)_weergaveInstellingen.cullMode);
+	if(_diepteDoel)
+		sleutel += ":diepteDoel";
 
 	return sleutel;
 }
@@ -804,11 +954,14 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 
 	auto [vertModule, fragModule] = _shaderModules[moduleNaam];
 
-	WGPUBindGroupLayout groepen[3] = { _basisBindGroepLayout, _textuurBindGroepLayout, _renderOpslagBindGroepLayout };
+	//Een depth-only pass (schaduwkaart) heeft geen fragment-stage en geen kleurdoelen
+	const bool alleenDiepte = _diepteDoel != nullptr;
+
+	WGPUBindGroupLayout groepen[4] = { _basisBindGroepLayout, _textuurBindGroepLayout, _renderOpslagBindGroepLayout, _schaduwBindGroepLayout };
 
 	WGPUPipelineLayoutDescriptor layoutBeschrijving = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
 	layoutBeschrijving.label 				= { programmaNaam.c_str(), programmaNaam.size() };
-	layoutBeschrijving.bindGroupLayoutCount 	= 3;
+	layoutBeschrijving.bindGroupLayoutCount 	= 4;
 	layoutBeschrijving.bindGroupLayouts 		= groepen;
 
 	WGPUPipelineLayout layout = wgpuDeviceCreatePipelineLayout(_wgpApparaat, &layoutBeschrijving);
@@ -868,7 +1021,7 @@ WGPURenderPipeline weergaveScherm::_maakPipeline(const std::string & programmaNa
 	beschrijving.primitive 	= primitief;
 	beschrijving.multisample = multi;
 	beschrijving.depthStencil = &diepteStaat;
-	beschrijving.fragment 	= &fragmentStaat;
+	beschrijving.fragment 	= alleenDiepte ? nullptr : &fragmentStaat;
 
 	WGPURenderPipeline programma = wgpuDeviceCreateRenderPipeline(_wgpApparaat, &beschrijving);
 
@@ -946,6 +1099,7 @@ void weergaveScherm::tekenKadertjes(WGPUBuffer vierkantje, uint32_t vierkantPunt
 	wgpuRenderPassEncoderSetBindGroup(_weergavePass, 0, _basisBindGroep, 0, nullptr);
 	_bindTextuurAanPass(_weergavePass);
 	_bindOpslagAanPass(_weergavePass);
+	_bindSchaduwAanPass(_weergavePass);
 
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 0, vierkantje, 0, wgpuBufferGetSize(vierkantje));
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 1, plekken, 0, wgpuBufferGetSize(plekken));
@@ -965,6 +1119,7 @@ void weergaveScherm::tekenAlsPunten(WGPUBuffer buffer, uint32_t puntAantal)
 	wgpuRenderPassEncoderSetBindGroup(_weergavePass, 0, _basisBindGroep, 0, nullptr);
 	_bindTextuurAanPass(_weergavePass);
 	_bindOpslagAanPass(_weergavePass);
+	_bindSchaduwAanPass(_weergavePass);
 
 	wgpuRenderPassEncoderSetVertexBuffer(_weergavePass, 0, buffer, 0, wgpuBufferGetSize(buffer));
 	wgpuRenderPassEncoderDraw(_weergavePass, puntAantal, 1, 0, 0);
@@ -1021,6 +1176,7 @@ void wrgvOpslag::tekenGeïndexeerd()
 	bindVoorWeergave(pass);
 	scherm->_bindTextuurAanPass(pass);
 	scherm->_bindOpslagAanPass(pass);
+	scherm->_bindSchaduwAanPass(pass);
 
 	if(aantalIndices() > 0)
 		wgpuRenderPassEncoderDrawIndexed(pass, (uint32_t)aantalIndices(), 1, 0, 0, 0);
@@ -1047,6 +1203,9 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 	WGPUBindGroup bindGroep = _maakOpslagBindGroep(_rekenBindGroepLayout);
 
 	wgpuComputePassEncoderSetBindGroup(rekenPass, 0, bindGroep, 0, nullptr);
+
+	//groep 1 (textuur) hoort bij de layout, dus altijd binden (anders het witte hulpje)
+	_bindTextuurAanRekenPass(rekenPass);
 
 	wgpuComputePassEncoderDispatchWorkgroups(rekenPass, groepGroottes.x, groepGroottes.y, groepGroottes.z);
 
@@ -1102,15 +1261,17 @@ void weergaveScherm::rondWeergevenAf()
 
 	wgpuQueueSubmit(_wgpRij, 1, &commando);
 
-	//Bij een off-screen doel (nepScherm) hoeft er niet gepresenteerd te worden
-	if(!_doelTextuur)
+	//Bij een off-screen doel (nepScherm) of een depth-only doel (schaduwkaart-pass)
+	//hoeft er niet gepresenteerd te worden
+	if(!_doelTextuur && !_diepteDoel)
 		wgpuSurfacePresent(_wgpOppervlak);
 
 	wgpuCommandBufferRelease(commando);
 	wgpuCommandEncoderRelease(_commandEncoder);
 
-	wgpuTextureViewRelease(_oppervlakZicht);
-	if(!_doelTextuur)
+	if(_oppervlakZicht)
+		wgpuTextureViewRelease(_oppervlakZicht);
+	if(!_doelTextuur && !_diepteDoel)
 		wgpuTextureRelease(_oppervlakTextuur);
 
 	//de gebonden opslag-bind-groepen waren alleen voor deze frame nodig
@@ -1168,6 +1329,17 @@ WGPURenderPipeline weergaveScherm::maakShader(const std::string & shaderNaam, co
 	return nullptr;
 }
 
+WGPURenderPipeline weergaveScherm::maakDiepteShader(const std::string & shaderNaam, const std::string & vertshaderbestand)
+{
+	WGPUShaderModule vertModule = _maakShaderModule(vertshaderbestand, _wgpApparaat);
+
+	//geen fragment-module: de pipeline ontstaat (zonder fragment-stage) zodra er
+	//met een depth-only doel (zetDiepteDoel) getekend wordt
+	_shaderModules[shaderNaam] = { vertModule, nullptr };
+
+	return nullptr;
+}
+
 WGPUComputePipeline weergaveScherm::maakRekenShader(const std::string & shaderNaam, const std::string & shaderbestand)
 {
 	WGPUShaderModule module = _maakShaderModule(shaderbestand, _wgpApparaat);
@@ -1175,10 +1347,14 @@ WGPUComputePipeline weergaveScherm::maakRekenShader(const std::string & shaderNa
 	//de opslag-layout: vier opslag-buffers op binding 0..3 (gedeeld met de render-pipelines)
 	_zorgOpslagBindGroep();
 
+	//groep 1: een (schaduw/diepte-)textuur met nearest sampler, optioneel voor
+	//reken-shaders die een kaart bemonsteren (bijv. zonlicht uit de schaduwkaart)
+	WGPUBindGroupLayout rekenGroepen[2] = { _rekenBindGroepLayout, _schaduwBindGroepLayout };
+
 	WGPUPipelineLayoutDescriptor layoutBeschrijving = WGPU_PIPELINE_LAYOUT_DESCRIPTOR_INIT;
 	layoutBeschrijving.label 				= { shaderNaam.c_str(), shaderNaam.size() };
-	layoutBeschrijving.bindGroupLayoutCount = 1;
-	layoutBeschrijving.bindGroupLayouts 	= &_rekenBindGroepLayout;
+	layoutBeschrijving.bindGroupLayoutCount = 2;
+	layoutBeschrijving.bindGroupLayouts 	= rekenGroepen;
 
 	WGPUPipelineLayout layout = wgpuDeviceCreatePipelineLayout(_wgpApparaat, &layoutBeschrijving);
 
@@ -1413,6 +1589,7 @@ WGPUTextureFormat weergaveScherm::_geefWgpFormaat(unsigned int internalFormat) c
 	case GL_RGBA16:
 	case GL_RGBA16F:		return WGPUTextureFormat_RGBA16Float;
 	case GL_DEPTH_COMPONENT16:	return WGPUTextureFormat_Depth16Unorm;
+	case GL_DEPTH_COMPONENT32F:	return WGPUTextureFormat_Depth32Float;
 	case GL_RGBA:
 	case GL_RGBA8:
 	default:				return WGPUTextureFormat_RGBA8Unorm;
