@@ -543,13 +543,6 @@ void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisSc
 {
 	_schermVerhouding = breedte / (float) hoogte;
 
-	static int vorigeH = -1, vorigeB = -1;
-
-	if(vorigeH != hoogte || vorigeB != breedte)
-		std::cout << "Schermgrootte: " << breedte << "x" << hoogte << std::endl;
-
-	vorigeH = hoogte, vorigeB = breedte;
-
 	//Welk programma moet er gebruikt worden?
 	if		(shader == "" && _shaderModules.size() == 1)			_huidigProgrammaNaam = _shaderModules.begin()->first;
 	else if	(shader != "" && _shaderModules.count(shader) > 0)		_huidigProgrammaNaam = shader;
