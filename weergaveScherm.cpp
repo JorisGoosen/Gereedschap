@@ -706,9 +706,9 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//(vraag ernaar in _vraagApparaat). De reken-layout is voor alle reken-shaders (read_write,
 	//net als voorheen), de weergave-layout is alleen-lezen. De min-grootte per binding staat op 0
 	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
-	//de vak-struct) het niet breken; alleen vakMeta (96) houdt een minimum voor de veiligheid.
+	//de vak-struct) het niet breken; alleen vakMeta (112) houdt een minimum voor de veiligheid.
 	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 0, 0, 96, 80 };
+	const uint64_t minGroottes[4] = { 0, 0, 112, 80 };
 
 	for(int i = 0; i < 4; i++)
 	{

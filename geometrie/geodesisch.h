@@ -11,6 +11,7 @@ public:
 protected:
 	void verdeelEnHeers();
 	void ordenPunten();
+	void relaxePunten();
 
 	float						_poolA				, 
 								_poolB				;

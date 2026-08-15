@@ -72,11 +72,52 @@ void geodesisch::verdeelEnHeers()
 		}
 	}
 
-	
+	//De simpele middelpunt-subdivisie (normalize(A+B)) geeft systematisch
+	//ongelijke randafstanden: cellen langs de oorspronkelijke icosahedron-randen
+	//hebben andere tussenafstanden dan cellen in de vlakinterieurs. Dat imprimeert
+	//het icosahedron-patroon in elke grid-afgeleide grootheid (gradient, wind,
+	//temperatuur). Lloyd-relaxatie schuift iedere vertex naar het gemiddelde van
+	//zijn buren en projecteert terug op de bol, zodat de afstanden gelijktrekken.
+	relaxePunten();
 
 	_punten->spoel();
 
 	std::cout << "Na het verdelen en heersen blijken er #" << _punten->grootte() << " punten te zijn!" << std::endl;
+}
+
+void geodesisch::relaxePunten()
+{
+	using namespace glm;
+
+	//Buurlijst uit de driehoekslijst opbouwen (elke rand telt uiteindelijk één keer
+	//per eindpunt; we willen unieke buren).
+	std::vector<std::set<glm::uint32>> buren(_punten->grootte());
+	for(size_t i = 0; i < _drieHk.size(); i += 3)
+	{
+		glm::uint32 v0 = _drieHk[i], v1 = _drieHk[i+1], v2 = _drieHk[i+2];
+		buren[v0].insert(v1); buren[v0].insert(v2);
+		buren[v1].insert(v0); buren[v1].insert(v2);
+		buren[v2].insert(v0); buren[v2].insert(v1);
+	}
+
+	const int iteraties = 5;
+	for(int it = 0; it < iteraties; it++)
+	{
+		std::vector<vec3> vers(_punten->grootte());
+		for(size_t i = 0; i < _punten->grootte(); i++)
+		{
+			vec3 som(0.0f);
+			for(const glm::uint32 buur : buren[i])
+				som += _punten->ggvPunt3(buur);
+			//Een beetje eigen positie meenemen dempt de beweging en voorkomt
+			//dat de 12 vijf-buur-punten instabiel gaan zwabberen.
+			som += 0.5f * _punten->ggvPunt3(i);
+			som /= float(buren[i].size()) + 0.5f;
+			vers[i] = normalize(som);
+		}
+		for(size_t i = 0; i < _punten->grootte(); i++)
+			_punten->ggvPuntZetten(i, vers[i]);
+	}
 }
 
 void geodesisch::ordenPunten()
