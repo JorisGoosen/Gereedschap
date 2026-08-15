@@ -541,7 +541,9 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 
 void weergaveScherm::_bereidWeergevenVoor(const std::string & shader, bool wisScherm, int breedte, int hoogte)
 {
-	_schermVerhouding = breedte / (float) hoogte;
+	//De vierkante schaduwkaart mag de beeldverhouding van de camera niet kapotmaken
+	if(!_diepteDoel)
+		_schermVerhouding = breedte / (float) hoogte;
 
 	//Welk programma moet er gebruikt worden?
 	if		(shader == "" && _shaderModules.size() == 1)			_huidigProgrammaNaam = _shaderModules.begin()->first;
@@ -1439,7 +1441,7 @@ WGPUTexture weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t 
 
 	WGPUTextureDescriptor beschrijving = WGPU_TEXTURE_DESCRIPTOR_INIT;
 	beschrijving.label 		= { textuurNaam.c_str(), textuurNaam.size() };
-	beschrijving.usage 		= WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst | WGPUTextureUsage_RenderAttachment;
+	beschrijving.usage 		= WGPUTextureUsage_TextureBinding | WGPUTextureUsage_CopyDst | WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_CopySrc;
 	beschrijving.dimension 	= WGPUTextureDimension_2D;
 	beschrijving.format 	= formaat;
 	beschrijving.size 		= omvang;

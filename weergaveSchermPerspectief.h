@@ -30,6 +30,6 @@ private:
 				_transInvMV 		= glm::mat4(1.0f);
 
 	glm::vec3	_verplaatsing		= glm::vec3(0.0f, 0.0f, -2.0f);
-	glm::vec2	_verdraaiing		= glm::vec2(0.0f, 0.6f);
+	glm::vec2	_verdraaiing		= glm::vec2(-1.2f, -0.2f); //kijk richting Valles Marineris op de MOLA-kaart
 
 };
