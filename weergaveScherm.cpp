@@ -99,6 +99,10 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 			throw std::runtime_error("Failed to create window!");
 		}
 
+		//Bij het starten direct gemaximaliseerd (bijna fullscreen, maar zonder de
+		//invazieve monitor-omschakeling van glfwSetWindowMonitor).
+		glfwMaximizeWindow(_glfwScherm);
+
 		//De metalen laag waar wgpu zijn tekenoppervlak aan kan hangen (macOS)
 		_metaalLaag = maakMetaalLaag(_glfwScherm);
 	}
