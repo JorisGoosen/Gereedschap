@@ -16,24 +16,26 @@ void weergaveSchermPerspectief::toetsVerwerker(int key, int scancode, int action
 	weergaveScherm::toetsVerwerker(key, scancode, action, mods); //We hoeven niks te controleren want als die iets opvangt sluit het programma
 
 	const float stap = 0.1, tol = 0.2;
+	bool cameraAangeraakt = false;
 
 	if(action == GLFW_PRESS || action == GLFW_REPEAT)
 		switch(key)
 		{
-		case GLFW_KEY_W:		_verplaatsing.z += stap;	break;
-		case GLFW_KEY_S:		_verplaatsing.z -= stap;	break;
-		case GLFW_KEY_A:		_verplaatsing.x -= stap;	break;
-		case GLFW_KEY_D:		_verplaatsing.x += stap;	break;
-		case GLFW_KEY_Q:		_verplaatsing.y += stap;	break;
-		case GLFW_KEY_E:		_verplaatsing.y -= stap;	break;
+		case GLFW_KEY_W:		_verplaatsing.z += stap;	cameraAangeraakt = true;	break;
+		case GLFW_KEY_S:		_verplaatsing.z -= stap;	cameraAangeraakt = true;	break;
+		case GLFW_KEY_A:		_verplaatsing.x -= stap;	cameraAangeraakt = true;	break;
+		case GLFW_KEY_D:		_verplaatsing.x += stap;	cameraAangeraakt = true;	break;
+		case GLFW_KEY_Q:		_verplaatsing.y += stap;	cameraAangeraakt = true;	break;
+		case GLFW_KEY_E:		_verplaatsing.y -= stap;	cameraAangeraakt = true;	break;
 
-		case GLFW_KEY_UP:		_verdraaiing.y	-= tol;		break;
-		case GLFW_KEY_DOWN:		_verdraaiing.y	+= tol;		break;
-		case GLFW_KEY_LEFT:		_verdraaiing.x	-= tol;		break;
-		case GLFW_KEY_RIGHT:	_verdraaiing.x	+= tol;		break;
+		case GLFW_KEY_UP:		_verdraaiing.y	-= tol;		cameraAangeraakt = true;	break;
+		case GLFW_KEY_DOWN:		_verdraaiing.y	+= tol;		cameraAangeraakt = true;	break;
+		case GLFW_KEY_LEFT:		_verdraaiing.x	-= tol;		cameraAangeraakt = true;	break;
+		case GLFW_KEY_RIGHT:	_verdraaiing.x	+= tol;		cameraAangeraakt = true;	break;
 		}
 
-	herberekenModelZicht();
+	if(cameraAangeraakt)
+		herberekenModelZicht();
 }
 
 void weergaveSchermPerspectief::herberekenModelZicht()

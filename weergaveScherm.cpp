@@ -6,6 +6,7 @@
 using namespace glm;
 
 weergaveScherm::toetsVerwerkerFunc weergaveScherm::_eigenVerwerker = nullptr;
+bool weergaveScherm::_escapeGevangen = false;
 
 std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
@@ -430,7 +431,15 @@ void weergaveScherm::toetsVerwerkerCentraal(GLFWwindow * scherm, int key, int sc
 void weergaveScherm::toetsVerwerker(int key, int , int action, int )
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	{
+		//De eigen toetsverwerker (overlay) heeft Escape al vastgepakt: niet afsluiten.
+		const bool escapeGevangen = _gafEscapeVast();
+		_legEscapeLos();
+		if(escapeGevangen)
+			return;
+
 		glfwSetWindowShouldClose(_glfwScherm, 1);
+	}
 }
 
 weergaveScherm::~weergaveScherm()

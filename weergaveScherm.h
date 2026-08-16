@@ -86,6 +86,12 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
 void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerwerker(eigenVerwerker); }
 
+	///Zet de escape-toets over (grote de eigen toetsverwerker de toets jáá ziet);
+	///de standaard afsluit-functor slaat die druk dan over.
+	static void		zetEscapeOverladen() { _escapeGevangen = true; }
+	static bool		_gafEscapeVast() { return _escapeGevangen; }
+	static void		_legEscapeLos() { _escapeGevangen = false; }
+
 	///WebGPU kent geen vlak-verdelings shaders; deze gooit dus een fout
 	[[noreturn]] void maakVlakVerdelingsShader(const std::string & /*shaderNaam*/,		const std::string & /*vertshaderbestand*/, 	const std::string & /*fragshaderbestand*/, const std::string & /*vlakEvaluatieBestand*/, const std::string & /*vlakControleBestand*/ = "");
 	///WebGPU kent geen geometry shaders; deze gooit dus een fout
@@ -275,6 +281,7 @@ private:
 	static std::map<GLFWwindow *, weergaveScherm*>							_schermen;
 
 	static toetsVerwerkerFunc _eigenVerwerker;
+	static bool _escapeGevangen;
 
 	void		_configureerOppervlak(uint32_t breedte, uint32_t hoogte);
 	void		_beeldenUniformen(int breedte, int hoogte);
