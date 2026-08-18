@@ -20,7 +20,11 @@ static EM_BOOL _canvasResizeCallback(int eventType, const EmscriptenUiEvent* ev,
 {
 	(void)eventType; (void)userData;
 	if(_s_scherm)
-		_s_scherm->zetCanvasGrootte((uint32_t)ev->windowInnerWidth, (uint32_t)ev->windowInnerHeight);
+	{
+		int w = (int)ev->windowInnerWidth;
+		int h = (int)ev->windowInnerHeight;
+		_s_scherm->zetCanvasGrootte((uint32_t)w, (uint32_t)h);
+	}
 	return EM_TRUE;
 }
 

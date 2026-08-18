@@ -679,9 +679,20 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 
  		werkMetaalLaagBij(_metaalLaag, breedte, hoogte);
 #else
- 		//Web-build: gebruik opslag-grootte van canvas-resize callback
- 		breedte = _oppervlakBreedte;
- 		hoogte  = _oppervlakHoogte;
+  		//Web-build: gebruik canvas-grootte uit resize callback (met fallback)
+  		breedte = _oppervlakBreedte;
+  		hoogte  = _oppervlakHoogte;
+  		
+  		//Fallback als resize-callback nog niet gefireerd heeft
+  		if(breedte == 0 || hoogte == 0)
+  		{
+  			breedte = 1280;
+  			hoogte  = 720;
+  		}
+  		
+  		//Configureer oppervlak met de juiste grootte
+  		if(breedte > 0 && hoogte > 0)
+  			_configureerOppervlak(breedte, hoogte);
 #endif
  	}
 
@@ -1583,15 +1594,19 @@ WGPURenderPipeline weergaveScherm::geefEnigeProgrammaHandvat() const
  }
 
  //Web-build: stel canvas-grootte in via resize callback
- void weergaveScherm::zetCanvasGrootte(uint32_t breedte, uint32_t hoogte)
- {
+void weergaveScherm::zetCanvasGrootte(uint32_t breedte, uint32_t hoogte)
+{
 #ifndef __EMSCRIPTEN__
- 	(void)breedte; (void)hoogte; //Alleen gebruikt op web
+	(void)breedte; (void)hoogte; //Alleen gebruikt op web
 #else
- 	_oppervlakBreedte = breedte;
- 	_oppervlakHoogte  = hoogte;
+	_oppervlakBreedte = breedte;
+	_oppervlakHoogte  = hoogte;
+	
+	//Configureer oppervlak met de nieuwe grootte
+	if(breedte > 0 && hoogte > 0)
+		_configureerOppervlak(breedte, hoogte);
 #endif
- }
+}
 
  glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
 {
