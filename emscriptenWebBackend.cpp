@@ -112,14 +112,16 @@ static int glfwModsFromEmscripten(const EmscriptenKeyboardEvent* ev)
 
 // ── Externe functie uit mars.cpp/Simulatie ─────────────────────────────────
 
-extern void _schermStap(); //Frame-functie (wordt gedefinieerd in mars.cpp)
+extern "C" {
+	void _schermStap(); //Frame-functie (wordt gedefinieerd in mars.cpp)
+}
 
 // ── Main-loop wrapper (geen params voor emscripten_set_main_loop) ──────────
 
 static void emscriptenMainLoopWrapper()
 {
-	if(_s_scherm && !_s_scherm->stopGewenst())
-		_schermStap();
+	//_schermStap() heeft eigen null-check; _s_scherm is optioneel
+	_schermStap();
 }
 
 // ── Init web-platform (aanroep vanuit JS) ──────────────────────────────────
