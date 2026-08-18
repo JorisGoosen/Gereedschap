@@ -1,7 +1,13 @@
 #include "weergaveScherm.h"
 #include "metaalLaag.h"
+#ifndef __EMSCRIPTEN__
 #include <wgpu.h>
+#endif
 #include <iostream>
+
+#ifdef _WIN32
+#	include <windows.h>
+#endif
 
 using namespace glm;
 
@@ -79,6 +85,13 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 {
 	std::cout << "weergaveScherm " << _naam << (hoofdloos ? " (hoofdloos)" : "") << " created!" << std::endl;
 
+#ifdef __EMSCRIPTEN__
+	//Web-build: geen GLFW, gebruik browser-native WebGPU
+	if(_schermen.size() == 0)
+	{
+		_glfwScherm = nullptr; //Niet gebruikt op web
+	}
+#else
 	//Hoofdloze modus: geen GLFW-venster, geen Metal-laag, geen tekenoppervlak.
 	//Alleen device/rij/bind-groepen/sampler en (reken-)pipelines worden gemaakt,
 	//zodat compute-verificatie zonder display/aqua kan draaien.
@@ -88,7 +101,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 			throw std::runtime_error("Failed to intialize glfw");
 
 		//We maken geen OpenGL context meer maar een venster puur voor wgpu
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 
 		_glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
@@ -106,8 +119,10 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 		//De metalen laag waar wgpu zijn tekenoppervlak aan kan hangen (macOS)
 		_metaalLaag = maakMetaalLaag(_glfwScherm);
 	}
+#endif
 
 	int breedte, hoogte;
+#ifndef __EMSCRIPTEN__
 	if(!_hoofdloos)
 	{
 		glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
@@ -117,8 +132,35 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 		breedte = (int)W;
 		hoogte  = (int)H;
 	}
+#else
+	//Web: haal grootte uit canvas
+	breedte = (int)W;
+	hoogte  = (int)H;
+#endif
 
 	//------------ wgpu basis ------------
+#ifdef __EMSCRIPTEN__
+	//Web-build: browser-native WebGPU via library_webgpu.js
+	//Device/rij worden opgehaald door de JS-side WebGPU bindings
+	_wgpInstantie = nullptr; //Niet gebruikt op web
+	_wgpAdapter  	= nullptr;
+	_wgpApparaat 	= nullptr;
+	_wgpRij 		= nullptr;
+	
+	//Probeer standaard webgpu.h API (wordt gedefinieerd door library_webgpu.js)
+	//Voor web: gebruik wgpuCreateInstance + wgpuRequestAdapter zoals normaal,
+	//maar de implementatie wordt vervangen door de JS-backend
+	_wgpInstantie = wgpuCreateInstance(nullptr);
+	if(!_wgpInstantie)
+		throw std::runtime_error("Kon geen WebGPU-instantie krijgen van browser!");
+	
+	_vraagAdapter();
+	_vraagApparaat();
+	_wgpRij = wgpuDeviceGetQueue(_wgpApparaat);
+	
+	s_gedeeldApparaat = _wgpApparaat;
+	s_gedeeldeRij	  = _wgpRij;
+#else
 	_wgpInstantie = wgpuCreateInstance(nullptr);
 
 	if(!_wgpInstantie)
@@ -131,16 +173,90 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	//Zodat de rest van de bibliotheek dit apparaat ook kan gebruiken
 	s_gedeeldApparaat = _wgpApparaat;
 	s_gedeeldeRij	  = _wgpRij;
+#endif
 
 	//------------ tekenoppervlak (surface) ------------
+#ifdef __EMSCRIPTEN__
+	//Web-build: canvas-surface via HTML-selector chained struct
 	if(!_hoofdloos)
 	{
-		WGPUSurfaceSourceMetalLayer metaalBron = WGPU_SURFACE_SOURCE_METAL_LAYER_INIT;
-		metaalBron.layer = _metaalLaag;
-
+		WGPUSurfaceDescriptor oppDesc = WGPU_SURFACE_DESCRIPTOR_INIT;
+		oppDesc.label = { _naam.c_str(), _naam.size() };
+		
+		static WGPUEmscriptenSurfaceSourceCanvasHTMLSelector canvasSel;
+		memset(&canvasSel, 0, sizeof(canvasSel));
+		canvasSel.chain.sType = WGPUSType_EmscriptenSurfaceSourceCanvasHTMLSelector;
+		canvasSel.selector.data = "#mars-canvas"; //id van het canvas in index.html
+		canvasSel.selector.length = 12;
+		oppDesc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&canvasSel);
+		
+		_wgpOppervlak = wgpuInstanceCreateSurface(_wgpInstantie, &oppDesc);
+		if(!_wgpOppervlak)
+			throw std::runtime_error("Het aanmaken van het wgpu-oppervlak is mislukt...");
+		
+		WGPUSurfaceCapabilities mogelijkheden = WGPU_SURFACE_CAPABILITIES_INIT;
+		wgpuSurfaceGetCapabilities(_wgpOppervlak, _wgpAdapter, &mogelijkheden);
+		if(mogelijkheden.formatCount > 0)
+			_oppervlakFormaat = mogelijkheden.formats[0];
+		else
+			throw std::runtime_error("Het oppervlak ondersteunt geen enkel tekenformaat...");
+		wgpuSurfaceCapabilitiesFreeMembers(mogelijkheden);
+	}
+#else
+	if(!_hoofdloos)
+	{
 		WGPUSurfaceDescriptor oppervlakBeschrijving = WGPU_SURFACE_DESCRIPTOR_INIT;
 		oppervlakBeschrijving.label 		= { _naam.c_str(), _naam.size() };
-		oppervlakBeschrijving.nextInChain 	= &metaalBron.chain;
+		oppervlakBeschrijving.nextInChain 	= nullptr;
+
+#if defined(__APPLE__)
+		//macOS: Metal layer via CAMetalLayer
+		if(!_metaalLaag)
+			throw std::runtime_error("Kon geen Metal-laag maken!");
+		static WGPUSurfaceSourceMetalLayer metaalBron;
+		memset(&metaalBron, 0, sizeof(metaalBron));
+		metaalBron.chain.sType = WGPUSType_SurfaceSourceMetalLayer;
+		metaalBron.layer = _metaalLaag;
+		oppervlakBeschrijving.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&metaalBron);
+#elif defined(_WIN32)
+		//Windows: HWND via glfwGetWin32Window
+		HWND hwnd = (HWND)glfwGetWin32Window(_glfwScherm);
+		if(!hwnd)
+			throw std::runtime_error("Kon Windows-hendel niet vinden!");
+		static WGPUSurfaceSourceWindowsHWND winBron;
+		memset(&winBron, 0, sizeof(winBron));
+		winBron.chain.sType = WGPUSType_SurfaceSourceWindowsHWND;
+		winBron.hwnd = hwnd;
+		winBron.hinstance = GetModuleHandle(nullptr);
+		oppervlakBeschrijving.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&winBron);
+#elif defined(__linux__)
+		//Linux: X11 of Wayland (probeer X11 eerst)
+		void *x11Display = glfwGetX11Display();
+		Window x11Window = glfwGetX11Window(_glfwScherm);
+		if(x11Display && x11Window)
+		{
+			static WGPUSurfaceSourceXlibWindow x11Bron;
+			memset(&x11Bron, 0, sizeof(x11Bron));
+			x11Bron.chain.sType = WGPUSType_SurfaceSourceXlibWindow;
+			x11Bron.display = (Display *)x11Display;
+			x11Bron.window = x11Window;
+			oppervlakBeschrijving.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&x11Bron);
+		}
+		else
+		{
+			//Wayland fallback
+			void *wlSurface = glfwGetWaylandWindow(_glfwScherm);
+			if(!wlSurface)
+				throw std::runtime_error("Geen X11- of Wayland-venster gevonden!");
+			static WGPUSurfaceSourceWaylandSurface wlBron;
+			memset(&wlBron, 0, sizeof(wlBron));
+			wlBron.chain.sType = WGPUSType_SurfaceSourceWaylandSurface;
+			wlBron.surface = wlSurface;
+			oppervlakBeschrijving.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&wlBron);
+		}
+#else
+#	error "Niet-ondersteund platform"
+#endif
 
 		_wgpOppervlak = wgpuInstanceCreateSurface(_wgpInstantie, &oppervlakBeschrijving);
 
@@ -158,6 +274,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
 		wgpuSurfaceCapabilitiesFreeMembers(mogelijkheden);
 	}
+#endif
 
 	//------------ uniform-buffers en de basis-bind-groep ------------
 	//bind-groep 0: binding 0 = beeld, binding 1 = matrices, binding 2 = extra
@@ -326,12 +443,14 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 
 	wgpuTextureViewRelease(witteSchaduwZicht);
 
-	if(!_hoofdloos)
-	{
-		_configureerOppervlak(breedte, hoogte);
-		_schermen[_glfwScherm] = this;
-		glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
-	}
+ 	if(!_hoofdloos)
+ 	{
+ 		_configureerOppervlak(breedte, hoogte);
+#ifndef __EMSCRIPTEN__
+ 		_schermen[_glfwScherm] = this;
+ 		glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
+#endif
+ 	}
 
 	(void)samples; // multi-sampling is (nog) niet volledig overgezet naar WebGPU
 }
@@ -367,6 +486,7 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 	beschrijving.uncapturedErrorCallbackInfo.callback 	= wgpFoutMelder;
 	beschrijving.uncapturedErrorCallbackInfo.userdata1 	= this;
 
+#ifndef __EMSCRIPTEN__
 	//wgpu-native: opslag-buffers die (ook) zichtbaar zijn voor de vertex-shader zijn een native
 	//feature (anders mag er geen storage-binding aan de vertex-stage hangen). De bibliotheek biedt
 	//dat nu altijd aan, dus vraagt de feature aan zodra het apparaat hem ondersteunt.
@@ -378,6 +498,10 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 
 	beschrijving.requiredFeatureCount = verplichteFeaturesAantal;
 	beschrijving.requiredFeatures 	  = verplichteFeaturesAantal > 0 ? verplichteFeatures : nullptr;
+#else
+	beschrijving.requiredFeatureCount = 0;
+	beschrijving.requiredFeatures 	  = nullptr;
+#endif
 
 	//grote textuurbronnen (zoals de 8416x4208 Mars-hoogtekaart) vragen om ruimere limieten
 	WGPULimits limieten = WGPU_LIMITS_INIT;
@@ -435,21 +559,25 @@ void weergaveScherm::toetsVerwerkerCentraal(GLFWwindow * scherm, int key, int sc
 void weergaveScherm::toetsVerwerker(int key, int , int action, int )
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-	{
-		//De eigen toetsverwerker (overlay) heeft Escape al vastgepakt: niet afsluiten.
-		const bool escapeGevangen = _gafEscapeVast();
-		_legEscapeLos();
-		if(escapeGevangen)
-			return;
+ 	{
+ 		//De eigen toetsverwerker (overlay) heeft Escape al vastgepakt: niet afsluiten.
+ 		const bool escapeGevangen = _gafEscapeVast();
+ 		_legEscapeLos();
+ 		if(escapeGevangen)
+ 			return;
 
-		glfwSetWindowShouldClose(_glfwScherm, 1);
-	}
-}
+#ifndef __EMSCRIPTEN__
+ 		glfwSetWindowShouldClose(_glfwScherm, 1);
+#endif
+ 	}
+ }
 
-weergaveScherm::~weergaveScherm()
-{
-	if(!_hoofdloos)
-		_schermen.erase(_glfwScherm);
+ weergaveScherm::~weergaveScherm()
+ {
+#ifndef __EMSCRIPTEN__
+ 	if(!_hoofdloos)
+ 		_schermen.erase(_glfwScherm);
+#endif
 
 	for(WGPUBindGroup bindGroep : _gevormdeBindGroepen)
 		wgpuBindGroupRelease(bindGroep);
@@ -503,13 +631,15 @@ weergaveScherm::~weergaveScherm()
 	if(_wgpApparaat) 	wgpuDeviceRelease(_wgpApparaat);
 	if(_wgpInstantie) 	wgpuInstanceRelease(_wgpInstantie);
 
-	if(!_hoofdloos)
-	{
-		glfwDestroyWindow(_glfwScherm);
-		if(_schermen.size() == 0)
-			glfwTerminate();
-	}
-}
+ 	if(!_hoofdloos)
+ 	{
+#ifndef __EMSCRIPTEN__
+ 		glfwDestroyWindow(_glfwScherm);
+ 		if(_schermen.size() == 0)
+ 			glfwTerminate();
+#endif
+ 	}
+ }
 
 void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisScherm)
 {
@@ -538,16 +668,22 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
 		breedte = _oppervlakBreedte;
 		hoogte  = _oppervlakHoogte;
 	}
-	else
-	{
-		glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
+ 	else
+ 	{
+#ifndef __EMSCRIPTEN__
+ 		glfwGetFramebufferSize(_glfwScherm, &breedte, &hoogte);
 
-		//Als het venstergrootte veranderd is moet het tekenoppervlak opnieuw geconfigureerd worden
-		if((uint32_t)breedte != _oppervlakBreedte || (uint32_t)hoogte != _oppervlakHoogte)
-			_configureerOppervlak(breedte, hoogte);
+ 		//Als het venstergrootte veranderd is moet het tekenoppervlak opnieuw geconfigureerd worden
+ 		if((uint32_t)breedte != _oppervlakBreedte || (uint32_t)hoogte != _oppervlakHoogte)
+ 			_configureerOppervlak(breedte, hoogte);
 
-		werkMetaalLaagBij(_metaalLaag, breedte, hoogte);
-	}
+ 		werkMetaalLaagBij(_metaalLaag, breedte, hoogte);
+#else
+ 		//Web-build: gebruik opslag-grootte van canvas-resize callback
+ 		breedte = _oppervlakBreedte;
+ 		hoogte  = _oppervlakHoogte;
+#endif
+ 	}
 
 	_bereidWeergevenVoor(shader, wisScherm, breedte, hoogte);
 }
@@ -588,7 +724,8 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 			WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
 			wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
 
-			if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_Occluded || !oppervlakTextuur.texture)
+			if(!oppervlakTextuur.texture || oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+			   oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
 			{
 				//extensie "Occluded": het venster is (even) niet zichtbaar en levert geen tekstuur,
 				//dus wordt deze frame overgeslagen (rondWeergevenAf doet dan niets)
@@ -1163,10 +1300,12 @@ void weergaveScherm::_zorgDiepteTextuur(uint32_t breedte, uint32_t hoogte)
 	_diepteZicht   = wgpuTextureCreateView(_diepteTextuur, nullptr);
 }
 
-void weergaveScherm::laadOmgeving()
-{
-	glfwMakeContextCurrent(_glfwScherm);
-}
+ void weergaveScherm::laadOmgeving()
+ {
+#ifndef __EMSCRIPTEN__
+ 	glfwMakeContextCurrent(_glfwScherm);
+#endif
+ }
 
 void wrgvOpslag::tekenGeïndexeerd()
 {
@@ -1229,86 +1368,99 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
 	wgpFoutControle("doeRekenVerwerker('" + verwerker + "'): ");
 }
 
-void weergaveScherm::wachtOpGebeurtenissen()
-{
-	//Blokkeert tot het wgpu-oppervlak weer een tekstuur levert (het venster is dan
-	//weer zichtbaar). Een venster-event (bijv. weer in beeld) wekt de wachter direct,
-	//anders wekt de timeout hem periodiek; beide keren peilen we opnieuw of het
-	//oppervlak bruikbaar is. Zo draait de hoofdloop niet ongeremd door, maar loopt
-	//hij ook niet meer stuk als het venster weer opduikt.
-	while(!_oppervlakZichtbaar)
-	{
-		glfwWaitEventsTimeout(0.05);
+ void weergaveScherm::wachtOpGebeurtenissen()
+ {
+#ifndef __EMSCRIPTEN__
+ 	//Blokkeert tot het wgpu-oppervlak weer een tekstuur levert (het venster is dan
+ 	//weer zichtbaar). Een venster-event (bijv. weer in beeld) wekt de wachter direct,
+ 	//anders wekt de timeout hem periodiek; beide keren peilen we opnieuw of het
+ 	//oppervlak bruikbaar is. Zo draait de hoofdloop niet ongeremd door, maar loopt
+ 	//hij ook niet meer stuk als het venster weer opduikt.
+ 	while(!_oppervlakZichtbaar)
+ 	{
+ 		glfwWaitEventsTimeout(0.05);
 
-		WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
-		wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
+ 		WGPUSurfaceTexture oppervlakTextuur = WGPU_SURFACE_TEXTURE_INIT;
+ 		wgpuSurfaceGetCurrentTexture(_wgpOppervlak, &oppervlakTextuur);
 
-		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_Occluded || !oppervlakTextuur.texture)
-			continue;
+			if(!oppervlakTextuur.texture || oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
+			   oppervlakTextuur.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+				continue;
 
-		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal ||
-		   oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
-			_oppervlakZichtbaar = true;
+ 		if(oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal ||
+ 		   oppervlakTextuur.status == WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal)
+ 			_oppervlakZichtbaar = true;
 
-		wgpuTextureRelease(oppervlakTextuur.texture);
-	}
-}
+ 		wgpuTextureRelease(oppervlakTextuur.texture);
+ 	}
+#else
+ 	(void)this; //Web-build: geen gebeurtenissen wachten nodig (RAF-loop)
+#endif
+ }
 
-void weergaveScherm::rondWeergevenAf()
-{
-	if(!_weergavePass && !_commandEncoder)
-	{
-		glfwPollEvents();
-		return;
-	}
+ void weergaveScherm::rondWeergevenAf()
+ {
+ 	if(!_weergavePass && !_commandEncoder)
+ 	{
+#ifndef __EMSCRIPTEN__
+ 		glfwPollEvents();
+#endif
+ 		return;
+ 	}
 
-	if(_weergavePass)
-		wgpuRenderPassEncoderEnd(_weergavePass);
+ 	if(_weergavePass)
+ 		wgpuRenderPassEncoderEnd(_weergavePass);
 
-	WGPUCommandBuffer commando = wgpuCommandEncoderFinish(_commandEncoder, nullptr);
+ 	WGPUCommandBuffer commando = wgpuCommandEncoderFinish(_commandEncoder, nullptr);
 
-	wgpuQueueSubmit(_wgpRij, 1, &commando);
+ 	wgpuQueueSubmit(_wgpRij, 1, &commando);
 
-	//Bij een off-screen doel (nepScherm) of een depth-only doel (schaduwkaart-pass)
-	//hoeft er niet gepresenteerd te worden
-	if(!_doelTextuur && !_diepteDoel)
-		wgpuSurfacePresent(_wgpOppervlak);
+ 	//Bij een off-screen doel (nepScherm) of een depth-only doel (schaduwkaart-pass)
+ 	//hoeft er niet gepresenteerd te worden
+#ifndef __EMSCRIPTEN__
+ 	if(!_doelTextuur && !_diepteDoel)
+ 		wgpuSurfacePresent(_wgpOppervlak);
+#endif
 
-	wgpuCommandBufferRelease(commando);
-	wgpuCommandEncoderRelease(_commandEncoder);
+ 	wgpuCommandBufferRelease(commando);
+ 	wgpuCommandEncoderRelease(_commandEncoder);
 
-	if(_oppervlakZicht)
-		wgpuTextureViewRelease(_oppervlakZicht);
-	if(!_doelTextuur && !_diepteDoel)
-		wgpuTextureRelease(_oppervlakTextuur);
+ 	if(_oppervlakZicht)
+ 		wgpuTextureViewRelease(_oppervlakZicht);
+ 	if(!_doelTextuur && !_diepteDoel)
+ 		wgpuTextureRelease(_oppervlakTextuur);
 
-	//de gebonden opslag-bind-groepen waren alleen voor deze frame nodig
-	for(WGPUBindGroup bindGroep : _rekenBindGroepen)
-		wgpuBindGroupRelease(bindGroep);
-	_rekenBindGroepen.clear();
+ 	//de gebonden opslag-bind-groepen waren alleen voor deze frame nodig
+ 	for(WGPUBindGroup bindGroep : _rekenBindGroepen)
+ 		wgpuBindGroupRelease(bindGroep);
+ 	_rekenBindGroepen.clear();
 
-	_weergavePass		= nullptr;
-	_commandEncoder 	= nullptr;
-	_oppervlakZicht 	= nullptr;
-	_oppervlakTextuur 	= nullptr;
-	//NB: _doelTextuur blijft staan (off-screen doel), zodat meerdere passes
-	//achter elkaar naar dezelfde framebuffer kunnen tekenen (--schermafbeelding).
-	//nepScherm zet het doel vóór elke render zelf opnieuw.
+ 	_weergavePass		= nullptr;
+ 	_commandEncoder 	= nullptr;
+ 	_oppervlakZicht 	= nullptr;
+ 	_oppervlakTextuur 	= nullptr;
+ 	//NB: _doelTextuur blijft staan (off-screen doel), zodat meerdere passes
+ 	//achter elkaar naar dezelfde framebuffer kunnen tekenen (--schermafbeelding).
+ 	//nepScherm zet het doel vóór elke render zelf opnieuw.
 
-	if(_diepteZicht) 	{ wgpuTextureViewRelease(_diepteZicht); 	_diepteZicht = nullptr; }
-	if(_diepteTextuur) 	{ wgpuTextureRelease(_diepteTextuur);	_diepteTextuur = nullptr; }
+ 	if(_diepteZicht) 	{ wgpuTextureViewRelease(_diepteZicht); 	_diepteZicht = nullptr; }
+ 	if(_diepteTextuur) 	{ wgpuTextureRelease(_diepteTextuur);	_diepteTextuur = nullptr; }
 
-	glfwPollEvents();
-	wgpFoutControle("weergaveScherm::rondWeergevenAf(): ");
-}
+#ifndef __EMSCRIPTEN__
+ 	glfwPollEvents();
+#endif
+ 	wgpFoutControle("weergaveScherm::rondWeergevenAf(): ");
+ }
 
-void weergaveScherm::pasRondWeergevenAf()
-{
-	if(!_weergavePass)
-	{
-		glfwPollEvents();
-		return;
-	}
+ void weergaveScherm::pasRondWeergevenAf()
+ {
+ 	if(!_weergavePass)
+ 	{
+#ifndef __EMSCRIPTEN__
+ 		glfwPollEvents();
+#endif
+ 		return;
+ 	}
 
 	wgpuRenderPassEncoderEnd(_weergavePass);
 	_weergavePass = nullptr;
@@ -1427,10 +1579,21 @@ WGPURenderPipeline weergaveScherm::geefEnigeProgrammaHandvat() const
 	if(_shaderModules.size() == 1)
 		return nullptr;
 
-	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
-}
+ 	throw std::runtime_error("Er wordt gepoogd het enige maar er zijn er '"+ std::to_string(_shaderProgrammas.size())+"'...");
+ }
 
-glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
+ //Web-build: stel canvas-grootte in via resize callback
+ void weergaveScherm::zetCanvasGrootte(uint32_t breedte, uint32_t hoogte)
+ {
+#ifndef __EMSCRIPTEN__
+ 	(void)breedte; (void)hoogte; //Alleen gebruikt op web
+#else
+ 	_oppervlakBreedte = breedte;
+ 	_oppervlakHoogte  = hoogte;
+#endif
+ }
+
+ glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
 {
 	size_t breedte, hoogte, kanalen;
 	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);

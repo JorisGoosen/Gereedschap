@@ -1,0 +1,138 @@
+// web/emscriptenWebBackend.cpp — Platform-laag voor Emscripten/WebGPU
+// Dit bestand vervangt GLFW+surface-creatie door browser-native WebGPU.
+// Op Emscripten wordt WebGPU bediend via library_webgpu.js (JS-binding).
+
+#ifdef __EMSCRIPTEN__
+
+#include "weergaveScherm.h"
+#include <emscripten/html5.h>
+#include <emscripten.h>
+#include <string.h>
+#include <iostream>
+
+// ── Globale pointers voor callbacks ────────────────────────────────────────
+
+static weergaveScherm* _s_scherm = nullptr;
+
+// ── Canvas resize callback ─────────────────────────────────────────────────
+
+static EM_BOOL _canvasResizeCallback(int eventType, const EmscriptenUiEvent* ev, void* userData)
+{
+	(void)eventType; (void)userData;
+	if(_s_scherm)
+		_s_scherm->zetCanvasGrootte((uint32_t)ev->windowInnerWidth, (uint32_t)ev->windowInnerHeight);
+	return EM_TRUE;
+}
+
+// ── Keyboard: DOM key → GLFW key mapping ───────────────────────────────────
+
+static int glfwKeyFromDOMKey(const char* domKey)
+{
+	if(!domKey || !domKey[0]) return GLFW_KEY_UNKNOWN;
+	
+	if(strcmp(domKey, " ") == 0) return GLFW_KEY_SPACE;
+	if(strcmp(domKey, "a") == 0 || strcmp(domKey, "A") == 0) return GLFW_KEY_A;
+	if(strcmp(domKey, "b") == 0 || strcmp(domKey, "B") == 0) return GLFW_KEY_B;
+	if(strcmp(domKey, "c") == 0 || strcmp(domKey, "C") == 0) return GLFW_KEY_C;
+	if(strcmp(domKey, "d") == 0 || strcmp(domKey, "D") == 0) return GLFW_KEY_D;
+	if(strcmp(domKey, "e") == 0 || strcmp(domKey, "E") == 0) return GLFW_KEY_E;
+	if(strcmp(domKey, "f") == 0 || strcmp(domKey, "F") == 0) return GLFW_KEY_F;
+	if(strcmp(domKey, "g") == 0 || strcmp(domKey, "G") == 0) return GLFW_KEY_G;
+	if(strcmp(domKey, "h") == 0 || strcmp(domKey, "H") == 0) return GLFW_KEY_H;
+	if(strcmp(domKey, "i") == 0 || strcmp(domKey, "I") == 0) return GLFW_KEY_I;
+	if(strcmp(domKey, "j") == 0 || strcmp(domKey, "J") == 0) return GLFW_KEY_J;
+	if(strcmp(domKey, "k") == 0 || strcmp(domKey, "K") == 0) return GLFW_KEY_K;
+	if(strcmp(domKey, "l") == 0 || strcmp(domKey, "L") == 0) return GLFW_KEY_L;
+	if(strcmp(domKey, "m") == 0 || strcmp(domKey, "M") == 0) return GLFW_KEY_M;
+	if(strcmp(domKey, "n") == 0 || strcmp(domKey, "N") == 0) return GLFW_KEY_N;
+	if(strcmp(domKey, "o") == 0 || strcmp(domKey, "O") == 0) return GLFW_KEY_O;
+	if(strcmp(domKey, "p") == 0 || strcmp(domKey, "P") == 0) return GLFW_KEY_P;
+	if(strcmp(domKey, "q") == 0 || strcmp(domKey, "Q") == 0) return GLFW_KEY_Q;
+	if(strcmp(domKey, "r") == 0 || strcmp(domKey, "R") == 0) return GLFW_KEY_R;
+	if(strcmp(domKey, "s") == 0 || strcmp(domKey, "S") == 0) return GLFW_KEY_S;
+	if(strcmp(domKey, "t") == 0 || strcmp(domKey, "T") == 0) return GLFW_KEY_T;
+	if(strcmp(domKey, "u") == 0 || strcmp(domKey, "U") == 0) return GLFW_KEY_U;
+	if(strcmp(domKey, "v") == 0 || strcmp(domKey, "V") == 0) return GLFW_KEY_V;
+	if(strcmp(domKey, "w") == 0 || strcmp(domKey, "W") == 0) return GLFW_KEY_W;
+	if(strcmp(domKey, "x") == 0 || strcmp(domKey, "X") == 0) return GLFW_KEY_X;
+	if(strcmp(domKey, "y") == 0 || strcmp(domKey, "Y") == 0) return GLFW_KEY_Y;
+	if(strcmp(domKey, "z") == 0 || strcmp(domKey, "Z") == 0) return GLFW_KEY_Z;
+	if(strcmp(domKey, "0") == 0) return GLFW_KEY_0;
+	if(strcmp(domKey, "1") == 0) return GLFW_KEY_1;
+	if(strcmp(domKey, "2") == 0) return GLFW_KEY_2;
+	if(strcmp(domKey, "3") == 0) return GLFW_KEY_3;
+	if(strcmp(domKey, "4") == 0) return GLFW_KEY_4;
+	if(strcmp(domKey, "5") == 0) return GLFW_KEY_5;
+	if(strcmp(domKey, "6") == 0) return GLFW_KEY_6;
+	if(strcmp(domKey, "7") == 0) return GLFW_KEY_7;
+	if(strcmp(domKey, "8") == 0) return GLFW_KEY_8;
+	if(strcmp(domKey, "9") == 0) return GLFW_KEY_9;
+	if(strcmp(domKey, "Enter") == 0) return GLFW_KEY_ENTER;
+	if(strcmp(domKey, "Escape") == 0) return GLFW_KEY_ESCAPE;
+	if(strcmp(domKey, "ArrowUp") == 0) return GLFW_KEY_UP;
+	if(strcmp(domKey, "ArrowDown") == 0) return GLFW_KEY_DOWN;
+	if(strcmp(domKey, "ArrowLeft") == 0) return GLFW_KEY_LEFT;
+	if(strcmp(domKey, "ArrowRight") == 0) return GLFW_KEY_RIGHT;
+	if(strcmp(domKey, ";") == 0) return GLFW_KEY_SEMICOLON;
+	if(strcmp(domKey, "'") == 0) return GLFW_KEY_APOSTROPHE;
+	if(strcmp(domKey, "[") == 0) return GLFW_KEY_LEFT_BRACKET;
+	if(strcmp(domKey, "]") == 0) return GLFW_KEY_RIGHT_BRACKET;
+	if(strcmp(domKey, ".") == 0) return GLFW_KEY_PERIOD;
+	if(strcmp(domKey, "/") == 0) return GLFW_KEY_SLASH;
+	
+	return GLFW_KEY_UNKNOWN;
+}
+
+static int glfwModsFromEmscripten(const EmscriptenKeyboardEvent* ev)
+{
+	int mods = 0;
+	if(ev->shiftKey) mods |= GLFW_MOD_SHIFT;
+	if(ev->ctrlKey) mods |= GLFW_MOD_CONTROL;
+	if(ev->altKey) mods |= GLFW_MOD_ALT;
+	if(ev->metaKey) mods |= GLFW_MOD_SUPER;
+	return mods;
+}
+
+	static EM_BOOL _keyDownCallback(int eventType, const EmscriptenKeyboardEvent* ev, void* userData)
+	{
+		(void)eventType; (void)userData;
+		
+		int key = glfwKeyFromDOMKey(ev->key);
+		int mods = glfwModsFromEmscripten(ev);
+		
+		if(_s_scherm && key != GLFW_KEY_UNKNOWN)
+			_s_scherm->toetsVerwerker(key, 0, GLFW_PRESS, mods);
+		
+		return EM_TRUE;
+	}
+
+// ── Externe functie uit mars.cpp/Simulatie ─────────────────────────────────
+
+extern void _schermStap(); //Frame-functie (wordt gedefinieerd in mars.cpp)
+
+// ── Main-loop wrapper (geen params voor emscripten_set_main_loop) ──────────
+
+static void emscriptenMainLoopWrapper()
+{
+	if(_s_scherm && !_s_scherm->stopGewenst())
+		_schermStap();
+}
+
+// ── Init web-platform (aanroep vanuit JS) ──────────────────────────────────
+
+extern "C" {
+EMSCRIPTEN_KEEPALIVE
+void initWebPlatform(weergaveScherm* scherm, const char* /*canvasId*/, int /*width*/, int /*height*/)
+{
+	_s_scherm = scherm;
+	
+	//Koppel event handlers aan body/document
+	emscripten_set_resize_callback("body", nullptr, false, _canvasResizeCallback);
+	emscripten_set_keydown_callback("#document", nullptr, true, _keyDownCallback);
+	
+	//Start de requestAnimationFrame-loop
+	emscripten_set_main_loop(emscriptenMainLoopWrapper, 0, 1);
+}
+}
+
+#endif // __EMSCRIPTEN__

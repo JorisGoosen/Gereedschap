@@ -186,6 +186,9 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	glm::uvec2	textuurGrootte(		const std::string & textuurNaam) { return _textuurGroottes.at(textuurNaam); }
 	WGPUTexture	textuurId(			const std::string & textuurNaam) { return _texturen.at(textuurNaam);		}
 
+	///Web-build: stel canvas-grootte in via resize callback
+	void		zetCanvasGrootte(uint32_t breedte, uint32_t hoogte);
+
 	void		doeRekenVerwerker(const std::string & verwerker, glm::uvec3 groepGroottes, std::function<void()> renderVoorbereiding);
 
 	///Kan gebruikt worden door subklasses om nog extra dingen voor te bereiden (uniform buffers bijvullen!)
