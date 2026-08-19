@@ -20,7 +20,7 @@ static EM_BOOL _canvasResizeCallback(int eventType, const EmscriptenUiEvent* ev,
 {
 	(void)eventType; (void)userData;
 	int w = 0, h = 0;
-	emscripten_get_canvas_element_size("mars-canvas", &w, &h);
+	emscripten_get_canvas_element_size("#mars-canvas", &w, &h);
 	if(w > 0 && h > 0 && _s_scherm)
 		_s_scherm->zetCanvasGrootte((uint32_t)w, (uint32_t)h);
 	return EM_TRUE;

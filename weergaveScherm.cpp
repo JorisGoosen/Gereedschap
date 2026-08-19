@@ -144,7 +144,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	//WebGPU-surface meteen het hele scherm vult en het canvas niet naar een
 	//kleine rechthoek in het midden wordt teruggeschaald.
 	int cvw = (int)W, cvh = (int)H;
-	if(emscripten_get_canvas_element_size("mars-canvas", &cvw, &cvh) != EMSCRIPTEN_RESULT_SUCCESS || cvw <= 0 || cvh <= 0)
+	if(emscripten_get_canvas_element_size("#mars-canvas", &cvw, &cvh) != EMSCRIPTEN_RESULT_SUCCESS || cvw <= 0 || cvh <= 0)
 	{
 		cvw = (int)W;
 		cvh = (int)H;
