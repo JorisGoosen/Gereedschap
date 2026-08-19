@@ -61,9 +61,22 @@ weergaveSchermPerspectief::~weergaveSchermPerspectief()
 }
 
 void weergaveSchermPerspectief::zetModelZicht(glm::mat4 modelView)
-{ 
+{
 	_modelZicht  = modelView;
 	_transInvMV = glm::transpose(glm::inverse(_modelZicht));
+}
+
+void weergaveSchermPerspectief::roteer(float dyaw, float dpitch)
+{
+	_verdraaiing.x += dyaw;
+	_verdraaiing.y  = clamp(_verdraaiing.y + dpitch, -1.5f, 1.5f);
+	herberekenModelZicht();
+}
+
+void weergaveSchermPerspectief::zoom(float delta)
+{
+	_verplaatsing.z = clamp(_verplaatsing.z + delta, -40.0f, -1.6f);
+	herberekenModelZicht();
 }
 
 void weergaveSchermPerspectief::extraVoorbereidingen(WGPURenderPipeline programma)

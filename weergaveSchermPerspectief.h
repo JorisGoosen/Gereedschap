@@ -18,6 +18,13 @@ public:
 void		setModelView(glm::mat4 modelView) { zetModelZicht(modelView); }
 	void 		toetsVerwerker(int key, int scancode, int action, int mods) override;
 
+	///Roteert de camera om het middelpunt (orbit): yaw om de Y-as, pitch om de
+	///X-as. De pitch wordt geklemd zodat de camera niet over de polen heen slaat.
+	void		roteer(float dyaw, float dpitch);
+	///Zoomt in (delta > 0) of uit (delta < 0) op het middelpunt: verandert de
+	///kijkafstand (vertaaling langs de kijkas), geklemd binnen redelijke grenzen.
+	void		zoom(float delta);
+
 	void 		extraVoorbereidingen(WGPURenderPipeline programma) override;
 
 private:
