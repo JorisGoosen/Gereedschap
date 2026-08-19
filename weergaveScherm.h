@@ -170,7 +170,7 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	///bindt het 1x1-witte hulpje (diepte 1.0 = alles verlicht).
 	void bindSchaduwKaart(const std::string & textuurNaam);
 
-	///Registreert een opslag-buffer voor het reken (compute) programma (binding 0..3)
+	///Registreert een opslag-buffer voor het reken (compute) programma (binding 0..4)
 	void verbindRekenBuffer(uint32_t binding, WGPUBuffer buffer);
 
 	///Maakt de geregistreerde reken-buffers weer leeg
@@ -314,7 +314,7 @@ private:
 	std::map<std::string, WGPUComputePipeline>								_rekenProgrammas;
 	std::map<std::string, WGPUTexture>										_texturen;
 	std::vector<WGPUBindGroup>												_rekenBindGroepen;	///< al gevormde reken-bind-groepen, netjes opruimen
-	std::array<WGPUBuffer, 4>												_rekenBufferBinden = { nullptr, nullptr, nullptr, nullptr };	///< geregistreerde opslag-buffers voor het reken-programma
+	std::array<WGPUBuffer, 5>												_rekenBufferBinden = { nullptr, nullptr, nullptr, nullptr, nullptr };	///< geregistreerde opslag-buffers voor het reken-programma
 	std::map<std::string, glm::uvec2>										_textuurGroottes;
 	std::map<std::string, WGPUBindGroup>									_textuurBindGroepen;///< per textuur een bind-groep voor groep 1
 	std::string																_gebondenTextuur;	///< de textuur die aan bind-groep 1 hangt

@@ -993,7 +993,7 @@ void weergaveScherm::zetDiepteDoel(WGPUTexture textuur, glm::uvec2 grootte)
 void weergaveScherm::verbindRekenBuffer(uint32_t binding, WGPUBuffer buffer)
 {
 	if(binding >= _rekenBufferBinden.size())
-		throw std::runtime_error("verbindRekenBuffer: alleen bindings 0..3 zijn ondersteund!");
+		throw std::runtime_error("verbindRekenBuffer: alleen bindings 0..4 zijn ondersteund!");
 
 	_rekenBufferBinden[binding] = buffer;
 }
@@ -1120,11 +1120,12 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//(vraag ernaar in _vraagApparaat). De reken-layout is voor alle reken-shaders (read_write,
 	//net als voorheen), de weergave-layout is alleen-lezen. De min-grootte per binding staat op 0
 	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
-	//de vak-struct) het niet breken; alleen vakMeta (144) houdt een minimum voor de veiligheid.
-	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 0, 0, 144, 192 };
+	//de vak-struct) het niet breken; alleen vakMeta (144) en rekenParameters (192) houden een
+	//minimum voor de veiligheid. Binding 4 is gereserveerd voor de penseel-buffer.
+	WGPUBindGroupLayoutEntry invoeren[5] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
+	const uint64_t minGroottes[5] = { 0, 0, 144, 192, 0 };
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		invoeren[i].binding 		= i;
 		//Reken-shaders draaien alléén in de compute-stage; lees/schrijf-opslag
@@ -1134,14 +1135,16 @@ void weergaveScherm::_zorgOpslagBindGroep()
 		invoeren[i].buffer.type 	= WGPUBufferBindingType_Storage;
 		invoeren[i].buffer.minBindingSize = minGroottes[i];
 	}
+	//Binding 4 (penseel-buffer) wordt door de reken-shaders alleen gelezen.
+	invoeren[4].buffer.type = WGPUBufferBindingType_ReadOnlyStorage;
 
 	WGPUBindGroupLayoutDescriptor layoutBeschrijving = WGPU_BIND_GROUP_LAYOUT_DESCRIPTOR_INIT;
-	layoutBeschrijving.entryCount = 4;
+	layoutBeschrijving.entryCount = 5;
 	layoutBeschrijving.entries 	  = invoeren;
 	_rekenBindGroepLayout = wgpuDeviceCreateBindGroupLayout(_wgpApparaat, &layoutBeschrijving);
 
 	//voor de weergave-shaders zijn alle opslag-buffers alleen-lezen
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		invoeren[i].binding 		= i;
 		invoeren[i].visibility 		= WGPUShaderStage_Vertex | WGPUShaderStage_Fragment;
@@ -1165,9 +1168,9 @@ WGPUBindGroup weergaveScherm::_maakOpslagBindGroep(WGPUBindGroupLayout layout)
 	if(!layout)
 		return nullptr;
 
-	WGPUBindGroupEntry invoeren[4] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
+	WGPUBindGroupEntry invoeren[5] = { WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT, WGPU_BIND_GROUP_ENTRY_INIT };
 
-	for(int i = 0; i < 4; i++)
+	for(int i = 0; i < 5; i++)
 	{
 		invoeren[i].binding = i;
 		invoeren[i].buffer 	= _rekenBufferBinden[i] ? _rekenBufferBinden[i] : _leegRekenBuffer;
@@ -1176,7 +1179,7 @@ WGPUBindGroup weergaveScherm::_maakOpslagBindGroep(WGPUBindGroupLayout layout)
 
 	WGPUBindGroupDescriptor bindGroepBeschrijving = WGPU_BIND_GROUP_DESCRIPTOR_INIT;
 	bindGroepBeschrijving.layout 		= layout;
-	bindGroepBeschrijving.entryCount 	= 4;
+	bindGroepBeschrijving.entryCount 	= 5;
 	bindGroepBeschrijving.entries 		= invoeren;
 
 	return wgpuDeviceCreateBindGroup(_wgpApparaat, &bindGroepBeschrijving);
