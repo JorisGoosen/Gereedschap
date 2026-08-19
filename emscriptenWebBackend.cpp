@@ -105,7 +105,7 @@ static int glfwModsFromEmscripten(const EmscriptenKeyboardEvent* ev)
 		int mods = glfwModsFromEmscripten(ev);
 		
 		if(_s_scherm && key != GLFW_KEY_UNKNOWN)
-			_s_scherm->toetsVerwerker(key, 0, GLFW_PRESS, mods);
+			weergaveScherm::verwerkToets(_s_scherm, key, 0, GLFW_PRESS, mods);
 		
 		return EM_TRUE;
 	}

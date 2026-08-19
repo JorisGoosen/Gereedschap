@@ -180,6 +180,29 @@ target_include_directories(gereedschap PUBLIC
     ${WGPU_INCLUDE_DIR}
 )
 
+# Emscripten/WebGPU: emdawnwebgpu levert <webgpu/webgpu.h>, maar onze code
+# gebruikt <webgpu.h> (zoals wgpu-native native doet). Het port voegt daarom
+# -isystem <pkg>/webgpu/include toe; de map dáárop (`webgpu`) moet vóór de
+# homebrew-pad staan zodat de browser-header wint van wgpu-native's webgpu.h.
+if(IS_EMSCRIPTEN)
+    target_compile_options(gereedschap PUBLIC --use-port=emdawnwebgpu)
+
+    if(NOT DEFINED EMDAWNWEBGPU_INCLUDE)
+        set(_em_cache "$ENV{EM_CACHE}")
+        if(NOT _em_cache)
+            set(_em_cache "${EMSCRIPTEN_ROOT_PATH}/cache")
+        endif()
+        set(EMDAWNWEBGPU_INCLUDE "${_em_cache}/ports/emdawnwebgpu/emdawnwebgpu_pkg/webgpu/include/webgpu")
+    endif()
+
+    if(EXISTS "${EMDAWNWEBGPU_INCLUDE}/webgpu.h")
+        message(STATUS "emdawnwebgpu includes gevonden: ${EMDAWNWEBGPU_INCLUDE}")
+        target_include_directories(gereedschap BEFORE PUBLIC "${EMDAWNWEBGPU_INCLUDE}")
+    else()
+        message(WARNING "emdawnwebgpu header niet gevonden op '${EMDAWNWEBGPU_INCLUDE}'; is --use-port=emdawnwebgpu al gecached?")
+    endif()
+endif()
+
 # Link libraries (alleen native)
 if(NOT IS_EMSCRIPTEN)
     target_link_directories(gereedschap PUBLIC ${GLFW3_LIBRARY_DIRS} ${LIBPNG_LIBRARY_DIRS})

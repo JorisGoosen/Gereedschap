@@ -72,7 +72,14 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 	void		zetWeergaveInstellingen(const weergaveInstellingen & instellingen) { _weergaveInstellingen = instellingen; }
 	const weergaveInstellingen & geefWeergaveInstellingen() const { return _weergaveInstellingen; }
 
-    bool		stopGewenst() { return _hoofdloos ? false : glfwWindowShouldClose(_glfwScherm); }
+    bool		stopGewenst() {
+#ifdef __EMSCRIPTEN__
+		(void)_glfwScherm;
+		return false; //web: geen GLFW-venster om te sluiten
+#else
+		return _hoofdloos ? false : glfwWindowShouldClose(_glfwScherm);
+#endif
+	}
 
 	///Of het wgpu-tekenoppervlak het laatst zichtbaar was (niet geOccludeerd).
 	///Handig om de hoofdloop te stoppen zolang de planeet buiten beeld is.
@@ -82,6 +89,9 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 	void		wachtOpGebeurtenissen();
 
 	static 	void toetsVerwerkerCentraal(GLFWwindow * scherm, 	int key, int scancode, int action, int mods);
+	///Verwerkt een toets net als toetsVerwerkerCentraal, maar dan zonder GLFWwindow
+	///(voor web-backend): roept eerst de eigen verwerker, dan de virtuele handler.
+	static	void verwerkToets(weergaveScherm * scherm,	int key, int scancode, int action, int mods);
 	virtual void toetsVerwerker(								int key, int scancode, int action, int mods);
 	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
 void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerwerker(eigenVerwerker); }

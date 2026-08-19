@@ -101,7 +101,7 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 			throw std::runtime_error("Failed to intialize glfw");
 
 		//We maken geen OpenGL context meer maar een venster puur voor wgpu
-		glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 		_glfwScherm = glfwCreateWindow(W, H, _naam.c_str(), volledigScherm ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
@@ -149,14 +149,21 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 	
 	//Probeer standaard webgpu.h API (wordt gedefinieerd door library_webgpu.js)
 	//Voor web: gebruik wgpuCreateInstance + wgpuRequestAdapter zoals normaal,
-	//maar de implementatie wordt vervangen door de JS-backend
-	_wgpInstantie = wgpuCreateInstance(nullptr);
+	//maar de implementatie wordt vervangen door de JS-backend.
+	//TimedWaitAny zetten we aan zodat _vraagAdapter/_vraagApparaat via
+	//wgpuInstanceWaitAny (asyncify) kunnen wachten i.p.v. een busy-wait die de
+	//JS-eventloop blokkeert.
+	WGPUInstanceFeatureName webFeatures[] = { WGPUInstanceFeatureName_TimedWaitAny };
+	WGPUInstanceDescriptor webInstantieDesc = WGPU_INSTANCE_DESCRIPTOR_INIT;
+	webInstantieDesc.requiredFeatureCount = 1;
+	webInstantieDesc.requiredFeatures = webFeatures;
+	_wgpInstantie = wgpuCreateInstance(&webInstantieDesc);
 	if(!_wgpInstantie)
 		throw std::runtime_error("Kon geen WebGPU-instantie krijgen van browser!");
 	
-	_vraagAdapter();
-	_vraagApparaat();
-	_wgpRij = wgpuDeviceGetQueue(_wgpApparaat);
+	_wgpAdapter  	= _vraagAdapter();
+	_wgpApparaat 	= _vraagApparaat();
+	_wgpRij 		= wgpuDeviceGetQueue(_wgpApparaat);
 	
 	s_gedeeldApparaat = _wgpApparaat;
 	s_gedeeldeRij	  = _wgpRij;
@@ -467,11 +474,23 @@ WGPUAdapter weergaveScherm::_vraagAdapter()
 	verwerkerInfo.callback 	= adapterVerwerver;
 	verwerkerInfo.userdata1 = &resultaat;
 
+#ifdef __EMSCRIPTEN__
+	//Web: navigator.gpu.requestAdapter() is async; een busy-wait blokkeert de
+	//eventloop zodat de belofte nooit afhandelt. wgpuInstanceWaitAny laat (via
+	//asyncify) JS tussendoor draaien en hervat zodra de future klaar is.
+	{
+		WGPUFuture adapterToekomst = wgpuInstanceRequestAdapter(_wgpInstantie, &opties, verwerkerInfo);
+		WGPUFutureWaitInfo wacht = WGPU_FUTURE_WAIT_INFO_INIT;
+		wacht.future = adapterToekomst;
+		wgpuInstanceWaitAny(_wgpInstantie, 1, &wacht, UINT64_MAX);
+	}
+#else
+	//wacht tot de verwerker is aangeroepen (wgpu-native levert de callback op een
+	//achtergrondthread; ProcessEvents pompt die hier af)
 	wgpuInstanceRequestAdapter(_wgpInstantie, &opties, verwerkerInfo);
-
-	//wacht tot de verwerker is aangeroepen (wgpuInstanceWaitAny is in wgpu-native nog niet geïmplementeerd)
 	while(!resultaat)
 		wgpuInstanceProcessEvents(_wgpInstantie);
+#endif
 
 	if(!resultaat)
 		throw std::runtime_error("Het verkrijgen van een wgpu-adapter is mislukt!");
@@ -515,11 +534,22 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 	verwerkerInfo.callback 	= apparaatVerwerver;
 	verwerkerInfo.userdata1 = &resultaat;
 
+#ifdef __EMSCRIPTEN__
+	//Web: adapter.requestDevice() is async; via asyncify + WaitAny laten we de
+	//eventloop draaien tot de future afhandelt (zelfde reden als _vraagAdapter).
+	{
+		WGPUFuture apparaatToekomst = wgpuAdapterRequestDevice(_wgpAdapter, &beschrijving, verwerkerInfo);
+		WGPUFutureWaitInfo wacht = WGPU_FUTURE_WAIT_INFO_INIT;
+		wacht.future = apparaatToekomst;
+		wgpuInstanceWaitAny(_wgpInstantie, 1, &wacht, UINT64_MAX);
+	}
+#else
 	wgpuAdapterRequestDevice(_wgpAdapter, &beschrijving, verwerkerInfo);
 
 	//wacht tot de verwerker is aangeroepen
 	while(!resultaat)
 		wgpuInstanceProcessEvents(_wgpInstantie);
+#endif
 
 	if(!resultaat)
 		throw std::runtime_error("Het verkrijgen van een wgpu-apparaat is mislukt!");
@@ -549,11 +579,17 @@ void weergaveScherm::_configureerOppervlak(uint32_t breedte, uint32_t hoogte)
 
 void weergaveScherm::toetsVerwerkerCentraal(GLFWwindow * scherm, int key, int scancode, int action, int mods)
 {
+	if(_schermen.count(scherm) > 0)
+		verwerkToets(_schermen[scherm], key, scancode, action, mods);
+}
+
+void weergaveScherm::verwerkToets(weergaveScherm * scherm, int key, int scancode, int action, int mods)
+{
 	if(_eigenVerwerker)
 		_eigenVerwerker(key, scancode, action, mods);
 
-	if(_schermen.count(scherm) > 0)
-		_schermen[scherm]->toetsVerwerker(key, scancode, action, mods);
+	if(scherm)
+		scherm->toetsVerwerker(key, scancode, action, mods);
 }
 
 void weergaveScherm::toetsVerwerker(int key, int , int action, int )
@@ -793,8 +829,10 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 	diepteHechting.depthLoadOp 		= hergebruik ? WGPULoadOp_Load   : WGPULoadOp_Clear;
 	diepteHechting.depthStoreOp 	= WGPUStoreOp_Store;
 	diepteHechting.depthClearValue 	= 1.0;
-	diepteHechting.stencilLoadOp 	= WGPULoadOp_Clear;
-	diepteHechting.stencilStoreOp 	= WGPUStoreOp_Discard;
+	//Depth32Float heeft geen stencil-aspect: stencil-ops moeten Undefined blijven
+	//(Clear/Discard op een diepte-only attachment is een validatiefout in browser-WebGPU).
+	diepteHechting.stencilLoadOp 	= WGPULoadOp_Undefined;
+	diepteHechting.stencilStoreOp 	= WGPUStoreOp_Undefined;
 
 	WGPURenderPassDescriptor passBeschrijving = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
 	passBeschrijving.label 				= { _huidigProgrammaNaam.c_str(), _huidigProgrammaNaam.size() };
@@ -1017,7 +1055,10 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	for(int i = 0; i < 4; i++)
 	{
 		invoeren[i].binding 		= i;
-		invoeren[i].visibility 		= WGPUShaderStage_Vertex | WGPUShaderStage_Fragment | WGPUShaderStage_Compute;
+		//Reken-shaders draaien alléén in de compute-stage; lees/schrijf-opslag
+		//(read_write) mag daar op elk platform. De vertex/fragment-visibiliteit
+		//hoort bij de weergave-layout hieronder (alleen-lezen).
+		invoeren[i].visibility 		= WGPUShaderStage_Compute;
 		invoeren[i].buffer.type 	= WGPUBufferBindingType_Storage;
 		invoeren[i].buffer.minBindingSize = minGroottes[i];
 	}
