@@ -19,12 +19,61 @@ static weergaveScherm* _s_scherm = nullptr;
 static EM_BOOL _canvasResizeCallback(int eventType, const EmscriptenUiEvent* ev, void* userData)
 {
 	(void)eventType; (void)userData;
-	if(_s_scherm)
-	{
-		int w = (int)ev->windowInnerWidth;
-		int h = (int)ev->windowInnerHeight;
+	int w = 0, h = 0;
+	emscripten_get_canvas_element_size("mars-canvas", &w, &h);
+	if(w > 0 && h > 0 && _s_scherm)
 		_s_scherm->zetCanvasGrootte((uint32_t)w, (uint32_t)h);
+	return EM_TRUE;
+}
+
+// ── Muis/wiel/tekst (naar de generieke weergaveScherm-verwerkers) ────────────
+
+static EM_BOOL _muisMoveCallback(int eventType, const EmscriptenMouseEvent* ev, void* userData)
+{
+	(void)eventType; (void)userData;
+	weergaveScherm::muisPosCentraal(nullptr, ev->clientX, ev->clientY);
+	return EM_TRUE;
+}
+
+static EM_BOOL _muisKnopCallback(int eventType, const EmscriptenMouseEvent* ev, void* userData)
+{
+	(void)userData;
+	//Zet Emscripten-knop (0=links,1=midden,2=rechts) om naar GLFW-conventie
+	//(0=links,1=rechts,2=midden) zodat ImGui hem direct kan gebruiken.
+	int knop = -1;
+	if(ev->button == 0)      knop = 0;
+	else if(ev->button == 2) knop = 1;
+	else if(ev->button == 1) knop = 2;
+	if(knop >= 0)
+	{
+		int actie = (eventType == EMSCRIPTEN_EVENT_MOUSEUP) ? GLFW_RELEASE : GLFW_PRESS;
+		weergaveScherm::muisKnopCentraal(nullptr, knop, actie, 0);
 	}
+	return EM_TRUE;
+}
+
+static EM_BOOL _muisDownCallback(int eventType, const EmscriptenMouseEvent* ev, void* userData)
+{
+	return _muisKnopCallback(EMSCRIPTEN_EVENT_MOUSEDOWN, ev, userData);
+}
+static EM_BOOL _muisUpCallback(int eventType, const EmscriptenMouseEvent* ev, void* userData)
+{
+	return _muisKnopCallback(EMSCRIPTEN_EVENT_MOUSEUP, ev, userData);
+}
+
+static EM_BOOL _wielCallback(int eventType, const EmscriptenWheelEvent* ev, void* userData)
+{
+	(void)eventType; (void)userData;
+	weergaveScherm::muisWielCentraal(nullptr, ev->deltaX, ev->deltaY);
+	return EM_TRUE;
+}
+
+//Tekstinvoer (cijfers/letters voor bijv. het diepte-veld)
+static EM_BOOL _charCallback(int eventType, const EmscriptenKeyboardEvent* ev, void* userData)
+{
+	(void)eventType; (void)userData;
+	if(ev->charValue[0])
+		weergaveScherm::charCentraal(nullptr, (unsigned int)(unsigned char)ev->charValue[0]);
 	return EM_TRUE;
 }
 
@@ -132,12 +181,17 @@ void initWebPlatform(weergaveScherm* scherm, const char* /*canvasId*/, int /*wid
 {
 	_s_scherm = scherm;
 	
-	//Koppel event handlers aan document/window.
+	//Koppel event handlers aan document/window/canvas.
 	//Let op: gebruik EMSCRIPTEN_EVENT_TARGET_DOCUMENT i.p.v. "#document" — sinds
 	//de querySelector-gebaseerde target-resolutie lost "#document" niet meer op
 	//(geen element met id="document") en blijft de listener dode code.
 	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, _canvasResizeCallback);
 	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, _keyDownCallback);
+	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, _charCallback);
+	emscripten_set_mousemove_callback("#mars-canvas", nullptr, false, _muisMoveCallback);
+	emscripten_set_mousedown_callback("#mars-canvas", nullptr, true, _muisDownCallback);
+	emscripten_set_mouseup_callback("#mars-canvas", nullptr, true, _muisUpCallback);
+	emscripten_set_wheel_callback("#mars-canvas", nullptr, true, _wielCallback);
 	
 	//Start de requestAnimationFrame-loop
 	emscripten_set_main_loop(emscriptenMainLoopWrapper, 0, 1);

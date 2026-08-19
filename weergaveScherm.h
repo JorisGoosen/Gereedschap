@@ -96,6 +96,27 @@ void		pasRondRenderAf() { pasRondWeergevenAf(); }
 	static	void zetEigenToetsVerwerker(toetsVerwerkerFunc eigenVerwerker) { _eigenVerwerker = eigenVerwerker; }
 void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerwerker(eigenVerwerker); }
 
+	///Wanneer ImGui een toets wil (tekst in een veld e.d.) moet de sim de toets
+	///niet zelf afhandelen; de GUI zet dit via deze papiertje.
+	static	void zetToetsGevangen(bool gevangen) { _toetsenGevangen = gevangen; }
+	static	bool toetsenGevangen() { return _toetsenGevangen; }
+
+	// ── Muis/scroll/tekst-verwerkers (native GLFW en web emscripten) ─────────
+	typedef std::function<void(double x, double y)>			muisPosVerwerkerFunc;
+	typedef std::function<void(int knop, int actie, int mods)>	muisKnopVerwerkerFunc;
+	typedef std::function<void(double dx, double dy)>			muisWielVerwerkerFunc;
+	typedef std::function<void(unsigned int utf8codepunt)>		charVerwerkerFunc;
+	static	void zetMuisPosVerwerker(muisPosVerwerkerFunc f)	{ _muisPosVerwerker  = std::move(f); }
+	static	void zetMuisKnopVerwerker(muisKnopVerwerkerFunc f)	{ _muisKnopVerwerker = std::move(f); }
+	static	void zetMuisWielVerwerker(muisWielVerwerkerFunc f)	{ _muisWielVerwerker = std::move(f); }
+	static	void zetCharVerwerker(charVerwerkerFunc f)			{ _charVerwerker     = std::move(f); }
+
+	//Centrale dispatchers (vanuit GLFW-callbacks op native, emscripten op web).
+	static void muisPosCentraal(GLFWwindow*, double x, double y);
+	static void muisKnopCentraal(GLFWwindow*, int knop, int actie, int mods);
+	static void muisWielCentraal(GLFWwindow*, double dx, double dy);
+	static void charCentraal(GLFWwindow*, unsigned int codepunt);
+
 	///Zet de escape-toets over (grote de eigen toetsverwerker de toets jáá ziet);
 	///de standaard afsluit-functor slaat die druk dan over.
 	static void		zetEscapeOverladen() { _escapeGevangen = true; }
@@ -184,6 +205,15 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	static WGPUDevice 	deelApparaat() 		{ return gedeeldApparaat(); }
 	static WGPUQueue 	deelRij() 			{ return gedeeldeRij(); 		}
 
+	///Traceer- (achtergrond)kleurformaat van het wgp-tekenoppervlak (voor de GUI).
+	WGPUTextureFormat	oppervlakFormat()	const { return _oppervlakFormaat; }
+	uint32_t			oppervlakBreedte()	const { return _oppervlakBreedte; }
+	uint32_t			oppervlakHoogte()	const { return _oppervlakHoogte; }
+
+	///Begint een puur-GUI-render-pass bovenop de al getekende planeet (load=Load,
+	///géén diepte-attachment) in de open commando-encoder. Eindig met pasRondRenderAf.
+	void		bereidGuiPass();
+
 	WGPUInstance		instantie()			const { return _wgpInstantie; }
 
 	glm::ivec2 	laadTextuurUitPng(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, unsigned int internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
@@ -192,6 +222,7 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	void		maakVolumeTextuur(	const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * dataB = nullptr);
 	void		maakLijnTextuur(	const std::string & textuurNaam, size_t lengte, unsigned int internalFormat =  GL_RGBA16 , void * dataB = nullptr, unsigned int dataFormat = GL_RGBA, unsigned int dataType = GL_FLOAT);
 	WGPUTexture	maakTextuur(		const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, unsigned int internalFormat = GL_RGBA, void * dataB = nullptr, unsigned int dataFormat = GL_RGBA, unsigned int dataType = GL_UNSIGNED_BYTE);
+	WGPUTexture	vervangTextuur(	const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, unsigned int internalFormat = GL_RGBA, void * dataB = nullptr, unsigned int dataFormat = GL_RGBA, unsigned int dataType = GL_UNSIGNED_BYTE);
 	void		laadData(			const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS = false, bool herhaalT = false, bool mipmap = false, unsigned int internalFormat = GL_RGBA, void * dataB = nullptr, unsigned int dataFormat = GL_RGBA, unsigned int dataType = GL_UNSIGNED_BYTE);
 	glm::uvec2	textuurGrootte(		const std::string & textuurNaam) { return _textuurGroottes.at(textuurNaam); }
 	WGPUTexture	textuurId(			const std::string & textuurNaam) { return _texturen.at(textuurNaam);		}
@@ -295,6 +326,11 @@ private:
 
 	static toetsVerwerkerFunc _eigenVerwerker;
 	static bool _escapeGevangen;
+	static bool _toetsenGevangen;				///< ImGui heeft een toets vast (tekst/invoer)
+	static muisPosVerwerkerFunc  _muisPosVerwerker;
+	static muisKnopVerwerkerFunc _muisKnopVerwerker;
+	static muisWielVerwerkerFunc _muisWielVerwerker;
+	static charVerwerkerFunc     _charVerwerker;
 
 	void		_configureerOppervlak(uint32_t breedte, uint32_t hoogte);
 	void		_beeldenUniformen(int breedte, int hoogte);

@@ -2,6 +2,8 @@
 #include "metaalLaag.h"
 #ifndef __EMSCRIPTEN__
 #include <wgpu.h>
+#else
+#include <emscripten/html5.h>
 #endif
 #include <iostream>
 
@@ -13,6 +15,11 @@ using namespace glm;
 
 weergaveScherm::toetsVerwerkerFunc weergaveScherm::_eigenVerwerker = nullptr;
 bool weergaveScherm::_escapeGevangen = false;
+bool weergaveScherm::_toetsenGevangen  = false;
+weergaveScherm::muisPosVerwerkerFunc  weergaveScherm::_muisPosVerwerker;
+weergaveScherm::muisKnopVerwerkerFunc weergaveScherm::_muisKnopVerwerker;
+weergaveScherm::muisWielVerwerkerFunc weergaveScherm::_muisWielVerwerker;
+weergaveScherm::charVerwerkerFunc     weergaveScherm::_charVerwerker;
 
 std::map<GLFWwindow *, weergaveScherm*>	weergaveScherm::_schermen;
 
@@ -133,9 +140,17 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 		hoogte  = (int)H;
 	}
 #else
-	//Web: haal grootte uit canvas
-	breedte = (int)W;
-	hoogte  = (int)H;
+	//Web: haal de canvas-grootte (backing store) op i.p.v. harde WxH, zodat de
+	//WebGPU-surface meteen het hele scherm vult en het canvas niet naar een
+	//kleine rechthoek in het midden wordt teruggeschaald.
+	int cvw = (int)W, cvh = (int)H;
+	if(emscripten_get_canvas_element_size("mars-canvas", &cvw, &cvh) != EMSCRIPTEN_RESULT_SUCCESS || cvw <= 0 || cvh <= 0)
+	{
+		cvw = (int)W;
+		cvh = (int)H;
+	}
+	breedte = cvw;
+	hoogte  = cvh;
 #endif
 
 	//------------ wgpu basis ------------
@@ -456,6 +471,10 @@ weergaveScherm::weergaveScherm(std::string Naam, size_t W, size_t H, size_t samp
 #ifndef __EMSCRIPTEN__
  		_schermen[_glfwScherm] = this;
  		glfwSetKeyCallback(_glfwScherm, toetsVerwerkerCentraal);
+ 		glfwSetCursorPosCallback(_glfwScherm, muisPosCentraal);
+ 		glfwSetMouseButtonCallback(_glfwScherm, muisKnopCentraal);
+ 		glfwSetScrollCallback(_glfwScherm, muisWielCentraal);
+ 		glfwSetCharCallback(_glfwScherm, charCentraal);
 #endif
  	}
 
@@ -588,8 +607,34 @@ void weergaveScherm::verwerkToets(weergaveScherm * scherm, int key, int scancode
 	if(_eigenVerwerker)
 		_eigenVerwerker(key, scancode, action, mods);
 
-	if(scherm)
+	//Als ImGui de toets wil (invoerveld e.d.) mag de virtuele (camera-)handler
+	//die niet ook nog afhandelen.
+	if(scherm && !_toetsenGevangen)
 		scherm->toetsVerwerker(key, scancode, action, mods);
+}
+
+void weergaveScherm::muisPosCentraal(GLFWwindow* scherm, double x, double y)
+{
+	(void)scherm;
+	if(_muisPosVerwerker) _muisPosVerwerker(x, y);
+}
+
+void weergaveScherm::muisKnopCentraal(GLFWwindow* scherm, int knop, int actie, int mods)
+{
+	(void)scherm;
+	if(_muisKnopVerwerker) _muisKnopVerwerker(knop, actie, mods);
+}
+
+void weergaveScherm::muisWielCentraal(GLFWwindow* scherm, double dx, double dy)
+{
+	(void)scherm;
+	if(_muisWielVerwerker) _muisWielVerwerker(dx, dy);
+}
+
+void weergaveScherm::charCentraal(GLFWwindow* scherm, unsigned int codepunt)
+{
+	(void)scherm;
+	if(_charVerwerker) _charVerwerker(codepunt);
 }
 
 void weergaveScherm::toetsVerwerker(int key, int , int action, int )
@@ -845,6 +890,33 @@ _huidigProgramma = _shaderProgrammas.count(_huidigProgrammaNaam) > 0 ? _shaderPr
 	s_huidigScherm = this;
 
 	wgpuRenderPassEncoderSetViewport(_weergavePass, 0.0f, 0.0f, (float)breedte, (float)hoogte, 0.0f, 1.0f);
+}
+
+//Begin een puur-GUI-pass bovenop de getekende planeet (geen diepte, load=Load).
+void weergaveScherm::bereidGuiPass()
+{
+	if(_diepteDoel || !_oppervlakZicht)
+		return;
+
+	if(!_commandEncoder)
+		_commandEncoder = wgpuDeviceCreateCommandEncoder(_wgpApparaat, nullptr);
+
+	WGPURenderPassColorAttachment kleurHechting = WGPU_RENDER_PASS_COLOR_ATTACHMENT_INIT;
+	kleurHechting.view 		= _oppervlakZicht;
+	kleurHechting.loadOp 	= WGPULoadOp_Load;
+	kleurHechting.storeOp 	= WGPUStoreOp_Store;
+
+	WGPURenderPassDescriptor passBeschrijving = WGPU_RENDER_PASS_DESCRIPTOR_INIT;
+	passBeschrijving.label 				 = {"gui", 3};
+	passBeschrijving.colorAttachmentCount = 1;
+	passBeschrijving.colorAttachments 	 = &kleurHechting;
+
+	_weergavePass = wgpuCommandEncoderBeginRenderPass(_commandEncoder, &passBeschrijving);
+
+	s_huidigScherm = this;
+
+	wgpuRenderPassEncoderSetViewport(_weergavePass, 0.0f, 0.0f,
+		(float)_oppervlakBreedte, (float)_oppervlakHoogte, 0.0f, 1.0f);
 }
 
 ///Schrijft de schermparameters (breedte/hoogte/verhouding) naar de beeld-buffer
@@ -1695,6 +1767,16 @@ WGPUTexture weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t 
 	wgpFoutControle("weergaveScherm::maakTextuur('" + textuurNaam + "'): ");
 
 	return textuur;
+}
+
+WGPUTexture weergaveScherm::vervangTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, void * dataB, unsigned int format, unsigned int type)
+{
+	if(_texturen.count(textuurNaam))
+	{
+		wgpuTextureRelease(_texturen[textuurNaam]);
+		_texturen.erase(textuurNaam);
+	}
+	return maakTextuur(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, dataB, format, type);
 }
 
 void weergaveScherm::laadData(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, void * dataB, unsigned int format, unsigned int type)
