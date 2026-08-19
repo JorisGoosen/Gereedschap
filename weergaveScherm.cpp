@@ -1122,7 +1122,7 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//(= geen minimum), zodat de werkelijke buffergrootte geldt en struct-wijzigingen (bijv. van
 	//de vak-struct) het niet breken; alleen vakMeta (144) houdt een minimum voor de veiligheid.
 	WGPUBindGroupLayoutEntry invoeren[4] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[4] = { 0, 0, 144, 96 };
+	const uint64_t minGroottes[4] = { 0, 0, 144, 192 };
 
 	for(int i = 0; i < 4; i++)
 	{
@@ -1155,7 +1155,7 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	{
 		WGPUBufferDescriptor legeBeschrijving = WGPU_BUFFER_DESCRIPTOR_INIT;
 		legeBeschrijving.usage = WGPUBufferUsage_Storage | WGPUBufferUsage_CopyDst;
-		legeBeschrijving.size  = 128; //groot genoeg voor elke binding (dummy-opvulling)
+		legeBeschrijving.size  = 256; //groot genoeg voor elke binding incl. rekenParameters (dummy-opvulling)
 		_leegRekenBuffer = wgpuDeviceCreateBuffer(_wgpApparaat, &legeBeschrijving);
 	}
 }
