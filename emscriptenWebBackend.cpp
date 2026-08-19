@@ -132,9 +132,12 @@ void initWebPlatform(weergaveScherm* scherm, const char* /*canvasId*/, int /*wid
 {
 	_s_scherm = scherm;
 	
-	//Koppel event handlers aan body/document
-	emscripten_set_resize_callback("body", nullptr, false, _canvasResizeCallback);
-	emscripten_set_keydown_callback("#document", nullptr, true, _keyDownCallback);
+	//Koppel event handlers aan document/window.
+	//Let op: gebruik EMSCRIPTEN_EVENT_TARGET_DOCUMENT i.p.v. "#document" — sinds
+	//de querySelector-gebaseerde target-resolutie lost "#document" niet meer op
+	//(geen element met id="document") en blijft de listener dode code.
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, _canvasResizeCallback);
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, true, _keyDownCallback);
 	
 	//Start de requestAnimationFrame-loop
 	emscripten_set_main_loop(emscriptenMainLoopWrapper, 0, 1);
