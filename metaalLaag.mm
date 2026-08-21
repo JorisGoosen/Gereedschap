@@ -22,22 +22,22 @@ void * maakMetaalLaag(GLFWwindow * glfwScherm)
 	inhoudsZicht.wantsLayer 	= YES;
 	inhoudsZicht.layer 			= laag;
 
-	werkMetaalLaagBij((__bridge void *)laag, (int)inhoudsZicht.bounds.size.width, (int)inhoudsZicht.bounds.size.height);
+	//Retina: de echte content-schaal (bv. 2.0) i.p.v. een verhouding uit bounds —
+	//die klopt pas nadat het venster zijn uiteindelijke grootte heeft.
+	float xs = 1.0f, ys = 1.0f;
+	glfwGetWindowContentScale(glfwScherm, &xs, &ys);
+	werkMetaalLaagBij((__bridge void *)laag,
+	                  (int)(inhoudsZicht.bounds.size.width * xs),
+	                  (int)(inhoudsZicht.bounds.size.height * ys),
+	                  xs);
 
 	return (__bridge void *)laag;
 }
 
-void werkMetaalLaagBij(void * laag, int breedte, int hoogte)
+void werkMetaalLaagBij(void * laag, int breedte, int hoogte, float schaal)
 {
 	CAMetalLayer * metalenLaag = (__bridge CAMetalLayer *) laag;
 
-	CGRect grenzen = metalenLaag.bounds;
-
-	if(grenzen.size.width > 0 && grenzen.size.height > 0)
-	{
-		metalenLaag.contentsScale 	= (CGFloat)breedte / grenzen.size.width;
-		metalenLaag.drawableSize 	= CGSizeMake(breedte, hoogte);
-	}
-	else
-		metalenLaag.drawableSize 	= CGSizeMake(breedte, hoogte);
+	metalenLaag.contentsScale = (CGFloat)schaal;
+	metalenLaag.drawableSize  = CGSizeMake(breedte, hoogte);
 }

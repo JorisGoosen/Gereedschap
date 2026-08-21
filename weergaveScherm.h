@@ -210,6 +210,10 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	uint32_t			oppervlakBreedte()	const { return _oppervlakBreedte; }
 	uint32_t			oppervlakHoogte()	const { return _oppervlakHoogte; }
 
+	///Retina/content-schaal: muis-/punt-coördinaten × deze factor = framebuffer-
+	///pixels. (1,1) op web en op 1x-schermen; ~2 op Retina.
+	glm::vec2			inhoudSchaal() 		const;
+
 	///Begint een puur-GUI-render-pass bovenop de al getekende planeet (load=Load,
 	///géén diepte-attachment) in de open commando-encoder. Eindig met pasRondRenderAf.
 	void		bereidGuiPass();

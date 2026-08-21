@@ -6,5 +6,6 @@
 ///zodat wgpu er een oppervlak van kan maken (alleen op macOS zinvol)
 void * maakMetaalLaag(GLFWwindow * glfwScherm);
 
-///Past de tekenformaat van de metalen laag aan zodat die klopt met het grootte van het GLFW kader-geheugen
-void werkMetaalLaagBij(void * laag, int breedte, int hoogte);
+///Past de tekenformaat van de metalen laag aan: contentsScale = de echte
+///content-schaal (Retina) en drawableSize = fysieke pixels (breedte/hoogte).
+void werkMetaalLaagBij(void * laag, int breedte, int hoogte, float schaal);

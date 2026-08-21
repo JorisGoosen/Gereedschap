@@ -758,7 +758,9 @@ void weergaveScherm::bereidWeergevenVoor(const std::string & shader, bool wisSch
  		if((uint32_t)breedte != _oppervlakBreedte || (uint32_t)hoogte != _oppervlakHoogte)
  			_configureerOppervlak(breedte, hoogte);
 
- 		werkMetaalLaagBij(_metaalLaag, breedte, hoogte);
+ 		float xs = 1.0f, ys = 1.0f;
+ 		glfwGetWindowContentScale(_glfwScherm, &xs, &ys);
+ 		werkMetaalLaagBij(_metaalLaag, breedte, hoogte, xs);
 #else
   		//Web-build: gebruik canvas-grootte uit resize callback (met fallback)
   		breedte = _oppervlakBreedte;
@@ -1123,7 +1125,7 @@ void weergaveScherm::_zorgOpslagBindGroep()
 	//de vak-struct) het niet breken; alleen vakMeta (144) en rekenParameters (192) houden een
 	//minimum voor de veiligheid. Binding 4 is gereserveerd voor de penseel-buffer.
 	WGPUBindGroupLayoutEntry invoeren[5] = { WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT, WGPU_BIND_GROUP_LAYOUT_ENTRY_INIT };
-	const uint64_t minGroottes[5] = { 0, 0, 144, 192, 0 };
+	const uint64_t minGroottes[5] = { 0, 0, 144, 208, 0 };
 
 	for(int i = 0; i < 5; i++)
 	{
@@ -1562,21 +1564,22 @@ void weergaveScherm::doeRekenVerwerker(const std::string & verwerker, glm::uvec3
  		wgpuBindGroupRelease(bindGroep);
  	_rekenBindGroepen.clear();
 
- 	_weergavePass		= nullptr;
- 	_commandEncoder 	= nullptr;
- 	_oppervlakZicht 	= nullptr;
- 	_oppervlakTextuur 	= nullptr;
- 	//NB: _doelTextuur blijft staan (off-screen doel), zodat meerdere passes
- 	//achter elkaar naar dezelfde framebuffer kunnen tekenen (--schermafbeelding).
- 	//nepScherm zet het doel vóór elke render zelf opnieuw.
+  	_weergavePass		= nullptr;
+  	_commandEncoder 	= nullptr;
+  	_oppervlakZicht 	= nullptr;
+  	_oppervlakTextuur 	= nullptr;
+  	//NB: _doelTextuur blijft staan (off-screen doel), zodat meerdere passes
+  	//achter elkaar naar dezelfde framebuffer kunnen tekenen (--schermafbeelding).
+  	//nepScherm zet het doel vóór elke render zelf opnieuw.
 
- 	if(_diepteZicht) 	{ wgpuTextureViewRelease(_diepteZicht); 	_diepteZicht = nullptr; }
- 	if(_diepteTextuur) 	{ wgpuTextureRelease(_diepteTextuur);	_diepteTextuur = nullptr; }
+  	//De diepte-textuur/‑view blijven gecached voor de volgende frame: _zorgDiepteTextuur
+  	//hergebruikt ze (en maakt pas iets nieuws bij een maatwijziging). Elke frame
+  	//opnieuw create/release gaf op het web (Dawn/Firefox) veel GPU-geheugenchurn.
 
 #ifndef __EMSCRIPTEN__
- 	glfwPollEvents();
+  	glfwPollEvents();
 #endif
- 	wgpFoutControle("weergaveScherm::rondWeergevenAf(): ");
+  	wgpFoutControle("weergaveScherm::rondWeergevenAf(): ");
  }
 
  void weergaveScherm::pasRondWeergevenAf()
@@ -1721,6 +1724,28 @@ void weergaveScherm::zetCanvasGrootte(uint32_t breedte, uint32_t hoogte)
 	//Configureer oppervlak met de nieuwe grootte
 	if(breedte > 0 && hoogte > 0)
 		_configureerOppervlak(breedte, hoogte);
+#endif
+}
+
+glm::vec2 weergaveScherm::inhoudSchaal() const
+{
+#ifndef __EMSCRIPTEN__
+	//De betrouwbare verhouding tussen muis-coördinaten (GLFW = vensterpixels/punten)
+	//en framebuffer-pixels is framebuffer/venster — exact wat de pick-textuur nodig
+	//heeft. glfwGetWindowContentScale kan op geschaalde macOS-modus afwijken.
+	if(!_hoofdloos && _glfwScherm)
+	{
+		int fbW = 0, fbH = 0, venW = 0, venH = 0;
+		glfwGetFramebufferSize(_glfwScherm, &fbW, &fbH);
+		glfwGetWindowSize(_glfwScherm, &venW, &venH);
+		return glm::vec2(venW > 0 ? (float)fbW / (float)venW : 1.0f,
+		                 venH > 0 ? (float)fbH / (float)venH : 1.0f);
+	}
+	return glm::vec2(1.0f, 1.0f);
+#else
+	(void)this;
+	//Web: de muis-callbacks leveren al canvas-coördinaten; geen schaal nodig.
+	return glm::vec2(1.0f, 1.0f);
 #endif
 }
 

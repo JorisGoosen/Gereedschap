@@ -31,6 +31,9 @@ static EM_BOOL _canvasResizeCallback(int eventType, const EmscriptenUiEvent* ev,
 static EM_BOOL _muisMoveCallback(int eventType, const EmscriptenMouseEvent* ev, void* userData)
 {
 	(void)eventType; (void)userData;
+	//clientX/clientY is viewport-relatief; voor het fullscreen-canvas op (0,0)
+	//valt dat samen met de canvas-coördinaten (canvas.width = CSS-breedte). Met
+	//canvasX/canvasY stonden de coördinaten op 0, dus terug naar clientX/clientY.
 	weergaveScherm::muisPosCentraal(nullptr, ev->clientX, ev->clientY);
 	return EM_TRUE;
 }
