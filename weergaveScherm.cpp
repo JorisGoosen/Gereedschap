@@ -1801,6 +1801,23 @@ WGPUTexture weergaveScherm::vervangTextuur(const std::string & textuurNaam, size
 {
 	if(_texturen.count(textuurNaam))
 	{
+		//Gecachte bind-groepen wijzen nog naar de oude textuur: weggooien, zodat ze
+		//bij de volgende draw opnieuw met de nieuwe textuur worden aangemaakt (anders
+		//bemonstert de shader de bevroren oude textuur, bijv. een verouderde schaduwkaart).
+		auto schaduwGevonden = _schaduwBindGroepen.find(textuurNaam);
+		if(schaduwGevonden != _schaduwBindGroepen.end())
+		{
+			wgpuBindGroupRelease(schaduwGevonden->second);
+			_schaduwBindGroepen.erase(schaduwGevonden);
+		}
+
+		auto textuurGevonden = _textuurBindGroepen.find(textuurNaam);
+		if(textuurGevonden != _textuurBindGroepen.end())
+		{
+			wgpuBindGroupRelease(textuurGevonden->second);
+			_textuurBindGroepen.erase(textuurGevonden);
+		}
+
 		wgpuTextureRelease(_texturen[textuurNaam]);
 		_texturen.erase(textuurNaam);
 	}
