@@ -74,6 +74,15 @@ icosahedron::icosahedron()
 	genereer();
 }
 
+icosahedron::~icosahedron()
+{
+	delete _punten;
+	delete _reeks;
+
+	_punten = nullptr;
+	_reeks  = nullptr;
+}
+
 //#define DEBUGTRIANGLE
 
 void icosahedron::genereer()

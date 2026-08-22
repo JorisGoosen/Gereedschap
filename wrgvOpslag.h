@@ -111,6 +111,10 @@ public:
 		if(grootte > wgpuBufferGetSize(info.reeksOpslag))
 		{
 			WGPUBuffer nieuwe = _maakBuffer(grootte == 0 ? eenheid : grootte, WGPUBufferUsage_Vertex);
+			//De oude buffer loslaten vóórdat we hem vervangen (groeien gebeurt
+			//alleen tijdens de opbouw van de geometrie, nooit midden in een frame).
+			if(info.reeksOpslag)
+				wgpuBufferRelease(info.reeksOpslag);
 			info.reeksOpslag = nieuwe;
 			_vertexBuffers[info.reeksIndex] = nieuwe;
 		}

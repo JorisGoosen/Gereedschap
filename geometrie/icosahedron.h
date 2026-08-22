@@ -19,6 +19,7 @@ class icosahedron
 {
 public:
 	icosahedron();
+	virtual ~icosahedron();
 
 	///Teken jezelf met driehoeken
 	virtual void tekenJezelf() 			const; 

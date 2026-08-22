@@ -47,6 +47,17 @@ vierkantRooster::vierkantRooster(size_t breedte, size_t hoogte, float schaling) 
 	genereer();
 }
 
+vierkantRooster::~vierkantRooster()
+{
+	delete _texturen;
+	delete _punten;
+	delete _reeks;
+
+	_texturen = nullptr;
+	_punten   = nullptr;
+	_reeks    = nullptr;
+}
+
 void vierkantRooster::genereer()
 {
 	const float xStap = 1.0 / _breedte,

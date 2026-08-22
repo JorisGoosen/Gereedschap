@@ -707,6 +707,7 @@ void weergaveScherm::toetsVerwerker(int key, int , int action, int )
 
 	if(_diepteDoelZicht) wgpuTextureViewRelease(_diepteDoelZicht);
 
+	if(_wgpRij) 		wgpuQueueRelease(_wgpRij);
 	if(_wgpOppervlak) 	wgpuSurfaceRelease(_wgpOppervlak);
 	if(_wgpAdapter) 	wgpuAdapterRelease(_wgpAdapter);
 	if(_wgpApparaat) 	wgpuDeviceRelease(_wgpApparaat);
@@ -1660,6 +1661,9 @@ WGPUComputePipeline weergaveScherm::maakRekenShader(const std::string & shaderNa
 	WGPUComputePipeline programma = wgpuDeviceCreateComputePipeline(_wgpApparaat, &beschrijving);
 
 	wgpuPipelineLayoutRelease(layout);
+	//De module is alleen nodig om de pipeline te bouwen (die wordt hier direct
+	//gemaakt, i.t.t. de render-pipelines die lazy ontstaan): meteen loslaten.
+	wgpuShaderModuleRelease(module);
 
 	if(!programma)
 		throw std::runtime_error("Het maken van het reken-programma \"" + shaderNaam + "\" is mislukt!");
@@ -1759,7 +1763,7 @@ glm::vec2 weergaveScherm::inhoudSchaal() const
 
 	maakTextuur(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, data, GL_RGBA, GL_UNSIGNED_BYTE);
 	
-	if(!imgData)	delete data;
+	if(!imgData)	delete[] data;
 	else			*imgData = data;
 
 	return glm::ivec2(breedte, hoogte);
@@ -1767,6 +1771,30 @@ glm::vec2 weergaveScherm::inhoudSchaal() const
 
 WGPUTexture weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, void * dataB, unsigned int format, unsigned int type)
 {
+	if(_texturen.count(textuurNaam))
+	{
+		//Er bestaat al een textuur onder deze naam: de oude loslaten. Gecachte
+		//bind-groepen wijzen nog naar de oude textuur: weggooien, zodat ze bij de
+		//volgende draw opnieuw met de nieuwe textuur worden aangemaakt (anders
+		//bemonstert de shader de bevroren oude textuur).
+		auto schaduwGevonden = _schaduwBindGroepen.find(textuurNaam);
+		if(schaduwGevonden != _schaduwBindGroepen.end())
+		{
+			wgpuBindGroupRelease(schaduwGevonden->second);
+			_schaduwBindGroepen.erase(schaduwGevonden);
+		}
+
+		auto textuurGevonden = _textuurBindGroepen.find(textuurNaam);
+		if(textuurGevonden != _textuurBindGroepen.end())
+		{
+			wgpuBindGroupRelease(textuurGevonden->second);
+			_textuurBindGroepen.erase(textuurGevonden);
+		}
+
+		wgpuTextureRelease(_texturen[textuurNaam]);
+		_texturen.erase(textuurNaam);
+	}
+
 	WGPUTextureFormat formaat = _geefWgpFormaat(internalFormat);
 
 	WGPUExtent3D omvang = { (uint32_t)breedte, (uint32_t)hoogte, 1 };
@@ -1799,28 +1827,8 @@ WGPUTexture weergaveScherm::maakTextuur(const std::string & textuurNaam, size_t 
 
 WGPUTexture weergaveScherm::vervangTextuur(const std::string & textuurNaam, size_t breedte, size_t hoogte, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, void * dataB, unsigned int format, unsigned int type)
 {
-	if(_texturen.count(textuurNaam))
-	{
-		//Gecachte bind-groepen wijzen nog naar de oude textuur: weggooien, zodat ze
-		//bij de volgende draw opnieuw met de nieuwe textuur worden aangemaakt (anders
-		//bemonstert de shader de bevroren oude textuur, bijv. een verouderde schaduwkaart).
-		auto schaduwGevonden = _schaduwBindGroepen.find(textuurNaam);
-		if(schaduwGevonden != _schaduwBindGroepen.end())
-		{
-			wgpuBindGroupRelease(schaduwGevonden->second);
-			_schaduwBindGroepen.erase(schaduwGevonden);
-		}
-
-		auto textuurGevonden = _textuurBindGroepen.find(textuurNaam);
-		if(textuurGevonden != _textuurBindGroepen.end())
-		{
-			wgpuBindGroupRelease(textuurGevonden->second);
-			_textuurBindGroepen.erase(textuurGevonden);
-		}
-
-		wgpuTextureRelease(_texturen[textuurNaam]);
-		_texturen.erase(textuurNaam);
-	}
+	//maakTextuur ruimt een bestaande textuur (én de gecachte bind-groepen) nu
+	//zelf al op, dus vervangen is gewoon opnieuw maken.
 	return maakTextuur(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, dataB, format, type);
 }
 

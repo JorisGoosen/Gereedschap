@@ -7,6 +7,7 @@ class geodesisch : public icosahedron
 {
 public:	
 	geodesisch(size_t onderverdelingen = 1);
+	~geodesisch() override;
 
 protected:
 	void verdeelEnHeers();

@@ -12,6 +12,13 @@ geodesisch::geodesisch(size_t onderverdelingen) : icosahedron(), _onderverdeling
 	ordenPunten();
 }
 
+geodesisch::~geodesisch()
+{
+	delete _tex;
+
+	_tex = nullptr;
+}
+
 void geodesisch::verdeelEnHeers() 
 {
 	for(size_t onderverdeling=0; onderverdeling<_onderverdelingen; onderverdeling++)
