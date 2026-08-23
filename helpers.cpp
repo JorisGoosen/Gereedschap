@@ -1,3 +1,4 @@
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "helpers.h"
 #include <fstream>
 #include <sstream>
@@ -6,6 +7,7 @@
 #include <random>
 #include <regex>
 #include <filesystem>
+#include <algorithm>
 
 static bool 				wgpHadFout 			= false;
 static std::string 			wgpLaatsteFoutBoodschap;
@@ -108,21 +110,46 @@ glm::vec3 willekeurigeVec3()
 }
 
 
-unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen)
+unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen, size_t maxDim)
 {
 	int w, h, n;
 	unsigned char *data = stbi_load(bestandsnaam.c_str(), &w, &h, &n, 4);
 
-	if(data)
+	if(!data)
+		return nullptr;
+
+	width 	= w;
+	height 	= h;
+	kanalen	= 4;
+
+	if(maxDim > 0 && (size_t(w) > maxDim || size_t(h) > maxDim))
 	{
-		width 	= w;
-		height 	= h;
-		kanalen	= 4;
+		float origineleVerhouding = float(w) / float(h);
+		
+		size_t nieuweBreedte, nieuweHoogte;
+		if(w > h)
+		{
+			nieuweBreedte = maxDim;
+			nieuweHoogte = size_t(maxDim / origineleVerhouding + 0.5f);
+		}
+		else
+		{
+			nieuweHoogte = maxDim;
+			nieuweBreedte = size_t(maxDim * origineleVerhouding + 0.5f);
+		}
 
+		std::cout << "Plaatje '" << bestandsnaam << "' wordt geschaald van " << w << "x" << h << " naar " << nieuweBreedte << "x" << nieuweHoogte << " (max " << maxDim << ")" << std::endl;
+		
+		unsigned char * geschaaldeData = (unsigned char *)stbir_resize_uint8_srgb(data, w, h, 0, nullptr, (int)nieuweBreedte, (int)nieuweHoogte, 0, STBIR_RGBA);
+		stbi_image_free(data);
+		data = geschaaldeData;
+		width = nieuweBreedte;
+		height = nieuweHoogte;
+	}
+	else
+	{
 		std::cout << "Plaatje '" << bestandsnaam << "' geladen en formaat: " << width << " X " << height << std::endl;
-
-		return data;
 	}
 
-	return nullptr;
+	return data;
 }

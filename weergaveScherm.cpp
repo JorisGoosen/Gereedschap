@@ -520,12 +520,18 @@ WGPUAdapter weergaveScherm::_vraagAdapter()
 
 WGPUDevice weergaveScherm::_vraagApparaat()
 {
+	WGPUDevice resultaat = nullptr;
+
+#ifndef __EMSCRIPTEN__
+	WGPULimits adapterLimieten = WGPU_LIMITS_INIT;
+	wgpuAdapterGetLimits(_wgpAdapter, &adapterLimieten);
+	_maxTextuurDimensie2D = adapterLimieten.maxTextureDimension2D;
+
 	WGPUDeviceDescriptor beschrijving = WGPU_DEVICE_DESCRIPTOR_INIT;
 	beschrijving.label 							= { _naam.c_str(), _naam.size() };
 	beschrijving.uncapturedErrorCallbackInfo.callback 	= wgpFoutMelder;
 	beschrijving.uncapturedErrorCallbackInfo.userdata1 	= this;
 
-#ifndef __EMSCRIPTEN__
 	//wgpu-native: opslag-buffers die (ook) zichtbaar zijn voor de vertex-shader zijn een native
 	//feature (anders mag er geen storage-binding aan de vertex-stage hangen). De bibliotheek biedt
 	//dat nu altijd aan, dus vraagt de feature aan zodra het apparaat hem ondersteunt.
@@ -537,17 +543,10 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 
 	beschrijving.requiredFeatureCount = verplichteFeaturesAantal;
 	beschrijving.requiredFeatures 	  = verplichteFeaturesAantal > 0 ? verplichteFeatures : nullptr;
-#else
-	beschrijving.requiredFeatureCount = 0;
-	beschrijving.requiredFeatures 	  = nullptr;
-#endif
 
-	//grote textuurbronnen (zoals de 8416x4208 Mars-hoogtekaart) vragen om ruimere limieten
-	WGPULimits limieten = WGPU_LIMITS_INIT;
-	limieten.maxTextureDimension2D = 16384;
-	beschrijving.requiredLimits = &limieten;
-
-	WGPUDevice resultaat = nullptr;
+	WGPULimits requiredLimieten = WGPU_LIMITS_INIT;
+	requiredLimieten.maxTextureDimension2D = 16384;
+	beschrijving.requiredLimits = &requiredLimieten;
 
 	WGPURequestDeviceCallbackInfo verwerkerInfo = WGPU_REQUEST_DEVICE_CALLBACK_INFO_INIT;
 	verwerkerInfo.mode 		= WGPUCallbackMode_AllowSpontaneous;
@@ -573,6 +572,31 @@ WGPUDevice weergaveScherm::_vraagApparaat()
 
 	if(!resultaat)
 		throw std::runtime_error("Het verkrijgen van een wgpu-apparaat is mislukt!");
+
+#else
+	//Web: gebruik de standaard limiet van 16384 (browser-gedefinieerd)
+	_maxTextuurDimensie2D = 16384;
+	
+	WGPUDeviceDescriptor beschrijving = WGPU_DEVICE_DESCRIPTOR_INIT;
+	beschrijving.label 							= { _naam.c_str(), _naam.size() };
+	beschrijving.uncapturedErrorCallbackInfo.callback 	= wgpFoutMelder;
+	beschrijving.uncapturedErrorCallbackInfo.userdata1 	= this;
+	beschrijving.requiredFeatureCount = 0;
+	beschrijving.requiredFeatures 	  = nullptr;
+
+	WGPURequestDeviceCallbackInfo verwerkerInfo = WGPU_REQUEST_DEVICE_CALLBACK_INFO_INIT;
+	verwerkerInfo.mode 		= WGPUCallbackMode_AllowSpontaneous;
+	verwerkerInfo.callback 	= apparaatVerwerver;
+	verwerkerInfo.userdata1 = &resultaat;
+
+	WGPUFuture apparaatToekomst = wgpuAdapterRequestDevice(_wgpAdapter, &beschrijving, verwerkerInfo);
+	WGPUFutureWaitInfo wacht = WGPU_FUTURE_WAIT_INFO_INIT;
+	wacht.future = apparaatToekomst;
+	wgpuInstanceWaitAny(_wgpInstantie, 1, &wacht, UINT64_MAX);
+
+	if(!resultaat)
+		throw std::runtime_error("Het verkrijgen van een wgpu-apparaat is mislukt!");
+#endif
 
 	return resultaat;
 }
@@ -1757,7 +1781,7 @@ glm::vec2 weergaveScherm::inhoudSchaal() const
   glm::ivec2 weergaveScherm::laadTextuurUitAfbeelding(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
 {
 	size_t breedte, hoogte, kanalen;
-	unsigned char * data = laadAfbeelding(bestandsNaam, breedte, hoogte, kanalen);
+	unsigned char * data = laadAfbeelding(bestandsNaam, breedte, hoogte, kanalen, geefMaxTextuurDimensieStatic());
 
 	if(!data) 
 		throw std::runtime_error("Could not load '" + bestandsNaam + "'!");

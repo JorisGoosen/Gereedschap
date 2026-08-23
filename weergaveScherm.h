@@ -205,6 +205,19 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	static WGPUDevice 	deelApparaat() 		{ return gedeeldApparaat(); }
 	static WGPUQueue 	deelRij() 			{ return gedeeldeRij(); 		}
 
+	///Vraagt de maximale 2D textuurafmeting van het gedeelde apparaat
+	static uint32_t		geefMaxTextuurDimensieStatic()
+	{
+		WGPUDevice apparaat = gedeeldApparaat();
+		if(apparaat)
+		{
+			WGPULimits limieten = WGPU_LIMITS_INIT;
+			wgpuDeviceGetLimits(apparaat, &limieten);
+			return limieten.maxTextureDimension2D;
+		}
+		return 16384;
+	}
+
 	///Traceer- (achtergrond)kleurformaat van het wgp-tekenoppervlak (voor de GUI).
 	WGPUTextureFormat	oppervlakFormat()	const { return _oppervlakFormaat; }
 	uint32_t			oppervlakBreedte()	const { return _oppervlakBreedte; }
@@ -219,6 +232,7 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 	void		bereidGuiPass();
 
 	WGPUInstance		instantie()			const { return _wgpInstantie; }
+	uint32_t		geefMaxTextuurDimensie()	const { return _maxTextuurDimensie2D; }
 
 	glm::ivec2 	laadTextuurUitAfbeelding(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, unsigned int internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
 	void 		bindTextuur(		const std::string & textuurNaam, uint32_t actieveTextuur) const;
@@ -294,6 +308,7 @@ private:
 	WGPUAdapter 			_wgpAdapter 	= nullptr;
 	WGPUSurface 			_wgpOppervlak 	= nullptr;
 
+	uint32_t 				_maxTextuurDimensie2D = 16384;
 	uint32_t 				_oppervlakBreedte 	= 0,
 							_oppervlakHoogte 	= 0;
 

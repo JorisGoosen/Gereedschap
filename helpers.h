@@ -9,7 +9,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "stb_image.h"
-#include "stb_image.h"
+
+#ifdef STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize2.h"
+#endif
 #include <ostream>
 #include <iomanip>
 #include <sstream>
@@ -29,7 +32,7 @@ std::string tekstInlezen(const std::string & bestandsNaam);
 		glm::vec3	willekeurigeVec3();
 inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 
-unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
+unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen, size_t maxDim = 0);
 
 ///WebGPU kent geen geometry- of vlak-verdelings shaders (alleen de reken en vertex/fragment)
 [[noreturn]] void werpOnondersteund(const std::string & wat);
