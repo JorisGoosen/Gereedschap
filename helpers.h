@@ -8,7 +8,8 @@
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "png.h"
+#include "stb_image.h"
+#include "stb_image.h"
 #include <ostream>
 #include <iomanip>
 #include <sstream>
@@ -28,7 +29,7 @@ std::string tekstInlezen(const std::string & bestandsNaam);
 		glm::vec3	willekeurigeVec3();
 inline 	glm::vec3	willekeurigeVec3Z() { return glm::vec3(-1.0f) + (2.0f * willekeurigeVec3()); }
 
-png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
+unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen);
 
 ///WebGPU kent geen geometry- of vlak-verdelings shaders (alleen de reken en vertex/fragment)
 [[noreturn]] void werpOnondersteund(const std::string & wat);

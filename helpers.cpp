@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <png.h>
 #include <exception>
 #include <random>
 #include <regex>
@@ -109,33 +108,21 @@ glm::vec3 willekeurigeVec3()
 }
 
 
-png_byte *	laadPNG(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen)
+unsigned char *	laadAfbeelding(const std::string & bestandsnaam, size_t & width, size_t & height, size_t & kanalen)
 {
-    png_image image;
+	int w, h, n;
+	unsigned char *data = stbi_load(bestandsnaam.c_str(), &w, &h, &n, 4);
 
-	memset(&image, 0, (sizeof image));
-	image.version = PNG_IMAGE_VERSION;
-
-	if (png_image_begin_read_from_file(&image, bestandsnaam.c_str()))
+	if(data)
 	{
-		png_bytep buffer = nullptr;
-		image.format = PNG_FORMAT_RGBA;
+		width 	= w;
+		height 	= h;
+		kanalen	= 4;
 
-		buffer = new png_byte[PNG_IMAGE_SIZE(image)];
+		std::cout << "Plaatje '" << bestandsnaam << "' geladen en formaat: " << width << " X " << height << std::endl;
 
-		if (buffer != nullptr && png_image_finish_read(&image, nullptr, buffer, 0, nullptr) != 0)
-		{
-			width 	= image.width;
-			height 	= image.height;
-			kanalen	= 4;
-
-			std::cout << "Plaatje '" << bestandsnaam << "' geladen en formaat: " << width << " X " << height << std::endl;
-
-			return buffer;
-		}
-
-		delete[] buffer;
+		return data;
 	}
 
-	  return nullptr;  
+	return nullptr;
 }

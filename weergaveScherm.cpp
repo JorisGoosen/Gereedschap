@@ -6,6 +6,7 @@
 #include <emscripten/html5.h>
 #endif
 #include <iostream>
+#include <stb_image.h>
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -1753,17 +1754,17 @@ glm::vec2 weergaveScherm::inhoudSchaal() const
 #endif
 }
 
- glm::ivec2 weergaveScherm::laadTextuurUitPng(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
+  glm::ivec2 weergaveScherm::laadTextuurUitAfbeelding(const std::string & bestandsNaam, const std::string & textuurNaam, bool herhaalS, bool herhaalT, bool mipmap, unsigned int internalFormat, unsigned char ** imgData /*om png data terug te geven, zelf opruimen!*/)
 {
 	size_t breedte, hoogte, kanalen;
-	png_byte * data = laadPNG(bestandsNaam, breedte, hoogte, kanalen);
+	unsigned char * data = laadAfbeelding(bestandsNaam, breedte, hoogte, kanalen);
 
 	if(!data) 
 		throw std::runtime_error("Could not load '" + bestandsNaam + "'!");
 
 	maakTextuur(textuurNaam, breedte, hoogte, herhaalS, herhaalT, mipmap, internalFormat, data, GL_RGBA, GL_UNSIGNED_BYTE);
 	
-	if(!imgData)	delete[] data;
+	if(!imgData)	stbi_image_free(data);
 	else			*imgData = data;
 
 	return glm::ivec2(breedte, hoogte);

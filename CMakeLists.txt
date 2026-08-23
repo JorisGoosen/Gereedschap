@@ -134,6 +134,7 @@ set(GEREEDSCHAP_SOURCES
     weergaveSchermVierkant.cpp
     weergaveSchermPerspectief.cpp
     helpers.cpp
+    stb_image_impl.cpp
     perlinRuis.cpp
     nepScherm.cpp
 )

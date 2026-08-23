@@ -220,7 +220,7 @@ void		setCustomKeyhandler(toetsVerwerkerFunc eigenVerwerker) { zetEigenToetsVerw
 
 	WGPUInstance		instantie()			const { return _wgpInstantie; }
 
-	glm::ivec2 	laadTextuurUitPng(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, unsigned int internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
+	glm::ivec2 	laadTextuurUitAfbeelding(	const std::string & bestandsNaam, const std::string & textuurNaam,  bool herhaalS = true, bool herhaalT = true, bool mipmap = true, unsigned int internalFormat=GL_RGBA, unsigned char ** imgData = nullptr);
 	void 		bindTextuur(		const std::string & textuurNaam, uint32_t actieveTextuur) const;
 	void 		bindTextuurPlaatje(	const std::string & textuurNaam, uint32_t actieveTextuur, bool schrijven = true, bool lezen = true) const;
 	void		maakVolumeTextuur(	const std::string & textuurNaam, glm::uvec3 dimensies, unsigned char * dataB = nullptr);
